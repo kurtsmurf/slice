@@ -3,11 +3,11 @@ svg {
   /* height: 12rem; */
 }
 #blah {
-  stroke-width: 0.05;
+  stroke-width: 0.1;
   stroke: #0003;
 }
 path {
   stroke: black;
-  stroke-width: 0.05;
+  stroke-width: 0.1;
   fill: none;
 }

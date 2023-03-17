@@ -7,6 +7,10 @@ const [offsetX, setOffsetX] = createSignal(0)
 
 createEffect(() => console.log(offsetX))
 
+
+const [dragging, setDragging] = createSignal(false)
+const [dragStart, setDragStart] = createSignal(-1)
+
 export const App = () =>
   <Show
     when={clip()}
@@ -26,22 +30,43 @@ export const App = () =>
         // @ts-ignore
         if (e.wheelDelta < 0) {
           // console.log("DOWN")
-          setOffsetX(prev => Math.min(prev + 2000, ((clip()?.buffer.length || Number.MAX_VALUE) - FFT_SIZE)))
+          setOffsetX(prev => Math.min(prev + 100, ((clip()?.buffer.length || Number.MAX_VALUE) - FFT_SIZE)))
         } else {
           // console.log("UP")
-          setOffsetX(prev => Math.max(prev - 2000, 0))
+          setOffsetX(prev => Math.max(prev - 100, 0))
         }
       }}
-      onClick={console.log}
+      onPointerDown={e => {
+        setDragging(true)
+        setDragStart(e.clientX)
+      }}
+      onPointerLeave={() => {
+        setDragging(false)
+        setDragStart(-1)
+      }}
+      onPointerUp={() => {
+        setDragging(false)
+        setDragStart(-1)
+      }}
+      onPointerMove={e => {
+        if (dragging()) {
+          const deltaX = e.clientX - dragStart()
+          setDragStart(e.clientX)
+          setOffsetX(prev => prev - deltaX * 10)
+          console.log("dragging")
+        }
+      }}
     >
       <path id="blah" d="M 0 0 H 1000"></path>
       <path d={
         pathOfFloat32Array(
           clip()?.buffer.getChannelData(0).slice(
-            offsetX(), offsetX() + 60000
+            offsetX(), offsetX() + 7000
           )
           || new Float32Array()
-        )}></path>
+        )}
+      ></path>
+
     </svg>
   </Show>
 
