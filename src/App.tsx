@@ -1,15 +1,33 @@
 import { AudioInput } from "./AudioInput";
 import { clip, setClip } from "./signals";
-import { createEffect, createSignal, Show } from "solid-js"
-import { FFT_SIZE } from "./FFT_SIZE";
+import { createSignal, Show } from "solid-js"
 
-const [offsetX, setOffsetX] = createSignal(0)
-
-createEffect(() => console.log(offsetX))
-
-
+const [offsetSamples, setOffsetSamples] = createSignal(0)
 const [dragging, setDragging] = createSignal(false)
 const [dragStart, setDragStart] = createSignal(-1)
+
+const WINDOW_SAMPLES = 7000;
+
+const startDrag = (e: PointerEvent) => {
+  setDragging(true)
+  setDragStart(e.clientX)
+}
+
+const stopDrag = () => {
+  setDragging(false)
+  setDragStart(-1)
+}
+
+const drag = (e: PointerEvent) => {
+  if (!dragging()) return; 
+  const deltaX = e.clientX - dragStart()
+  const min = 0;
+  const max = (clip()?.buffer.length || 0) - WINDOW_SAMPLES;
+  const target = offsetSamples() - deltaX * 10;
+  const nextOffset = Math.min(Math.max(target, min), max);
+  setOffsetSamples(nextOffset);
+  setDragStart(e.clientX)
+}
 
 export const App = () =>
   <Show
@@ -23,55 +41,27 @@ export const App = () =>
       ((clip()?.buffer.length || 0) /
         (clip()?.buffer.sampleRate || 1)).toFixed(2)
     } seconds</p>
+    <p>{offsetSamples} sample start</p>
+    <p>{clip()?.buffer.length} samples</p>
     <svg
-      viewBox={`0 -5 ${FFT_SIZE} 10`}
-      onwheel={(e) => {
-        e.preventDefault();
-        // @ts-ignore
-        if (e.wheelDelta < 0) {
-          // console.log("DOWN")
-          setOffsetX(prev => Math.min(prev + 100, ((clip()?.buffer.length || Number.MAX_VALUE) - FFT_SIZE)))
-        } else {
-          // console.log("UP")
-          setOffsetX(prev => Math.max(prev - 100, 0))
-        }
-      }}
-      onPointerDown={e => {
-        setDragging(true)
-        setDragStart(e.clientX)
-      }}
-      onPointerLeave={() => {
-        setDragging(false)
-        setDragStart(-1)
-      }}
-      onPointerUp={() => {
-        setDragging(false)
-        setDragStart(-1)
-      }}
-      onPointerMove={e => {
-        if (dragging()) {
-          const deltaX = e.clientX - dragStart()
-          setDragStart(e.clientX)
-          setOffsetX(prev => prev - deltaX * 10)
-          console.log("dragging")
-        }
-      }}
+      viewBox={`0 -5 ${64} 10`}
+      onPointerDown={startDrag}
+      onPointerLeave={stopDrag}
+      onPointerUp={stopDrag}
+      onPointerMove={drag}
     >
       <path id="blah" d="M 0 0 H 1000"></path>
       <path d={
         pathOfFloat32Array(
           clip()?.buffer.getChannelData(0).slice(
-            offsetX(), offsetX() + 7000
+            // FIXME: MAGIC NUMBER
+            offsetSamples(), offsetSamples() + WINDOW_SAMPLES
           )
           || new Float32Array()
         )}
       ></path>
-
     </svg>
   </Show>
-
-
-
 
 
 type Point = { x: number; y: number };
@@ -86,10 +76,32 @@ export const pathOfFloat32Array = (floats: Float32Array): string => {
       lineTo(
         path,
         {
-          x: (index + 1) / 100,
+          x: index / 100,
           y: float * 5,
         },
       ),
     move("", { x: 0, y: first }),
   );
 };
+
+// ======== TODO: keyboard controls ========
+
+// key: 'ArrowUp'
+// key: 'ArrowLeft'
+// shuttle back
+
+// key: 'ArrowDown'
+// key: 'ArrowRight'
+// shuttle forward
+
+// key: 'PageUp'
+// shuttle back more
+
+// key: 'PageDown'
+// shuttle forward more
+
+// key: 'End'
+// go to end
+
+// key: 'Home'
+// go to beginning
