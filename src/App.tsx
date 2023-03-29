@@ -1,6 +1,7 @@
 import { AudioInput } from "./AudioInput";
 import { clip, setClip } from "./signals";
-import { onMount, Show } from "solid-js"
+import { onMount, Show, For } from "solid-js"
+const CHUNK_SIZE = 100;
 
 export const App = () =>
   <Show
@@ -15,15 +16,30 @@ export const App = () =>
         (clip()?.buffer.sampleRate || 1)).toFixed(2)
     } seconds</p>
     <p>{clip()?.buffer.length} samples</p>
-    <Wave></Wave>
+    <div class="wave">
+      <For each={divisions()}>{
+        (start) => <Wave start={start} width={CHUNK_SIZE}></Wave>
+      }</For>
+    </div>
   </Show>
 
-const Wave = () => {
+const divisions = () => {
+  const buffer = clip()?.buffer;
+  const output: number[]=  [];
+  if (!buffer) return output;
+
+  for (let i = 0; i < buffer.length; i += CHUNK_SIZE) {
+    output.push(i)
+  }
+
+  return output
+}
+
+const Wave = (props: {start: number, width: number}) => {
   let canvas: HTMLCanvasElement | undefined;
   
   onMount(() => {{
     if (!canvas) return;
-    canvas.width = canvas.offsetWidth; // TODO: remove
     const clip_ = clip();
     if (!clip_) return;
     const context = canvas.getContext("2d");
@@ -47,14 +63,15 @@ const Wave = () => {
     context.strokeStyle = "black"
     context.lineWidth = 2
     const samples = clip_.buffer.getChannelData(0);
-    context.moveTo(0, samples[0] * canvas.height / 2)
-    for (let i = 0; i < canvas.width; i++) {
-      context.lineTo(i, samples[i] * canvas.height / 2)
+    const overlap = 5;
+    // context.moveTo(0, samples[0] * canvas.height / 2)
+    for (let i = -overlap; i < props.width + overlap; i++) {
+      context.lineTo(i, samples[props.start + i] * canvas.height / 2)
     }
     context.stroke();
     context.closePath();
   }})
 
 
-  return <canvas ref={canvas}></canvas>
+  return <canvas ref={canvas} width={props.width}></canvas>
 }
