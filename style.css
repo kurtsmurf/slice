@@ -11,3 +11,7 @@ path {
   stroke-linejoin: round;
   fill: none;
 }
+canvas {
+  width: 100%;
+  outline: 1px solid;
+}

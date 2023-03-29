@@ -1,33 +1,6 @@
 import { AudioInput } from "./AudioInput";
 import { clip, setClip } from "./signals";
-import { createSignal, Show } from "solid-js"
-
-const [offsetSamples, setOffsetSamples] = createSignal(0)
-const [dragging, setDragging] = createSignal(false)
-const [dragStart, setDragStart] = createSignal(-1)
-
-const WINDOW_SAMPLES = 7000;
-
-const startDrag = (e: PointerEvent) => {
-  setDragging(true)
-  setDragStart(e.clientX)
-}
-
-const stopDrag = () => {
-  setDragging(false)
-  setDragStart(-1)
-}
-
-const drag = (e: PointerEvent) => {
-  if (!dragging()) return; 
-  const deltaX = e.clientX - dragStart()
-  const min = 0;
-  const max = (clip()?.buffer.length || 0) - WINDOW_SAMPLES;
-  const target = offsetSamples() - deltaX * 10;
-  const nextOffset = Math.min(Math.max(target, min), max);
-  setOffsetSamples(nextOffset);
-  setDragStart(e.clientX)
-}
+import { onMount, Show } from "solid-js"
 
 export const App = () =>
   <Show
@@ -41,67 +14,47 @@ export const App = () =>
       ((clip()?.buffer.length || 0) /
         (clip()?.buffer.sampleRate || 1)).toFixed(2)
     } seconds</p>
-    <p>{offsetSamples} sample start</p>
     <p>{clip()?.buffer.length} samples</p>
-    <svg
-      viewBox={`0 -5 ${64} 10`}
-      onPointerDown={startDrag}
-      onPointerLeave={stopDrag}
-      onPointerUp={stopDrag}
-      onPointerMove={drag}
-    >
-      <path id="blah" d="M 0 0 H 1000"></path>
-      <path d={
-        pathOfFloat32Array(
-          clip()?.buffer.getChannelData(0).slice(
-            // FIXME: MAGIC NUMBER
-            offsetSamples(), offsetSamples() + WINDOW_SAMPLES
-          )
-          || new Float32Array()
-        )}
-      ></path>
-    </svg>
+    <Wave></Wave>
   </Show>
 
+const Wave = () => {
+  let canvas: HTMLCanvasElement | undefined;
+  
+  onMount(() => {{
+    if (!canvas) return;
+    canvas.width = canvas.offsetWidth; // TODO: remove
+    const clip_ = clip();
+    if (!clip_) return;
+    const context = canvas.getContext("2d");
+    if (!context) return;
 
-type Point = { x: number; y: number };
+    // shift origin
+    context.translate(0, canvas.height / 2)
+ 
+    // draw baseline
+    context.beginPath();
+    context.lineWidth = 1;
+    context.setLineDash([2])
+    context.moveTo(0,0)
+    context.lineTo(canvas.width, 0)
+    context.stroke();
+    context.closePath()
 
-const move = (path: string, { x, y }: Point) => `${path} M ${x}, ${y} `;
-const lineTo = (path: string, { x, y }: Point) => `${path} L ${x}, ${y} `;
+    // draw waveform
+    context.beginPath();
+    context.setLineDash([])
+    context.strokeStyle = "black"
+    context.lineWidth = 2
+    const samples = clip_.buffer.getChannelData(0);
+    context.moveTo(0, samples[0] * canvas.height / 2)
+    for (let i = 0; i < canvas.width; i++) {
+      context.lineTo(i, samples[i] * canvas.height / 2)
+    }
+    context.stroke();
+    context.closePath();
+  }})
 
-export const pathOfFloat32Array = (floats: Float32Array): string => {
-  const [first, ...rest] = floats;
-  return rest.reduce(
-    (path, float, index) =>
-      lineTo(
-        path,
-        {
-          x: index / 100,
-          y: float * 5,
-        },
-      ),
-    move("", { x: 0, y: first }),
-  );
-};
 
-// ======== TODO: keyboard controls ========
-
-// key: 'ArrowUp'
-// key: 'ArrowLeft'
-// shuttle back
-
-// key: 'ArrowDown'
-// key: 'ArrowRight'
-// shuttle forward
-
-// key: 'PageUp'
-// shuttle back more
-
-// key: 'PageDown'
-// shuttle forward more
-
-// key: 'End'
-// go to end
-
-// key: 'Home'
-// go to beginning
+  return <canvas ref={canvas}></canvas>
+}
