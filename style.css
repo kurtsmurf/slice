@@ -11,7 +11,3 @@ path {
   stroke-linejoin: round;
   fill: none;
 }
-.wave {
-  display: flex;
-  overflow: auto;
-}

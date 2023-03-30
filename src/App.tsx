@@ -8,6 +8,11 @@ export const App = () =>
     when={clip()}
     fallback={<AudioInput onChange={setClip} />}
   >
+    <Details />
+    <Waveform />
+  </Show>
+
+const Details = () => <>
     <button onClick={() => setClip(undefined)}>clear</button>
     <p>{clip()?.name}</p>
     <p>{clip()?.buffer.numberOfChannels} channels</p>
@@ -16,24 +21,19 @@ export const App = () =>
         (clip()?.buffer.sampleRate || 1)).toFixed(2)
     } seconds</p>
     <p>{clip()?.buffer.length} samples</p>
-    <div class="wave">
-      <For each={divisions()}>{
+</>
+
+const Waveform = () =>
+  <div style="overflow: auto;">
+    <div style={`width: ${clip()?.buffer.length}px; display: flex; overflow: hidden;`}>
+      <For each={range(0, clip()?.buffer.length || 0, CHUNK_SIZE)}>{
         (start) => <Wave start={start} width={CHUNK_SIZE}></Wave>
       }</For>
     </div>
-  </Show>
+  </div>
 
-const divisions = () => {
-  const buffer = clip()?.buffer;
-  const output: number[]=  [];
-  if (!buffer) return output;
-
-  for (let i = 0; i < buffer.length; i += CHUNK_SIZE) {
-    output.push(i)
-  }
-
-  return output
-}
+const range = (start:number, end:number, step:number) =>
+  [...new Array(Math.ceil((end - start) / step))].map((_, i) => i * step)
 
 const Wave = (props: {start: number, width: number}) => {
   let canvas: HTMLCanvasElement | undefined;
