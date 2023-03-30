@@ -1,11 +1,12 @@
 import { AudioInput } from "./AudioInput";
 import { Clip } from "./types";
-import { createSignal, For, onMount, Show } from "solid-js";
+import { createEffect, createSignal, For, onMount, Show } from "solid-js";
 
 const CHUNK_SIZE = 100;
 
 export const App = () => {
   const [clip, setClip] = createSignal<Clip | undefined>();
+
   return (
     <Show
       when={clip()}
@@ -32,27 +33,37 @@ const Details = (props: { clip: Clip }) => (
 
 const Waveform = (props: { clip: Clip }) => (
   <div style={{ overflow: "auto" }}>
-    <div
-      style={{
-        width: `${props.clip.buffer.length}px`,
-        display: "flex",
-        overflow: "hidden",
-      }}
-    >
-      <For each={range(0, props.clip.buffer.length, CHUNK_SIZE)}>
-        {(start) => (
-          <WaveformTile clip={props.clip} start={start} length={CHUNK_SIZE}>
-          </WaveformTile>
-        )}
-      </For>
-    </div>
+    <For each={range(0, props.clip.buffer.numberOfChannels)}>
+      {(channelNumber) => (
+        <WaveformChannel channelData={props.clip.buffer.getChannelData(channelNumber)} />
+      )}
+    </For>
   </div>
 );
 
-const range = (start: number, end: number, step: number) =>
-  [...new Array(Math.ceil((end - start) / step))].map((_, i) => i * step);
+const WaveformChannel = (props: { channelData: Float32Array }) => (
+  <div
+    style={{
+      width: `${props.channelData.length}px`,
+      display: "flex",
+      overflow: "hidden",
+    }}
+  >
+    <For each={range(0, props.channelData.length, CHUNK_SIZE)}>
+      {(start) => (
+        <WaveformTile
+          channelData={props.channelData}
+          start={start}
+          length={CHUNK_SIZE}
+        />
+      )}
+    </For>
+  </div>
+);
 
-const WaveformTile = (props: { start: number; length: number; clip: Clip }) => {
+const WaveformTile = (
+  props: { start: number; length: number; channelData: Float32Array },
+) => {
   let canvas: HTMLCanvasElement | undefined;
 
   onMount(() => {
@@ -76,10 +87,9 @@ const WaveformTile = (props: { start: number; length: number; clip: Clip }) => {
     context.beginPath();
     context.setLineDash([]);
     context.lineWidth = 2;
-    const samples = props.clip.buffer.getChannelData(0);
     const overlap = 5;
     for (let i = -overlap; i < props.length + overlap; i++) {
-      context.lineTo(i, samples[props.start + i] * canvas.height / 2);
+      context.lineTo(i, props.channelData[props.start + i] * canvas.height / 2);
     }
     context.stroke();
     context.closePath();
@@ -87,3 +97,8 @@ const WaveformTile = (props: { start: number; length: number; clip: Clip }) => {
 
   return <canvas ref={canvas} width={props.length}></canvas>;
 };
+
+// util
+
+const range = (start: number, end: number, step = 1) =>
+  [...new Array(Math.ceil((end - start) / step))].map((_, i) => i * step);
