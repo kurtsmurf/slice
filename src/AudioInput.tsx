@@ -1,5 +1,5 @@
 import { audioContext } from "./audioContext";
-import { Clip } from "./signals";
+import { Clip } from "./types";
 
 type Props = { onChange: (clip: Clip) => void };
 
@@ -26,7 +26,7 @@ export const AudioInput = (props: Props) => {
         accept=".mp3, .wav, .m4a"
         onChange={(e) => {
           const [file] = [...(e.currentTarget.files || [])];
-          clipOfFile(file).then(props.onChange)
+          clipOfFile(file).then(props.onChange);
         }}
       />
     </label>
