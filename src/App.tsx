@@ -2,7 +2,7 @@ import { AudioInput } from "./AudioInput";
 import { Clip } from "./types";
 import { createEffect, createSignal, For, onMount, Show } from "solid-js";
 
-const CHUNK_SIZE = 100;
+const CHUNK_SIZE = 400;
 
 export const App = () => {
   const [clip, setClip] = createSignal<Clip | undefined>();
@@ -33,35 +33,43 @@ const Details = (props: { clip: Clip }) => (
 
 const Waveform = (props: { clip: Clip }) => (
   <div style={{ overflow: "auto" }}>
-    <For each={range(0, props.clip.buffer.numberOfChannels)}>
-      {(channelNumber) => (
-        <WaveformChannel channelData={props.clip.buffer.getChannelData(channelNumber)} />
-      )}
-    </For>
+    <div
+      style={{
+        width: `${props.clip.buffer.length}px`,
+        display: "flex",
+        overflow: "hidden",
+      }}
+    >
+      <For each={range(0, props.clip.buffer.length, CHUNK_SIZE)}>
+        {(start) => (
+          <WaveformTile
+            clip={props.clip}
+            start={start}
+            length={CHUNK_SIZE}
+          />
+        )}
+      </For>
+    </div>
   </div>
 );
 
-const WaveformChannel = (props: { channelData: Float32Array }) => (
-  <div
-    style={{
-      width: `${props.channelData.length}px`,
-      display: "flex",
-      overflow: "hidden",
-    }}
-  >
-    <For each={range(0, props.channelData.length, CHUNK_SIZE)}>
-      {(start) => (
-        <WaveformTile
-          channelData={props.channelData}
-          start={start}
-          length={CHUNK_SIZE}
+const WaveformTile = (
+  props: { start: number; length: number; clip: Clip },
+) => (
+  <div>
+    <For each={range(0, props.clip.buffer.numberOfChannels)}>
+      {(channelNumber) => (
+        <Segment
+          start={props.start}
+          length={props.length}
+          channelData={props.clip.buffer.getChannelData(channelNumber)}
         />
       )}
     </For>
   </div>
 );
 
-const WaveformTile = (
+const Segment = (
   props: { start: number; length: number; channelData: Float32Array },
 ) => {
   let canvas: HTMLCanvasElement | undefined;
