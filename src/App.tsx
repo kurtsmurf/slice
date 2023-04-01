@@ -1,8 +1,10 @@
 import { AudioInput } from "./AudioInput";
 import { Clip } from "./types";
-import { createEffect, createSignal, For, onMount, Show } from "solid-js";
+import { createSignal, For, onMount, Show } from "solid-js";
+import { createVirtualizer } from "@tanstack/solid-virtual";
 
-const CHUNK_SIZE = 400;
+const CANVAS_WIDTH = 400;
+const CANVAS_HEIGHT = 100;
 
 export const App = () => {
   const [clip, setClip] = createSignal<Clip | undefined>();
@@ -31,35 +33,58 @@ const Details = (props: { clip: Clip }) => (
   </>
 );
 
-const Waveform = (props: { clip: Clip }) => (
-  <div style={{ overflow: "auto" }}>
-    <div
-      style={{
-        width: `${props.clip.buffer.length}px`,
-        display: "flex",
-        overflow: "hidden",
-      }}
-    >
-      <For each={range(0, props.clip.buffer.length, CHUNK_SIZE)}>
-        {(start) => (
-          <WaveformTile
-            clip={props.clip}
-            start={start}
-            length={CHUNK_SIZE}
-          />
-        )}
-      </For>
+const Waveform = (props: { clip: Clip }) => {
+  let root: HTMLDivElement | undefined;
+
+  const tileManager = createVirtualizer({
+    count: range(0, props.clip.buffer.length, CANVAS_WIDTH).length,
+    getScrollElement: () => root,
+    estimateSize: () => CANVAS_WIDTH,
+    horizontal: true,
+  });
+
+  return (
+    <div ref={root} style={{ overflow: "auto" }}>
+      <div
+        style={{
+          width: `${props.clip.buffer.length}px`,
+          display: "flex",
+          position: "relative",
+          "overflow": "hidden",
+          height: props.clip.buffer.numberOfChannels * CANVAS_HEIGHT + "px",
+        }}
+      >
+        <For each={tileManager.getVirtualItems()}>
+          {(virtualItem) => (
+            <WaveformTile
+              clip={props.clip}
+              start={virtualItem.start}
+              length={CANVAS_WIDTH}
+            />
+          )}
+        </For>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const WaveformTile = (
   props: { start: number; length: number; clip: Clip },
 ) => (
-  <div>
+  <div
+    style={{
+      display: "flex",
+      "flex-direction": "column",
+      position: "absolute",
+      top: 0,
+      left: 0,
+      transform: `translateX(${props.start}px)`,
+      width: CANVAS_WIDTH + "px",
+    }}
+  >
     <For each={range(0, props.clip.buffer.numberOfChannels)}>
       {(channelNumber) => (
-        <Segment
+        <ChannelSegment
           start={props.start}
           length={props.length}
           channelData={props.clip.buffer.getChannelData(channelNumber)}
@@ -69,7 +94,7 @@ const WaveformTile = (
   </div>
 );
 
-const Segment = (
+const ChannelSegment = (
   props: { start: number; length: number; channelData: Float32Array },
 ) => {
   let canvas: HTMLCanvasElement | undefined;
@@ -103,7 +128,9 @@ const Segment = (
     context.closePath();
   });
 
-  return <canvas ref={canvas} width={props.length}></canvas>;
+  return (
+    <canvas ref={canvas} width={CANVAS_WIDTH} height={CANVAS_HEIGHT}></canvas>
+  );
 };
 
 // util
