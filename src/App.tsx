@@ -6,6 +6,8 @@ import { createVirtualizer } from "@tanstack/solid-virtual";
 const CANVAS_WIDTH = 400;
 const CANVAS_HEIGHT = 100;
 
+const SAMPLES_PER_PX = 1;
+
 export const App = () => {
   const [clip, setClip] = createSignal<Clip | undefined>();
 
@@ -37,7 +39,7 @@ const Waveform = (props: { clip: Clip }) => {
   let root: HTMLDivElement | undefined;
 
   const tileManager = createVirtualizer({
-    count: range(0, props.clip.buffer.length, CANVAS_WIDTH).length,
+    count: range(0, props.clip.buffer.length / SAMPLES_PER_PX, CANVAS_WIDTH).length,
     getScrollElement: () => root,
     estimateSize: () => CANVAS_WIDTH,
     horizontal: true,
@@ -47,7 +49,7 @@ const Waveform = (props: { clip: Clip }) => {
     <div ref={root} style={{ overflow: "auto" }}>
       <div
         style={{
-          width: `${props.clip.buffer.length}px`,
+          width: `${props.clip.buffer.length / SAMPLES_PER_PX}px`,
           display: "flex",
           position: "relative",
           "overflow": "hidden",
@@ -85,8 +87,8 @@ const WaveformTile = (
     <For each={range(0, props.clip.buffer.numberOfChannels)}>
       {(channelNumber) => (
         <ChannelSegment
-          start={props.start}
-          length={props.length}
+          start={props.start * SAMPLES_PER_PX}
+          length={props.length * SAMPLES_PER_PX}
           channelData={props.clip.buffer.getChannelData(channelNumber)}
         />
       )}
@@ -122,7 +124,7 @@ const ChannelSegment = (
     context.lineWidth = 2;
     const overlap = 5;
     for (let i = -overlap; i < props.length + overlap; i++) {
-      context.lineTo(i, props.channelData[props.start + i] * canvas.height / 2);
+      context.lineTo(i / SAMPLES_PER_PX, props.channelData[props.start + i] * canvas.height / 2);
     }
     context.stroke();
     context.closePath();
