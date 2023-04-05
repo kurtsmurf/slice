@@ -5,7 +5,7 @@ import { createVirtualizer } from "@tanstack/solid-virtual";
 
 const CANVAS_WIDTH = 400;
 const CANVAS_HEIGHT = 100;
-const SAMPLES_PER_PX = 3;
+const SAMPLES_PER_PX = 100;
 
 export const App = () => {
   const [clip, setClip] = createSignal<Clip | undefined>();
@@ -138,19 +138,21 @@ const drawBars = (canvas: HTMLCanvasElement, channelData: Float32Array, start: n
 
   // draw waveform
   let bucket: number[] = [];
+  context.lineWidth = 1.5;
+
   for (let i = 0; i < length; i++) {
     bucket.push(channelData[i + start])
     if (bucket.length === SAMPLES_PER_PX) {
       const min = Math.min(...bucket) * (canvas.height / 2)
       const max = Math.max(...bucket) * (canvas.height / 2)
       bucket = [];
-      // draw rectangle
-      context.fillRect(
-        i / SAMPLES_PER_PX,
-        max,
-        2,
-        min,
-      )
+      // draw line from window min to window max
+      // along the y axis
+      // at x = i
+      context.beginPath()
+      context.moveTo(i / SAMPLES_PER_PX, max + 1)
+      context.lineTo(i / SAMPLES_PER_PX, min - 1)
+      context.stroke();
     }
   }
 }
