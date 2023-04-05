@@ -103,31 +103,11 @@ const ChannelSegment = (
 
   onMount(() => {
     if (!canvas) return;
-    const context = canvas.getContext("2d");
-    if (!context) return;
-
-    // shift origin
-    context.translate(0, canvas.height / 2);
-
-    // draw baseline
-    context.beginPath();
-    context.lineWidth = 1;
-    context.setLineDash([2]);
-    context.moveTo(0, 0);
-    context.lineTo(canvas.width, 0);
-    context.stroke();
-    context.closePath();
-
-    // draw waveform
-    context.beginPath();
-    context.setLineDash([]);
-    context.lineWidth = 2;
-    const overlap = 5;
-    for (let i = -overlap; i < props.length + overlap; i++) {
-      context.lineTo(i / SAMPLES_PER_PX, props.channelData[props.start + i] * canvas.height / 2);
+    if (SAMPLES_PER_PX <= 1) {
+      drawPath(canvas, props.channelData, props.start, props.length);
+    } else {
+      drawBars(canvas, props.channelData, props.start, props.length);
     }
-    context.stroke();
-    context.closePath();
   });
 
   return (
@@ -139,3 +119,67 @@ const ChannelSegment = (
 
 const range = (start: number, end: number, step = 1) =>
   [...new Array(Math.ceil((end - start) / step))].map((_, i) => i * step);
+
+const drawBars = (canvas: HTMLCanvasElement, channelData: Float32Array, start: number, length: number) => {
+  const context = canvas.getContext("2d");
+  if (!context) return;
+
+  // shift origin
+  context.translate(0, canvas.height / 2);
+
+  // draw baseline
+  context.beginPath();
+  context.lineWidth = 1;
+  context.setLineDash([2]);
+  context.moveTo(0, 0);
+  context.lineTo(canvas.width, 0);
+  context.stroke();
+  context.setLineDash([]);
+  context.closePath();
+  
+  // draw waveform
+  let bucket: number[] = [];
+  for (let i = 0; i < length; i++) {
+    bucket.push(channelData[i])
+    if (bucket.length === SAMPLES_PER_PX) {
+      const min = Math.min(...bucket) * (canvas.height / 2)
+      const max = Math.max(...bucket) * (canvas.height / 2)
+      bucket = [];
+      // draw rectangle
+      context.fillRect(
+        i,
+        max,
+        2,
+        min,
+      )
+    }
+  }
+}
+
+const drawPath = (canvas: HTMLCanvasElement, channelData: Float32Array, start: number, length: number) => {
+      const context = canvas.getContext("2d");
+      if (!context) return;
+
+      // shift origin
+      context.translate(0, canvas.height / 2);
+
+      // draw baseline
+      context.beginPath();
+      context.lineWidth = 1;
+      context.setLineDash([2]);
+      context.moveTo(0, 0);
+      context.lineTo(canvas.width, 0);
+      context.stroke();
+      context.setLineDash([]);
+      context.closePath();
+  
+      // draw waveform
+      context.beginPath();
+      context.lineWidth = 2;
+      const overlap = 5;
+      for (let i = -overlap; i < length + overlap; i++) {
+        context.lineTo(i / SAMPLES_PER_PX, channelData[start + i] * canvas.height / 2);
+      }
+      context.stroke();
+      context.closePath();
+}
