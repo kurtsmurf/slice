@@ -5,8 +5,7 @@ import { createVirtualizer } from "@tanstack/solid-virtual";
 
 const CANVAS_WIDTH = 400;
 const CANVAS_HEIGHT = 100;
-
-const SAMPLES_PER_PX = 1;
+const SAMPLES_PER_PX = 3;
 
 export const App = () => {
   const [clip, setClip] = createSignal<Clip | undefined>();
@@ -136,18 +135,18 @@ const drawBars = (canvas: HTMLCanvasElement, channelData: Float32Array, start: n
   context.stroke();
   context.setLineDash([]);
   context.closePath();
-  
+
   // draw waveform
   let bucket: number[] = [];
   for (let i = 0; i < length; i++) {
-    bucket.push(channelData[i])
+    bucket.push(channelData[i + start])
     if (bucket.length === SAMPLES_PER_PX) {
       const min = Math.min(...bucket) * (canvas.height / 2)
       const max = Math.max(...bucket) * (canvas.height / 2)
       bucket = [];
       // draw rectangle
       context.fillRect(
-        i,
+        i / SAMPLES_PER_PX,
         max,
         2,
         min,
@@ -157,29 +156,29 @@ const drawBars = (canvas: HTMLCanvasElement, channelData: Float32Array, start: n
 }
 
 const drawPath = (canvas: HTMLCanvasElement, channelData: Float32Array, start: number, length: number) => {
-      const context = canvas.getContext("2d");
-      if (!context) return;
+  const context = canvas.getContext("2d");
+  if (!context) return;
 
-      // shift origin
-      context.translate(0, canvas.height / 2);
+  // shift origin
+  context.translate(0, canvas.height / 2);
 
-      // draw baseline
-      context.beginPath();
-      context.lineWidth = 1;
-      context.setLineDash([2]);
-      context.moveTo(0, 0);
-      context.lineTo(canvas.width, 0);
-      context.stroke();
-      context.setLineDash([]);
-      context.closePath();
-  
-      // draw waveform
-      context.beginPath();
-      context.lineWidth = 2;
-      const overlap = 5;
-      for (let i = -overlap; i < length + overlap; i++) {
-        context.lineTo(i / SAMPLES_PER_PX, channelData[start + i] * canvas.height / 2);
-      }
-      context.stroke();
-      context.closePath();
+  // draw baseline
+  context.beginPath();
+  context.lineWidth = 1;
+  context.setLineDash([2]);
+  context.moveTo(0, 0);
+  context.lineTo(canvas.width, 0);
+  context.stroke();
+  context.setLineDash([]);
+  context.closePath();
+
+  // draw waveform
+  context.beginPath();
+  context.lineWidth = 2;
+  const overlap = 5;
+  for (let i = -overlap; i < length + overlap; i++) {
+    context.lineTo(i / SAMPLES_PER_PX, channelData[start + i] * canvas.height / 2);
+  }
+  context.stroke();
+  context.closePath();
 }
