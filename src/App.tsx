@@ -1,12 +1,37 @@
 import { AudioInput } from "./AudioInput";
 import { Clip } from "./types";
-import { createSignal, For, onMount, Show } from "solid-js";
+import { createEffect, createSignal, For, Show } from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
 
 const CANVAS_WIDTH = 400;
 const CANVAS_HEIGHT = 100;
-// todo: make dynamic with min 1 max 1000, integers only
-const SAMPLES_PER_PX = 20;
+// samples per pixel
+const [spx, setSpx] = createSignal(1);
+let root: HTMLDivElement | undefined;
+
+// TODO: consolidate zoom functions
+const zoomIn = () => {
+  const currentSpx = spx();
+  const nextSpx = Math.max(1, currentSpx / 2);
+  if (currentSpx === nextSpx) return;
+  setSpx(nextSpx);
+
+  const currentScrollLeft = root?.scrollLeft || 0;
+  const nextScrollLeft = currentScrollLeft * 2;
+  if (root) root.scrollLeft = nextScrollLeft;
+  console.log(currentScrollLeft, nextScrollLeft, currentSpx, nextSpx);
+};
+const zoomOut = () => {
+  const currentSpx = spx();
+  const nextSpx = Math.min(512, currentSpx * 2);
+  if (currentSpx === nextSpx) return;
+  setSpx(nextSpx);
+
+  const currentScrollLeft = root?.scrollLeft || 0;
+  const nextScrollLeft = currentScrollLeft / 2;
+  if (root) root.scrollLeft = nextScrollLeft;
+  console.log(currentScrollLeft, nextScrollLeft, currentSpx, nextSpx);
+};
 
 export const App = () => {
   const [clip, setClip] = createSignal<Clip | undefined>();
@@ -17,6 +42,8 @@ export const App = () => {
       fallback={<AudioInput onChange={setClip} />}
     >
       <button onClick={() => setClip(undefined)}>clear</button>
+      <button onClick={zoomOut}>ZOOM OUT</button>
+      <button onClick={zoomIn}>ZOOM IN</button>
       <Details clip={clip()!} />
       <Waveform clip={clip()!} />
     </Show>
@@ -32,15 +59,13 @@ const Details = (props: { clip: Clip }) => (
         (props.clip.buffer.sampleRate || 1)).toFixed(2)} seconds
     </p>
     <p>{props.clip.buffer.length} samples</p>
+    <p>{spx()} samples per pixel</p>
   </>
 );
 
 const Waveform = (props: { clip: Clip }) => {
-  let root: HTMLDivElement | undefined;
-
   const tileManager = createVirtualizer({
-    count:
-      range(0, props.clip.buffer.length / SAMPLES_PER_PX, CANVAS_WIDTH).length,
+    count: range(0, props.clip.buffer.length / spx(), CANVAS_WIDTH).length,
     getScrollElement: () => root,
     estimateSize: () => CANVAS_WIDTH,
     horizontal: true,
@@ -50,7 +75,7 @@ const Waveform = (props: { clip: Clip }) => {
     <div ref={root} style={{ overflow: "auto" }}>
       <div
         style={{
-          width: `${props.clip.buffer.length / SAMPLES_PER_PX}px`,
+          width: `${props.clip.buffer.length / spx()}px`,
           display: "flex",
           position: "relative",
           "overflow": "hidden",
@@ -88,8 +113,8 @@ const WaveformTile = (
     <For each={range(0, props.clip.buffer.numberOfChannels)}>
       {(channelNumber) => (
         <ChannelSegment
-          start={props.start * SAMPLES_PER_PX}
-          length={props.length * SAMPLES_PER_PX}
+          start={props.start * spx()}
+          length={props.length * spx()}
           channelData={props.clip.buffer.getChannelData(channelNumber)}
         />
       )}
@@ -102,8 +127,9 @@ const ChannelSegment = (
 ) => {
   let canvas: HTMLCanvasElement | undefined;
 
-  onMount(() => {
+  createEffect(() => {
     if (!canvas) return;
+    // TODO: drawBars async
     drawBars(canvas, props.channelData, props.start, props.length);
   });
 
@@ -126,26 +152,31 @@ const drawBars = (
   const context = canvas.getContext("2d");
   if (!context) return;
   const LINE_WIDTH = 2;
+  context.lineWidth = LINE_WIDTH;
+
+  context.clearRect(0, 0, canvas.width, canvas.height);
 
   // shift origin
   context.translate(0, canvas.height / 2);
-  context.lineWidth = LINE_WIDTH;
 
   // draw waveform
   let bucket: number[] = [];
   for (let i = 0; i < length; i++) {
     bucket.push(channelData[i + start]);
-    if (bucket.length === SAMPLES_PER_PX) {
+    if (bucket.length === spx()) {
       const min = Math.min(...bucket) * (canvas.height / 2);
       const max = Math.max(...bucket) * (canvas.height / 2);
       bucket = [];
-      // draw line from window min to window max
+      // draw line from bucket min to bucket max
       // along the y axis
       // at x = i
       context.beginPath();
-      context.moveTo(i / SAMPLES_PER_PX, max + LINE_WIDTH / 2);
-      context.lineTo(i / SAMPLES_PER_PX, min - LINE_WIDTH / 2);
+      context.moveTo(i / spx(), max + LINE_WIDTH / 2);
+      context.lineTo(i / spx(), min - LINE_WIDTH / 2);
       context.stroke();
     }
   }
+
+  // shift origin back
+  context.translate(0, -canvas.height / 2);
 };
