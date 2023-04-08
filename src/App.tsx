@@ -19,7 +19,6 @@ const zoomIn = () => {
   const currentScrollLeft = root?.scrollLeft || 0;
   const nextScrollLeft = currentScrollLeft * 2;
   if (root) root.scrollLeft = nextScrollLeft;
-  console.log(currentScrollLeft, nextScrollLeft, currentSpx, nextSpx);
 };
 const zoomOut = () => {
   const currentSpx = spx();
@@ -30,7 +29,6 @@ const zoomOut = () => {
   const currentScrollLeft = root?.scrollLeft || 0;
   const nextScrollLeft = currentScrollLeft / 2;
   if (root) root.scrollLeft = nextScrollLeft;
-  console.log(currentScrollLeft, nextScrollLeft, currentSpx, nextSpx);
 };
 
 export const App = () => {
@@ -128,9 +126,10 @@ const ChannelSegment = (
   let canvas: HTMLCanvasElement | undefined;
 
   createEffect(() => {
-    if (!canvas) return;
+    const context = canvas?.getContext("2d");
+    if (!context) return;
     // TODO: drawBars async
-    drawBars(canvas, props.channelData, props.start, props.length);
+    drawBars(context, props.channelData, props.start, props.length);
   });
 
   return (
@@ -144,28 +143,26 @@ const range = (start: number, end: number, step = 1) =>
   [...new Array(Math.ceil((end - start) / step))].map((_, i) => i * step);
 
 const drawBars = (
-  canvas: HTMLCanvasElement,
+  context: CanvasRenderingContext2D,
   channelData: Float32Array,
   start: number,
   length: number,
 ) => {
-  const context = canvas.getContext("2d");
-  if (!context) return;
   const LINE_WIDTH = 2;
   context.lineWidth = LINE_WIDTH;
 
-  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
   // shift origin
-  context.translate(0, canvas.height / 2);
+  context.translate(0, CANVAS_HEIGHT / 2);
 
   // draw waveform
   let bucket: number[] = [];
   for (let i = 0; i < length; i++) {
     bucket.push(channelData[i + start]);
     if (bucket.length === spx()) {
-      const min = Math.min(...bucket) * (canvas.height / 2);
-      const max = Math.max(...bucket) * (canvas.height / 2);
+      const min = Math.min(...bucket) * (CANVAS_HEIGHT / 2);
+      const max = Math.max(...bucket) * (CANVAS_HEIGHT / 2);
       bucket = [];
       // draw line from bucket min to bucket max
       // along the y axis
@@ -178,5 +175,5 @@ const drawBars = (
   }
 
   // shift origin back
-  context.translate(0, -canvas.height / 2);
+  context.translate(0, -CANVAS_HEIGHT / 2);
 };
