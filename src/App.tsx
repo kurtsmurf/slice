@@ -6,7 +6,7 @@ import { createVirtualizer } from "@tanstack/solid-virtual";
 const CANVAS_WIDTH = 400;
 const CANVAS_HEIGHT = 100;
 // samples per pixel
-const [spx, setSpx] = createSignal(1);
+const [spx, setSpx] = createSignal(32);
 let root: HTMLDivElement | undefined;
 
 // TODO: consolidate zoom functions
@@ -40,8 +40,8 @@ export const App = () => {
       fallback={<AudioInput onChange={setClip} />}
     >
       <button onClick={() => setClip(undefined)}>clear</button>
-      <button onClick={zoomOut}>ZOOM OUT</button>
-      <button onClick={zoomIn}>ZOOM IN</button>
+      <button onClick={zoomOut} disabled={spx() === 512}>ZOOM OUT</button>
+      <button onClick={zoomIn} disabled={spx() === 1}>ZOOM IN</button>
       <Details clip={clip()!} />
       <Waveform clip={clip()!} />
     </Show>
@@ -62,12 +62,13 @@ const Details = (props: { clip: Clip }) => (
 );
 
 const Waveform = (props: { clip: Clip }) => {
-  const tileManager = createVirtualizer({
+  // @ts-ignore
+  const tileManager = createVirtualizer(() => ({
     count: range(0, props.clip.buffer.length / spx(), CANVAS_WIDTH).length,
     getScrollElement: () => root,
     estimateSize: () => CANVAS_WIDTH,
     horizontal: true,
-  });
+  }));
 
   return (
     <div ref={root} style={{ overflow: "auto" }}>
