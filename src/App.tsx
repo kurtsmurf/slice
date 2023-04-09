@@ -112,8 +112,10 @@ const WaveformTile = (
       {(channelNumber) => (
         <ChannelSegment
           data={props.clip.buffer.getChannelData(channelNumber)
-            .subarray(props.start * spx(), (props.start + props.length) * spx())
-          }
+            .subarray(
+              props.start * spx(),
+              (props.start + props.length) * spx(),
+            )}
         />
       )}
     </For>
@@ -154,24 +156,34 @@ const drawBars = (
   // shift origin
   context.translate(0, CANVAS_HEIGHT / 2);
 
-  // draw waveform
-  let bucket: number[] = [];
-  for (let i = 0; i < data.length; i++) {
-    bucket.push(data[i]);
-    if (bucket.length === spx()) {
-      const min = Math.min(...bucket) * (CANVAS_HEIGHT / 2);
-      const max = Math.max(...bucket) * (CANVAS_HEIGHT / 2);
-      bucket = [];
-      // draw line from bucket min to bucket max
-      // along the y axis
-      // at x = i
-      context.beginPath();
-      context.moveTo(i / spx(), max + LINE_WIDTH / 2);
-      context.lineTo(i / spx(), min - LINE_WIDTH / 2);
-      context.stroke();
-    }
+  const buckets = computeBuckets(data, data.length / spx());
+
+  // draw buckets as vertical lines
+  for (let i = 0; i < buckets.length; i++) {
+    const { min, max } = buckets[i];
+    context.beginPath();
+    context.moveTo(i, max * (CANVAS_HEIGHT / 2) + LINE_WIDTH / 2);
+    context.lineTo(i, min * (CANVAS_HEIGHT / 2) - LINE_WIDTH / 2);
+    context.stroke();
   }
 
   // shift origin back
   context.translate(0, -CANVAS_HEIGHT / 2);
 };
+
+function computeBuckets(data: Float32Array, numBuckets: number) {
+  const bucketSize = Math.ceil(data.length / numBuckets);
+  const buckets = [];
+  let startIndex = 0;
+
+  for (let i = 0; i < numBuckets; i++) {
+    const endIndex = startIndex + bucketSize;
+    const bucket = data.subarray(startIndex, endIndex);
+    const min = Math.min(...bucket);
+    const max = Math.max(...bucket);
+    buckets.push({ min, max });
+    startIndex = endIndex;
+  }
+
+  return buckets;
+}
