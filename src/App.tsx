@@ -111,9 +111,9 @@ const WaveformTile = (
     <For each={range(0, props.clip.buffer.numberOfChannels)}>
       {(channelNumber) => (
         <ChannelSegment
-          start={props.start * spx()}
-          length={props.length * spx()}
-          channelData={props.clip.buffer.getChannelData(channelNumber)}
+          data={props.clip.buffer.getChannelData(channelNumber)
+            .subarray(props.start * spx(), (props.start + props.length) * spx())
+          }
         />
       )}
     </For>
@@ -121,7 +121,7 @@ const WaveformTile = (
 );
 
 const ChannelSegment = (
-  props: { start: number; length: number; channelData: Float32Array },
+  props: { data: Float32Array },
 ) => {
   let canvas: HTMLCanvasElement | undefined;
 
@@ -129,7 +129,7 @@ const ChannelSegment = (
     const context = canvas?.getContext("2d");
     if (!context) return;
     // TODO: drawBars async
-    drawBars(context, props.channelData, props.start, props.length);
+    drawBars(context, props.data);
   });
 
   return (
@@ -144,9 +144,7 @@ const range = (start: number, end: number, step = 1) =>
 
 const drawBars = (
   context: CanvasRenderingContext2D,
-  channelData: Float32Array,
-  start: number,
-  length: number,
+  data: Float32Array,
 ) => {
   const LINE_WIDTH = 2;
   context.lineWidth = LINE_WIDTH;
@@ -158,8 +156,8 @@ const drawBars = (
 
   // draw waveform
   let bucket: number[] = [];
-  for (let i = 0; i < length; i++) {
-    bucket.push(channelData[i + start]);
+  for (let i = 0; i < data.length; i++) {
+    bucket.push(data[i]);
     if (bucket.length === spx()) {
       const min = Math.min(...bucket) * (CANVAS_HEIGHT / 2);
       const max = Math.max(...bucket) * (CANVAS_HEIGHT / 2);
