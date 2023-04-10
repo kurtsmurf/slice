@@ -2,7 +2,8 @@ import { AudioInput } from "./AudioInput";
 import { Clip } from "./types";
 import { createEffect, createSignal, For, onCleanup, Show } from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
-import * as Comlink from "comlink";
+// @ts-ignore
+import workerpool from "https://cdn.jsdelivr.net/npm/workerpool@6.4.0/+esm";
 
 const CANVAS_WIDTH = 400;
 const CANVAS_HEIGHT = 100;
@@ -128,29 +129,46 @@ const WaveformTile = (
   </div>
 );
 
+const pool = workerpool.pool();
+
+function computeBuckets(data: Float32Array, numBuckets: number) {
+  const bucketSize = Math.ceil(data.length / numBuckets);
+  const buckets = [];
+  let startIndex = 0;
+
+  for (let i = 0; i < numBuckets; i++) {
+    const endIndex = startIndex + bucketSize;
+    const bucket = data.subarray(startIndex, endIndex);
+    const min = Math.min(...bucket);
+    const max = Math.max(...bucket);
+    buckets.push({ min, max });
+    startIndex = endIndex;
+  }
+
+  return buckets;
+}
+
 const ChannelSegment = (
   props: { data: Float32Array },
 ) => {
   let canvas: HTMLCanvasElement | undefined;
   const [loading, setLoading] = createSignal(true);
+  let blah: any;
 
   onCleanup(() => {
-    console.log("goodbye");
     // cancel pending "drawBars" tasks
+    blah?.cancel();
   });
 
   createEffect(async () => {
     const context = canvas?.getContext("2d");
     if (!context) return;
-
-    // @ts-ignore
-    const buckets = await bucketMaster.computeBuckets(
-      Comlink.transfer(props.data, [props.data.buffer]),
-      props.data.length / spx(),
-    );
-
-    drawBars(context, buckets);
-    setLoading(false);
+    blah = pool
+      .exec(computeBuckets, [props.data, CANVAS_WIDTH])
+      .then((buckets: [{ min: number; max: number }]) => {
+        drawBars(context, buckets);
+        setLoading(false);
+      });
   });
 
   return (
@@ -173,7 +191,7 @@ const ChannelSegment = (
 const range = (start: number, end: number, step = 1) =>
   [...new Array(Math.ceil((end - start) / step))].map((_, i) => i * step);
 
-const bucketMaster = Comlink.wrap(new Worker("src/worker.js"));
+// const bucketMaster = Comlink.wrap(new Worker("src/worker.js"));
 
 const drawBars = (
   context: CanvasRenderingContext2D,
