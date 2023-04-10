@@ -2,6 +2,7 @@ import { AudioInput } from "./AudioInput";
 import { Clip } from "./types";
 import { createEffect, createSignal, For, Show } from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
+import * as Comlink from "comlink";
 
 const CANVAS_WIDTH = 400;
 const CANVAS_HEIGHT = 100;
@@ -79,6 +80,7 @@ const Waveform = (props: { clip: Clip }) => {
           position: "relative",
           "overflow": "hidden",
           height: props.clip.buffer.numberOfChannels * CANVAS_HEIGHT + "px",
+          "background-image": 'url("diagonal-lines-backdrop.svg")',
         }}
       >
         <For each={tileManager.getVirtualItems()}>
@@ -113,7 +115,7 @@ const WaveformTile = (
       {(channelNumber) => (
         <ChannelSegment
           data={props.clip.buffer.getChannelData(channelNumber)
-            .subarray(
+            .slice(
               props.start * spx(),
               (props.start + props.length) * spx(),
             )}
@@ -128,15 +130,20 @@ const ChannelSegment = (
 ) => {
   let canvas: HTMLCanvasElement | undefined;
 
-  createEffect(() => {
+  createEffect(async () => {
     const context = canvas?.getContext("2d");
     if (!context) return;
     // TODO: drawBars async
-    drawBars(context, props.data);
+    await drawBars(context, props.data);
   });
 
   return (
-    <canvas ref={canvas} width={CANVAS_WIDTH} height={CANVAS_HEIGHT}></canvas>
+    <canvas
+      ref={canvas}
+      width={CANVAS_WIDTH}
+      height={CANVAS_HEIGHT}
+    >
+    </canvas>
   );
 };
 
@@ -145,7 +152,9 @@ const ChannelSegment = (
 const range = (start: number, end: number, step = 1) =>
   [...new Array(Math.ceil((end - start) / step))].map((_, i) => i * step);
 
-const drawBars = (
+const bucketMaster = Comlink.wrap(new Worker("src/worker.js"));
+
+const drawBars = async (
   context: CanvasRenderingContext2D,
   data: Float32Array,
 ) => {
@@ -157,7 +166,14 @@ const drawBars = (
   // shift origin
   context.translate(0, CANVAS_HEIGHT / 2);
 
-  const buckets = computeBuckets(data, data.length / spx());
+  // @ts-ignore
+  const buckets = await bucketMaster.computeBuckets(
+    Comlink.transfer(data, [data.buffer]),
+    data.length / spx(),
+  );
+
+  context.fillStyle = "white";
+  context.fillRect(0, -CANVAS_HEIGHT / 2, CANVAS_WIDTH, CANVAS_HEIGHT);
 
   // draw buckets as vertical lines
   for (let i = 0; i < buckets.length; i++) {
@@ -171,20 +187,3 @@ const drawBars = (
   // shift origin back
   context.translate(0, -CANVAS_HEIGHT / 2);
 };
-
-function computeBuckets(data: Float32Array, numBuckets: number) {
-  const bucketSize = Math.ceil(data.length / numBuckets);
-  const buckets = [];
-  let startIndex = 0;
-
-  for (let i = 0; i < numBuckets; i++) {
-    const endIndex = startIndex + bucketSize;
-    const bucket = data.subarray(startIndex, endIndex);
-    const min = Math.min(...bucket);
-    const max = Math.max(...bucket);
-    buckets.push({ min, max });
-    startIndex = endIndex;
-  }
-
-  return buckets;
-}
