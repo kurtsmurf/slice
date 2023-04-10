@@ -80,7 +80,11 @@ const Waveform = (props: { clip: Clip }) => {
           position: "relative",
           "overflow": "hidden",
           height: props.clip.buffer.numberOfChannels * CANVAS_HEIGHT + "px",
-          "background-image": 'url("diagonal-lines-backdrop.svg")',
+          "background-image": "linear-gradient(to right, #fff 0%, #e0e0e0 50%, #fff 100%)",
+          "background-size": "4000px 100%",
+          "background-repeat": "repeat-x",
+        
+        
         }}
       >
         <For each={tileManager.getVirtualItems()}>
