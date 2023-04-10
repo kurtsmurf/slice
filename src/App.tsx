@@ -1,6 +1,6 @@
 import { AudioInput } from "./AudioInput";
 import { Clip } from "./types";
-import { createEffect, createSignal, For, Show } from "solid-js";
+import { createEffect, createSignal, For, onCleanup, Show } from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
 import * as Comlink from "comlink";
 
@@ -82,7 +82,7 @@ const Waveform = (props: { clip: Clip }) => {
           height: props.clip.buffer.numberOfChannels * CANVAS_HEIGHT + "px",
           "background-image":
             "linear-gradient(to right, #fff 0%, #e0e0e0 50%, #fff 100%)",
-          "background-size": "4000px 100%",
+          "background-size": "8000px 100%",
           "background-repeat": "repeat-x",
         }}
       >
@@ -134,11 +134,22 @@ const ChannelSegment = (
   let canvas: HTMLCanvasElement | undefined;
   const [loading, setLoading] = createSignal(true);
 
+  onCleanup(() => {
+    console.log("goodbye");
+    // cancel pending "drawBars" tasks
+  });
+
   createEffect(async () => {
     const context = canvas?.getContext("2d");
     if (!context) return;
-    // TODO: drawBars async
-    await drawBars(context, props.data);
+
+    // @ts-ignore
+    const buckets = await bucketMaster.computeBuckets(
+      Comlink.transfer(props.data, [props.data.buffer]),
+      props.data.length / spx(),
+    );
+
+    drawBars(context, buckets);
     setLoading(false);
   });
 
@@ -164,9 +175,9 @@ const range = (start: number, end: number, step = 1) =>
 
 const bucketMaster = Comlink.wrap(new Worker("src/worker.js"));
 
-const drawBars = async (
+const drawBars = (
   context: CanvasRenderingContext2D,
-  data: Float32Array,
+  buckets: [{ min: number; max: number }],
 ) => {
   const LINE_WIDTH = 2;
   context.lineWidth = LINE_WIDTH;
@@ -175,12 +186,6 @@ const drawBars = async (
 
   // shift origin
   context.translate(0, CANVAS_HEIGHT / 2);
-
-  // @ts-ignore
-  const buckets = await bucketMaster.computeBuckets(
-    Comlink.transfer(data, [data.buffer]),
-    data.length / spx(),
-  );
 
   // draw buckets as vertical lines
   for (let i = 0; i < buckets.length; i++) {
