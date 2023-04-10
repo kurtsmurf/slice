@@ -80,11 +80,10 @@ const Waveform = (props: { clip: Clip }) => {
           position: "relative",
           "overflow": "hidden",
           height: props.clip.buffer.numberOfChannels * CANVAS_HEIGHT + "px",
-          "background-image": "linear-gradient(to right, #fff 0%, #e0e0e0 50%, #fff 100%)",
+          "background-image":
+            "linear-gradient(to right, #fff 0%, #e0e0e0 50%, #fff 100%)",
           "background-size": "4000px 100%",
           "background-repeat": "repeat-x",
-        
-        
         }}
       >
         <For each={tileManager.getVirtualItems()}>
@@ -133,12 +132,14 @@ const ChannelSegment = (
   props: { data: Float32Array },
 ) => {
   let canvas: HTMLCanvasElement | undefined;
+  const [loading, setLoading] = createSignal(true);
 
   createEffect(async () => {
     const context = canvas?.getContext("2d");
     if (!context) return;
     // TODO: drawBars async
     await drawBars(context, props.data);
+    setLoading(false);
   });
 
   return (
@@ -146,6 +147,11 @@ const ChannelSegment = (
       ref={canvas}
       width={CANVAS_WIDTH}
       height={CANVAS_HEIGHT}
+      style={{
+        "background-color": loading() ? "transparent" : "white",
+        "transition-property": "background-color",
+        "transition-duration": "0.5s",
+      }}
     >
     </canvas>
   );
@@ -175,9 +181,6 @@ const drawBars = async (
     Comlink.transfer(data, [data.buffer]),
     data.length / spx(),
   );
-
-  context.fillStyle = "white";
-  context.fillRect(0, -CANVAS_HEIGHT / 2, CANVAS_WIDTH, CANVAS_HEIGHT);
 
   // draw buckets as vertical lines
   for (let i = 0; i < buckets.length; i++) {
