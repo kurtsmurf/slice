@@ -33,20 +33,10 @@ export const AudioInput = (props: Props) => {
   );
 };
 
-const clipOfFile = async (file: File): Promise<Clip> => {
-  const arrayBuffer = await arrayBufferOfFile(file);
-
-  return {
-    name: file.name,
-    buffer: await audioContext.decodeAudioData(arrayBuffer),
-  };
-};
-
-export const hashOfArrayBuffer = async (buffer: ArrayBuffer) => {
-  const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-};
+const clipOfFile = async (file: File): Promise<Clip> => ({
+  name: file.name,
+  buffer: await audioContext.decodeAudioData(await arrayBufferOfFile(file)),
+});
 
 const arrayBufferOfFile = (file: File) =>
   new Promise<ArrayBuffer>((resolve, reject) => {

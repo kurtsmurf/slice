@@ -4,11 +4,27 @@ import { createEffect, createSignal, For, onCleanup, Show } from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
 import workerpool from "workerpool";
 
+// TYPES --------------------------
+// --------------------------------
+// --------------------------------
+
+type Bucket = { min: number; max: number };
+
+// GLOBALS ------------------------
+// --------------------------------
+// --------------------------------
+
 const CANVAS_WIDTH = 400;
 const CANVAS_HEIGHT = 100;
+
 // samples per pixel
 const [spx, setSpx] = createSignal(32);
+
+// the root (scrollable) element
 let root: HTMLDivElement | undefined;
+
+// Pool of workers for computing buckets
+const pool = workerpool.pool();
 
 // TODO: consolidate zoom functions
 const zoomIn = () => {
@@ -31,6 +47,10 @@ const zoomOut = () => {
   const nextScrollLeft = currentScrollLeft / 2;
   if (root) root.scrollLeft = nextScrollLeft;
 };
+
+// COMPONENTS ---------------------
+// --------------------------------
+// --------------------------------
 
 export const App = () => {
   const [clip, setClip] = createSignal<Clip | undefined>();
@@ -63,6 +83,9 @@ const Details = (props: { clip: Clip }) => (
 );
 
 const Waveform = (props: { clip: Clip }) => {
+  // not sure if I'm supposed to be passing a function to createVirtualizer
+  // TypeScript says not
+  // but it seems to make things stay in sync better...
   // @ts-ignore
   const tileManager = createVirtualizer(() => ({
     count: range(0, props.clip.buffer.length / spx(), CANVAS_WIDTH).length,
@@ -128,27 +151,6 @@ const WaveformTile = (
   </div>
 );
 
-const pool = workerpool.pool();
-
-function computeBuckets(data: Float32Array, numBuckets: number): Bucket[] {
-  const bucketSize = Math.ceil(data.length / numBuckets);
-  const buckets = [];
-  let startIndex = 0;
-
-  for (let i = 0; i < numBuckets; i++) {
-    const endIndex = startIndex + bucketSize;
-    const bucket = data.subarray(startIndex, endIndex);
-    const min = Math.min(...bucket);
-    const max = Math.max(...bucket);
-    buckets.push({ min, max });
-    startIndex = endIndex;
-  }
-
-  return buckets;
-}
-
-type Bucket = { min: number; max: number };
-
 const ChannelSegment = (
   props: { data: Float32Array },
 ) => {
@@ -180,19 +182,36 @@ const ChannelSegment = (
       style={{
         "background-color": loading() ? "transparent" : "white",
         "transition-property": "background-color",
-        "transition-duration": "0.5s",
+        "transition-duration": "0.01s",
       }}
     >
     </canvas>
   );
 };
 
-// util
+// MISC----------------------------
+// --------------------------------
+// --------------------------------
 
 const range = (start: number, end: number, step = 1) =>
   [...new Array(Math.ceil((end - start) / step))].map((_, i) => i * step);
 
-// const bucketMaster = Comlink.wrap(new Worker("src/worker.js"));
+function computeBuckets(data: Float32Array, numBuckets: number): Bucket[] {
+  const bucketSize = Math.ceil(data.length / numBuckets);
+  const buckets = [];
+  let startIndex = 0;
+
+  for (let i = 0; i < numBuckets; i++) {
+    const endIndex = startIndex + bucketSize;
+    const bucket = data.subarray(startIndex, endIndex);
+    const min = Math.min(...bucket);
+    const max = Math.max(...bucket);
+    buckets.push({ min, max });
+    startIndex = endIndex;
+  }
+
+  return buckets;
+}
 
 const drawBars = (
   context: CanvasRenderingContext2D,
