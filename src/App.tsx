@@ -130,7 +130,7 @@ const WaveformTile = (
 
 const pool = workerpool.pool();
 
-function computeBuckets(data: Float32Array, numBuckets: number) {
+function computeBuckets(data: Float32Array, numBuckets: number): Bucket[] {
   const bucketSize = Math.ceil(data.length / numBuckets);
   const buckets = [];
   let startIndex = 0;
@@ -147,24 +147,26 @@ function computeBuckets(data: Float32Array, numBuckets: number) {
   return buckets;
 }
 
+type Bucket = { min: number; max: number };
+
 const ChannelSegment = (
   props: { data: Float32Array },
 ) => {
   let canvas: HTMLCanvasElement | undefined;
   const [loading, setLoading] = createSignal(true);
-  let blah: any;
+  let workerTask: workerpool.Promise<void | Bucket[]> | undefined;
 
   onCleanup(() => {
-    // cancel pending "drawBars" tasks
-    blah?.cancel();
+    workerTask?.cancel();
   });
 
   createEffect(async () => {
+    workerTask?.cancel();
     const context = canvas?.getContext("2d");
     if (!context) return;
-    blah = pool
+    workerTask = pool
       .exec(computeBuckets, [props.data, CANVAS_WIDTH])
-      .then((buckets: { min: number; max: number }[]) => {
+      .then((buckets: Bucket[]) => {
         drawBars(context, buckets);
         setLoading(false);
       });
@@ -194,7 +196,7 @@ const range = (start: number, end: number, step = 1) =>
 
 const drawBars = (
   context: CanvasRenderingContext2D,
-  buckets: { min: number; max: number }[],
+  buckets: Bucket[],
 ) => {
   const LINE_WIDTH = 2;
   context.lineWidth = LINE_WIDTH;
