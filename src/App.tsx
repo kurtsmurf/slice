@@ -1,6 +1,13 @@
 import { AudioInput } from "./AudioInput";
 import { Clip } from "./types";
-import { createEffect, createSignal, For, onCleanup, Show } from "solid-js";
+import {
+  createEffect,
+  createSignal,
+  For,
+  onCleanup,
+  onMount,
+  Show,
+} from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
 import workerpool from "workerpool";
 
@@ -64,6 +71,8 @@ export const App = () => {
       <button onClick={zoomOut} disabled={spx() === 512}>ZOOM OUT</button>
       <button onClick={zoomIn} disabled={spx() === 1}>ZOOM IN</button>
       <Details clip={clip()!} />
+      <WaveformSummary clip={clip()} />
+
       <Waveform clip={clip()!} />
     </Show>
   );
@@ -83,9 +92,6 @@ const Details = (props: { clip: Clip }) => (
 );
 
 const Waveform = (props: { clip: Clip }) => {
-  // not sure if I'm supposed to be passing a function to createVirtualizer
-  // TypeScript says not
-  // but it seems to make things stay in sync better...
   // @ts-ignore
   const tileManager = createVirtualizer(() => ({
     count: range(0, props.clip.buffer.length / spx(), CANVAS_WIDTH).length,
@@ -123,6 +129,26 @@ const Waveform = (props: { clip: Clip }) => {
   );
 };
 
+const WaveformSummary = (props: { clip: Clip }) => {
+  return (
+    <div
+      style={{
+        background: "red",
+        position: "sticky",
+        left: "0",
+        height: "50px",
+      }}
+    >
+      <ChannelSegment
+        data={props.clip.buffer.getChannelData(0)}
+        width={800}
+        height={50}
+        numBuckets={800}
+      />
+    </div>
+  );
+};
+
 const WaveformTile = (
   props: { start: number; length: number; clip: Clip },
 ) => (
@@ -138,21 +164,32 @@ const WaveformTile = (
     }}
   >
     <For each={range(0, props.clip.buffer.numberOfChannels)}>
-      {(channelNumber) => (
-        <ChannelSegment
-          data={props.clip.buffer.getChannelData(channelNumber)
-            .slice(
-              props.start * spx(),
-              (props.start + props.length) * spx(),
-            )}
-        />
-      )}
+      {(channelNumber) => {
+        const data = props.clip.buffer.getChannelData(channelNumber)
+        .slice(
+          props.start * spx(),
+          (props.start + props.length) * spx(),
+        );
+        return (
+          <ChannelSegment
+            data={data}
+            width={CANVAS_WIDTH}
+            height={CANVAS_HEIGHT}
+            numBuckets={data.length / spx()}
+          />
+        )
+      }}
     </For>
   </div>
 );
 
 const ChannelSegment = (
-  props: { data: Float32Array },
+  props: {
+    data: Float32Array;
+    width: number;
+    height: number;
+    numBuckets: number;
+  },
 ) => {
   let canvas: HTMLCanvasElement | undefined;
   const [loading, setLoading] = createSignal(true);
@@ -164,12 +201,11 @@ const ChannelSegment = (
 
   createEffect(async () => {
     workerTask?.cancel();
-    const context = canvas?.getContext("2d");
-    if (!context) return;
     workerTask = pool
-      .exec(computeBuckets, [props.data, props.data.length / spx()])
+      .exec(computeBuckets, [props.data, props.numBuckets])
       .then((buckets: Bucket[]) => {
-        drawBars(context, buckets);
+        if (!canvas) return;
+        drawBars(canvas, buckets);
         setLoading(false);
       });
   });
@@ -177,10 +213,12 @@ const ChannelSegment = (
   return (
     <canvas
       ref={canvas}
-      width={CANVAS_WIDTH}
-      height={CANVAS_HEIGHT}
+      width={props.width}
+      height={props.height}
       style={{
         "background-color": loading() ? "transparent" : "white",
+        width: "100%",
+        height: "100%",
       }}
     >
     </canvas>
@@ -212,26 +250,24 @@ function computeBuckets(data: Float32Array, numBuckets: number): Bucket[] {
 }
 
 const drawBars = (
-  context: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement,
   buckets: Bucket[],
 ) => {
+  const context = canvas.getContext("2d");
+  if (!context) return;
+
   const LINE_WIDTH = 2;
   context.lineWidth = LINE_WIDTH;
-
-  context.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
+  context.clearRect(0, 0, canvas.width, canvas.height);
   // shift origin
-  context.translate(0, CANVAS_HEIGHT / 2);
+  context.translate(0, canvas.height / 2);
 
   // draw buckets as vertical lines
   for (let i = 0; i < buckets.length; i++) {
     const { min, max } = buckets[i];
     context.beginPath();
-    context.moveTo(i, max * (CANVAS_HEIGHT / 2) + LINE_WIDTH / 2);
-    context.lineTo(i, min * (CANVAS_HEIGHT / 2) - LINE_WIDTH / 2);
+    context.moveTo(i, max * (canvas.height / 2) + LINE_WIDTH / 2);
+    context.lineTo(i, min * (canvas.height / 2) - LINE_WIDTH / 2);
     context.stroke();
   }
-
-  // shift origin back
-  context.translate(0, -CANVAS_HEIGHT / 2);
 };
