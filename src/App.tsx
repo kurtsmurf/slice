@@ -181,8 +181,6 @@ const ChannelSegment = (
       height={CANVAS_HEIGHT}
       style={{
         "background-color": loading() ? "transparent" : "white",
-        "transition-property": "background-color",
-        "transition-duration": "0.01s",
       }}
     >
     </canvas>
