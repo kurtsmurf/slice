@@ -167,7 +167,7 @@ const ChannelSegment = (
     const context = canvas?.getContext("2d");
     if (!context) return;
     workerTask = pool
-      .exec(computeBuckets, [props.data, CANVAS_WIDTH])
+      .exec(computeBuckets, [props.data, props.data.length / spx()])
       .then((buckets: Bucket[]) => {
         drawBars(context, buckets);
         setLoading(false);
