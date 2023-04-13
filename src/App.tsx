@@ -75,7 +75,6 @@ export const App = () => {
       <button onClick={zoomIn} disabled={spx() === 1}>ZOOM IN</button>
       <Details clip={clip()!} />
       <WaveformSummary clip={clip()!} />
-
       <Waveform clip={clip()!} />
     </Show>
   );
@@ -165,10 +164,8 @@ const WaveformSummary = (props: { clip: Clip }) => {
           position: "absolute",
           height: "50px",
           width: width() + "px",
-          background: "#3333",
           left: left() + "px",
-          // "border-inline": "2px solid transparent",
-          "box-sizing": "border-box",
+          background: "#3333",
         }}
       >
       </div>
@@ -188,6 +185,7 @@ const WaveformSummary = (props: { clip: Clip }) => {
     >
       <PositionIndicator />
       <ChannelSegment
+        // TODO: smoosh together all channels into single summary waveform
         data={props.clip.buffer.getChannelData(0)}
         width={800}
         height={50}
@@ -307,6 +305,7 @@ const drawBars = (
   const LINE_WIDTH = 2;
   context.lineWidth = LINE_WIDTH;
   context.clearRect(0, 0, canvas.width, canvas.height);
+
   // shift origin
   context.translate(0, canvas.height / 2);
 
@@ -318,4 +317,8 @@ const drawBars = (
     context.lineTo(i, min * (canvas.height / 2) - LINE_WIDTH / 2);
     context.stroke();
   }
+
+  // shift origin back
+  context.translate(0, -canvas.height / 2);
+
 };

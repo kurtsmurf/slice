@@ -1,16 +1,3 @@
 * {
   margin: 0;
 }
-svg {
-  border: 1px solid;
-}
-#blah {
-  stroke-width: 0.1;
-  stroke: #0003;
-}
-path {
-  stroke: black;
-  stroke-width: 0.1;
-  stroke-linejoin: round;
-  fill: none;
-}
