@@ -27,8 +27,11 @@ const CANVAS_HEIGHT = 100;
 // samples per pixel
 const [spx, setSpx] = createSignal(32);
 
-// the root (scrollable) element
-let root: HTMLDivElement | undefined;
+// the scrollable element
+let scrollRoot: HTMLDivElement | undefined;
+
+// the content wrapper
+let contentRoot: HTMLDivElement | undefined;
 
 // Pool of workers for computing buckets
 const pool = workerpool.pool();
@@ -40,9 +43,9 @@ const zoomIn = () => {
   if (currentSpx === nextSpx) return;
   setSpx(nextSpx);
 
-  const currentScrollLeft = root?.scrollLeft || 0;
+  const currentScrollLeft = scrollRoot?.scrollLeft || 0;
   const nextScrollLeft = currentScrollLeft * 2;
-  if (root) root.scrollLeft = nextScrollLeft;
+  if (scrollRoot) scrollRoot.scrollLeft = nextScrollLeft;
 };
 const zoomOut = () => {
   const currentSpx = spx();
@@ -50,9 +53,9 @@ const zoomOut = () => {
   if (currentSpx === nextSpx) return;
   setSpx(nextSpx);
 
-  const currentScrollLeft = root?.scrollLeft || 0;
+  const currentScrollLeft = scrollRoot?.scrollLeft || 0;
   const nextScrollLeft = currentScrollLeft / 2;
-  if (root) root.scrollLeft = nextScrollLeft;
+  if (scrollRoot) scrollRoot.scrollLeft = nextScrollLeft;
 };
 
 // COMPONENTS ---------------------
@@ -71,7 +74,7 @@ export const App = () => {
       <button onClick={zoomOut} disabled={spx() === 512}>ZOOM OUT</button>
       <button onClick={zoomIn} disabled={spx() === 1}>ZOOM IN</button>
       <Details clip={clip()!} />
-      <WaveformSummary clip={clip()} />
+      <WaveformSummary clip={clip()!} />
 
       <Waveform clip={clip()!} />
     </Show>
@@ -95,14 +98,15 @@ const Waveform = (props: { clip: Clip }) => {
   // @ts-ignore
   const tileManager = createVirtualizer(() => ({
     count: range(0, props.clip.buffer.length / spx(), CANVAS_WIDTH).length,
-    getScrollElement: () => root,
+    getScrollElement: () => scrollRoot,
     estimateSize: () => CANVAS_WIDTH,
     horizontal: true,
   }));
 
   return (
-    <div ref={root} style={{ overflow: "auto" }}>
+    <div ref={scrollRoot} style={{ overflow: "auto" }}>
       <div
+        ref={contentRoot}
         style={{
           width: `${props.clip.buffer.length / spx()}px`,
           display: "flex",
@@ -130,15 +134,59 @@ const Waveform = (props: { clip: Clip }) => {
 };
 
 const WaveformSummary = (props: { clip: Clip }) => {
+  const PositionIndicator = () => {
+    let animationFrame: number;
+    const [left, setLeft] = createSignal(0);
+    const [width, setWidth] = createSignal(0);
+
+    const tick = () => {
+      if (scrollRoot && contentRoot && root) {
+        setLeft(
+          scrollRoot.scrollLeft / contentRoot.clientWidth * root.clientWidth,
+        );
+        setWidth(
+          scrollRoot.clientWidth / contentRoot.clientWidth * root?.clientWidth,
+        );
+      }
+      animationFrame = requestAnimationFrame(tick);
+    };
+
+    onMount(() => {
+      animationFrame = requestAnimationFrame(tick);
+    });
+
+    onCleanup(() => {
+      cancelAnimationFrame(animationFrame);
+    });
+
+    return (
+      <div
+        style={{
+          position: "absolute",
+          height: "50px",
+          width: width() + "px",
+          background: "#3333",
+          left: left() + "px",
+          // "border-inline": "2px solid transparent",
+          "box-sizing": "border-box",
+        }}
+      >
+      </div>
+    );
+  };
+
+  let root: HTMLDivElement | undefined;
+
   return (
     <div
+      ref={root}
       style={{
-        background: "red",
         position: "sticky",
         left: "0",
         height: "50px",
       }}
     >
+      <PositionIndicator />
       <ChannelSegment
         data={props.clip.buffer.getChannelData(0)}
         width={800}
@@ -166,10 +214,10 @@ const WaveformTile = (
     <For each={range(0, props.clip.buffer.numberOfChannels)}>
       {(channelNumber) => {
         const data = props.clip.buffer.getChannelData(channelNumber)
-        .slice(
-          props.start * spx(),
-          (props.start + props.length) * spx(),
-        );
+          .slice(
+            props.start * spx(),
+            (props.start + props.length) * spx(),
+          );
         return (
           <ChannelSegment
             data={data}
@@ -177,7 +225,7 @@ const WaveformTile = (
             height={CANVAS_HEIGHT}
             numBuckets={data.length / spx()}
           />
-        )
+        );
       }}
     </For>
   </div>
