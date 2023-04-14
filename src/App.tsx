@@ -134,6 +134,9 @@ const Waveform = (props: { clip: Clip }) => {
 };
 
 const WaveformSummary = (props: { clip: Clip }) => {
+
+  let root: HTMLDivElement | undefined;
+
   const PositionIndicator = () => {
     let animationFrame: number;
     const [left, setLeft] = createSignal(0);
@@ -145,7 +148,10 @@ const WaveformSummary = (props: { clip: Clip }) => {
           scrollRoot.scrollLeft / contentRoot.clientWidth * root.clientWidth,
         );
         setWidth(
-          scrollRoot.clientWidth / contentRoot.clientWidth * root?.clientWidth,
+          Math.min(
+            scrollRoot.clientWidth / contentRoot.clientWidth * root.clientWidth,
+            root.clientWidth // do not exceed container width
+          ),
         );
       }
       animationFrame = requestAnimationFrame(tick);
@@ -172,8 +178,6 @@ const WaveformSummary = (props: { clip: Clip }) => {
       </div>
     );
   };
-
-  let root: HTMLDivElement | undefined;
 
   return (
     <div
