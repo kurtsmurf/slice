@@ -135,7 +135,6 @@ const Waveform = (props: { clip: Clip }) => {
 };
 
 const WaveformSummary = (props: { clip: Clip }) => {
-
   let root: HTMLDivElement | undefined;
 
   const PositionIndicator = () => {
@@ -151,7 +150,7 @@ const WaveformSummary = (props: { clip: Clip }) => {
         setWidth(
           Math.min(
             scrollRoot.clientWidth / contentRoot.clientWidth * root.clientWidth,
-            root.clientWidth // do not exceed container width
+            root.clientWidth, // do not exceed container width
           ),
         );
       }
@@ -190,19 +189,21 @@ const WaveformSummary = (props: { clip: Clip }) => {
       }}
     >
       <PositionIndicator />
-    <For each={range(0, props.clip.buffer.numberOfChannels)}>
-      {channelNumber => <ChannelSegment
-        // TODO: smoosh together all channels into single summary waveform
-        data={props.clip.buffer.getChannelData(channelNumber)}
-        width={800}
-        height={50}
-        numBuckets={800}
-        style={{
-          background: "transparent",
-          position: "absolute"
-        }}
-      />}
-    </For>
+      <For each={range(0, props.clip.buffer.numberOfChannels)}>
+        {(channelNumber) => (
+          <ChannelSegment
+            // TODO: smoosh together all channels into single summary waveform
+            data={props.clip.buffer.getChannelData(channelNumber)}
+            width={800}
+            height={50}
+            numBuckets={800}
+            style={{
+              background: "transparent",
+              position: "absolute",
+            }}
+          />
+        )}
+      </For>
     </div>
   );
 };
@@ -223,11 +224,13 @@ const WaveformTile = (
   >
     <For each={range(0, props.clip.buffer.numberOfChannels)}>
       {(channelNumber) => {
-        const data = createMemo(() => props.clip.buffer.getChannelData(channelNumber)
-          .slice(
-            props.start * spx(),
-            (props.start + props.length) * spx(),
-          ))
+        const data = createMemo(() =>
+          props.clip.buffer.getChannelData(channelNumber)
+            .slice(
+              props.start * spx(),
+              (props.start + props.length) * spx(),
+            )
+        );
         return (
           <ChannelSegment
             data={data()}
@@ -278,7 +281,7 @@ const ChannelSegment = (
         "background-color": loading() ? "transparent" : "white",
         width: "100%",
         height: "100%",
-        ...props.style
+        ...props.style,
       }}
     >
     </canvas>
@@ -334,5 +337,4 @@ const drawBars = (
 
   // shift origin back
   context.translate(0, -canvas.height / 2);
-
 };
