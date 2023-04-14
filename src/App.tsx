@@ -2,6 +2,7 @@ import { AudioInput } from "./AudioInput";
 import { Clip } from "./types";
 import {
   createEffect,
+  createMemo,
   createSignal,
   For,
   onCleanup,
@@ -211,17 +212,17 @@ const WaveformTile = (
   >
     <For each={range(0, props.clip.buffer.numberOfChannels)}>
       {(channelNumber) => {
-        const data = props.clip.buffer.getChannelData(channelNumber)
+        const data = createMemo(() => props.clip.buffer.getChannelData(channelNumber)
           .slice(
             props.start * spx(),
             (props.start + props.length) * spx(),
-          );
+          ))
         return (
           <ChannelSegment
-            data={data}
+            data={data()}
             width={CANVAS_WIDTH}
             height={CANVAS_HEIGHT}
-            numBuckets={data.length / spx()}
+            numBuckets={data().length / spx()}
           />
         );
       }}
