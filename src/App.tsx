@@ -5,6 +5,7 @@ import {
   createMemo,
   createSignal,
   For,
+  JSX,
   onCleanup,
   onMount,
   Show,
@@ -189,13 +190,19 @@ const WaveformSummary = (props: { clip: Clip }) => {
       }}
     >
       <PositionIndicator />
-      <ChannelSegment
+    <For each={range(0, props.clip.buffer.numberOfChannels)}>
+      {channelNumber => <ChannelSegment
         // TODO: smoosh together all channels into single summary waveform
-        data={props.clip.buffer.getChannelData(0)}
+        data={props.clip.buffer.getChannelData(channelNumber)}
         width={800}
         height={50}
         numBuckets={800}
-      />
+        style={{
+          background: "transparent",
+          position: "absolute"
+        }}
+      />}
+    </For>
     </div>
   );
 };
@@ -240,6 +247,7 @@ const ChannelSegment = (
     width: number;
     height: number;
     numBuckets: number;
+    style?: JSX.CSSProperties;
   },
 ) => {
   let canvas: HTMLCanvasElement | undefined;
@@ -270,6 +278,7 @@ const ChannelSegment = (
         "background-color": loading() ? "transparent" : "white",
         width: "100%",
         height: "100%",
+        ...props.style
       }}
     >
     </canvas>
