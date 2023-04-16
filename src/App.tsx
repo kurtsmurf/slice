@@ -12,6 +12,7 @@ import {
 } from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
 import workerpool from "workerpool";
+import { audioContext } from "./audioContext";
 
 // TYPES --------------------------
 // --------------------------------
@@ -66,6 +67,27 @@ const zoomOut = () => {
 
 export const App = () => {
   const [clip, setClip] = createSignal<Clip | undefined>();
+  const [player, setPlayer] = createSignal<AudioBufferSourceNode | undefined>(
+    undefined,
+  );
+
+  const play = (buffer: AudioBuffer) => {
+    const node = audioContext.createBufferSource();
+    node.buffer = buffer;
+    node.connect(audioContext.destination);
+    node.start();
+    node.onended = stop;
+    setPlayer(node);
+  };
+
+  const stop = () => {
+    player()?.stop();
+    setPlayer(undefined);
+  };
+
+  createEffect(() => {
+    if (!clip()) stop();
+  });
 
   return (
     <Show
@@ -75,6 +97,14 @@ export const App = () => {
       <button onClick={() => setClip(undefined)}>clear</button>
       <button onClick={zoomOut} disabled={spx() === 512}>ZOOM OUT</button>
       <button onClick={zoomIn} disabled={spx() === 1}>ZOOM IN</button>
+      <button
+        onClick={() => {
+          if (player()) return stop();
+          play(clip()!.buffer);
+        }}
+      >
+        {player() ? "stop" : "play"}
+      </button>
       <Details clip={clip()!} />
       <WaveformSummary clip={clip()!} />
       <Waveform clip={clip()!} />
