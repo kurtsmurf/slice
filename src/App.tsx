@@ -61,6 +61,8 @@ const zoomOut = () => {
   if (scrollRoot) scrollRoot.scrollLeft = nextScrollLeft;
 };
 
+const [startedAt, setStartedAt] = createSignal<number | undefined>(undefined);
+
 // COMPONENTS ---------------------
 // --------------------------------
 // --------------------------------
@@ -76,6 +78,7 @@ export const App = () => {
     node.buffer = buffer;
     node.connect(audioContext.destination);
     node.start();
+    setStartedAt(audioContext.currentTime);
     node.onended = stop;
     setPlayer(node);
   };
@@ -83,6 +86,7 @@ export const App = () => {
   const stop = () => {
     player()?.stop();
     setPlayer(undefined);
+    setStartedAt(undefined);
   };
 
   createEffect(() => {
@@ -106,7 +110,6 @@ export const App = () => {
         {player() ? "stop" : "play"}
       </button>
       <Details clip={clip()!} />
-      <WaveformSummary clip={clip()!} />
       <Waveform clip={clip()!} />
     </Show>
   );
@@ -144,10 +147,6 @@ const Waveform = (props: { clip: Clip }) => {
           position: "relative",
           "overflow": "hidden",
           height: props.clip.buffer.numberOfChannels * CANVAS_HEIGHT + "px",
-          "background-image":
-            "linear-gradient(to right, #fff 0%, #e0e0e0 50%, #fff 100%)",
-          "background-size": "8000px 100%",
-          "background-repeat": "repeat-x",
         }}
       >
         <For each={tileManager.getVirtualItems()}>
@@ -159,7 +158,50 @@ const Waveform = (props: { clip: Clip }) => {
             />
           )}
         </For>
+        <Show when={startedAt() && contentRoot}>
+          {<Cursor clip={props.clip} parent={contentRoot!} />}
+        </Show>
       </div>
+      <WaveformSummary clip={props.clip} />
+    </div>
+  );
+};
+
+const Cursor = (props: { clip: Clip; parent: HTMLElement }) => {
+  let animationFrame: number;
+  const [left, setLeft] = createSignal(0);
+
+  const tick = () => {
+    const startedAt_ = startedAt();
+    if (startedAt_) {
+      const offset = audioContext.currentTime - startedAt_;
+      const duration = props.clip.buffer.length / props.clip.buffer.sampleRate;
+      const progress = offset / duration;
+      setLeft(progress * props.parent.clientWidth);
+    }
+    animationFrame = requestAnimationFrame(tick);
+  };
+
+  onMount(() => {
+    animationFrame = requestAnimationFrame(tick);
+  });
+
+  onCleanup(() => {
+    cancelAnimationFrame(animationFrame);
+  });
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        transform: `translateX(${left()}px)`,
+        width: "1px",
+        height: "100%",
+        "backdrop-filter": "invert(1)",
+      }}
+    >
     </div>
   );
 };
@@ -222,7 +264,6 @@ const WaveformSummary = (props: { clip: Clip }) => {
       <For each={range(0, props.clip.buffer.numberOfChannels)}>
         {(channelNumber) => (
           <ChannelSegment
-            // TODO: smoosh together all channels into single summary waveform
             data={props.clip.buffer.getChannelData(channelNumber)}
             width={800}
             height={50}
@@ -234,6 +275,9 @@ const WaveformSummary = (props: { clip: Clip }) => {
           />
         )}
       </For>
+      <Show when={startedAt() && root}>
+        {<Cursor clip={props.clip} parent={root!} />}
+      </Show>
     </div>
   );
 };
