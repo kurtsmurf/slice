@@ -199,9 +199,21 @@ const Cursor = (props: { clip: Clip; parent: HTMLElement }) => {
         transform: `translateX(${left()}px)`,
         width: "1px",
         height: "100%",
-        "backdrop-filter": "invert(1)",
+        background: "currentColor",
       }}
     >
+      <svg
+      viewBox="0 0 1 1"
+      style={{
+        position: "relative",
+        top: "-20px",
+        left: "-5px",
+        width: "10px",
+
+      }}
+      >
+        <polygon points="0,0 1,0 0.5,1" />
+      </svg>
     </div>
   );
 };
