@@ -139,25 +139,28 @@ const Waveform = (props: { clip: Clip }) => {
 
   return (
     <div ref={scrollRoot} style={{ overflow: "auto" }}>
-      <div
-        ref={contentRoot}
-        style={{
-          width: `${props.clip.buffer.length / spx()}px`,
-          display: "flex",
-          position: "relative",
-          "overflow": "hidden",
-          height: props.clip.buffer.numberOfChannels * CANVAS_HEIGHT + "px",
-        }}
-      >
-        <For each={tileManager.getVirtualItems()}>
-          {(virtualItem) => (
-            <WaveformTile
-              clip={props.clip}
-              start={virtualItem.start}
-              length={CANVAS_WIDTH}
-            />
-          )}
-        </For>
+      <div style={{ position: "relative" }}>
+        <div
+          ref={contentRoot}
+          style={{
+            width: `${props.clip.buffer.length / spx()}px`,
+            display: "flex",
+            position: "relative",
+            "overflow": "hidden",
+            "margin-top": "20px",
+            height: props.clip.buffer.numberOfChannels * CANVAS_HEIGHT + "px",
+          }}
+        >
+          <For each={tileManager.getVirtualItems()}>
+            {(virtualItem) => (
+              <WaveformTile
+                clip={props.clip}
+                start={virtualItem.start}
+                length={CANVAS_WIDTH}
+              />
+            )}
+          </For>
+        </div>
         <Show when={startedAt() && contentRoot}>
           {<Cursor clip={props.clip} parent={contentRoot!} />}
         </Show>
@@ -203,14 +206,13 @@ const Cursor = (props: { clip: Clip; parent: HTMLElement }) => {
       }}
     >
       <svg
-      viewBox="0 0 1 1"
-      style={{
-        position: "relative",
-        top: "-20px",
-        left: "-5px",
-        width: "10px",
-
-      }}
+        viewBox="0 0 1 1"
+        style={{
+          position: "relative",
+          top: "-20px",
+          left: "-5px",
+          width: "10px",
+        }}
       >
         <polygon points="0,0 1,0 0.5,1" />
       </svg>
@@ -270,6 +272,7 @@ const WaveformSummary = (props: { clip: Clip }) => {
         position: "sticky",
         left: "0",
         height: "50px",
+        "margin-top": "25px",
       }}
     >
       <PositionIndicator />
