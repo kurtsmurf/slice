@@ -61,7 +61,35 @@ const zoomOut = () => {
   if (scrollRoot) scrollRoot.scrollLeft = nextScrollLeft;
 };
 
-const [startedAt, setStartedAt] = createSignal<number | undefined>(undefined);
+const player = (function createPlayer() {
+  const [sourceNode, setSourceNode] = createSignal<
+    AudioBufferSourceNode | undefined
+  >(
+    undefined,
+  );
+  const [startedAt, setStartedAt] = createSignal<number | undefined>(undefined);
+
+  const play = (buffer: AudioBuffer) => {
+    const node = audioContext.createBufferSource();
+    node.buffer = buffer;
+    node.connect(audioContext.destination);
+    node.onended = stop;
+    node.start();
+
+    setStartedAt(audioContext.currentTime);
+    setSourceNode(node);
+  };
+
+  const stop = () => {
+    sourceNode()?.stop();
+    setSourceNode(undefined);
+    setStartedAt(undefined);
+  };
+
+  const playing = () => startedAt() !== undefined;
+
+  return { play, playing, stop, startedAt };
+})();
 
 // COMPONENTS ---------------------
 // --------------------------------
@@ -69,25 +97,6 @@ const [startedAt, setStartedAt] = createSignal<number | undefined>(undefined);
 
 export const App = () => {
   const [clip, setClip] = createSignal<Clip | undefined>();
-  const [player, setPlayer] = createSignal<AudioBufferSourceNode | undefined>(
-    undefined,
-  );
-
-  const play = (buffer: AudioBuffer) => {
-    const node = audioContext.createBufferSource();
-    node.buffer = buffer;
-    node.connect(audioContext.destination);
-    node.start();
-    setStartedAt(audioContext.currentTime);
-    node.onended = stop;
-    setPlayer(node);
-  };
-
-  const stop = () => {
-    player()?.stop();
-    setPlayer(undefined);
-    setStartedAt(undefined);
-  };
 
   createEffect(() => {
     if (!clip()) stop();
@@ -98,16 +107,26 @@ export const App = () => {
       when={clip()}
       fallback={<AudioInput onChange={setClip} />}
     >
-      <button onClick={() => setClip(undefined)}>clear</button>
+      <button
+        onClick={() => {
+          setClip(undefined);
+          player.stop();
+        }}
+      >
+        clear
+      </button>
       <button onClick={zoomOut} disabled={spx() === 512}>ZOOM OUT</button>
       <button onClick={zoomIn} disabled={spx() === 1}>ZOOM IN</button>
       <button
         onClick={() => {
-          if (player()) return stop();
-          play(clip()!.buffer);
+          if (player.playing()) {
+            player.stop();
+          } else {
+            player.play(clip()!.buffer);
+          }
         }}
       >
-        {player() ? "stop" : "play"}
+        {player.playing() ? "stop" : "play"}
       </button>
       <Details clip={clip()!} />
       <Waveform clip={clip()!} />
@@ -161,7 +180,7 @@ const Waveform = (props: { clip: Clip }) => {
             )}
           </For>
         </div>
-        <Show when={startedAt() && contentRoot}>
+        <Show when={player.playing() && contentRoot}>
           {<Cursor clip={props.clip} parent={contentRoot!} />}
         </Show>
       </div>
@@ -175,8 +194,8 @@ const Cursor = (props: { clip: Clip; parent: HTMLElement }) => {
   const [left, setLeft] = createSignal(0);
 
   const tick = () => {
-    const startedAt_ = startedAt();
-    if (startedAt_) {
+    const startedAt_ = player.startedAt();
+    if (startedAt_ !== undefined) {
       const offset = audioContext.currentTime - startedAt_;
       const duration = props.clip.buffer.length / props.clip.buffer.sampleRate;
       const progress = offset / duration;
@@ -290,7 +309,7 @@ const WaveformSummary = (props: { clip: Clip }) => {
           />
         )}
       </For>
-      <Show when={startedAt() && root}>
+      <Show when={player.playing() && root}>
         {<Cursor clip={props.clip} parent={root!} />}
       </Show>
     </div>
