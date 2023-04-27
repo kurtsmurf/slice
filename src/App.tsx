@@ -62,34 +62,43 @@ const zoomOut = () => {
 };
 
 const player = (function createPlayer() {
-  const [sourceNode, setSourceNode] = createSignal<
-    AudioBufferSourceNode | undefined
-  >(
-    undefined,
-  );
   const [startedAt, setStartedAt] = createSignal<number | undefined>(undefined);
+  const [startOffset, setStartOffset] = createSignal<number>(0);
+  let sourceNode: AudioBufferSourceNode | undefined;
 
-  const play = (buffer: AudioBuffer) => {
+  const play = (buffer: AudioBuffer, offset = 0) => {
+    setStartOffset(offset);
     const node = audioContext.createBufferSource();
     node.buffer = buffer;
     node.connect(audioContext.destination);
     node.onended = stop;
-    node.start();
+    node.start(0, offset);
 
     setStartedAt(audioContext.currentTime);
-    setSourceNode(node);
+    sourceNode = node;
   };
 
   const stop = () => {
-    sourceNode()?.stop();
-    setSourceNode(undefined);
+    sourceNode?.stop();
+    sourceNode = undefined;
     setStartedAt(undefined);
   };
 
   const playing = () => startedAt() !== undefined;
 
-  return { play, playing, stop, startedAt };
+  const progress = () => {
+    const startedAt_ = startedAt();
+    if (!startedAt_ || !sourceNode?.buffer) return 0;
+    const timeSinceStart = audioContext.currentTime - startedAt_;
+    const elapsed = timeSinceStart + startOffset();
+    return elapsed / sourceNode.buffer.duration;
+  };
+
+  return { play, playing, stop, startedAt, progress };
 })();
+
+// @ts-ignore
+window.player = player;
 
 // COMPONENTS ---------------------
 // --------------------------------
@@ -196,10 +205,7 @@ const Cursor = (props: { clip: Clip; parent: HTMLElement }) => {
   const tick = () => {
     const startedAt_ = player.startedAt();
     if (startedAt_ !== undefined) {
-      const offset = audioContext.currentTime - startedAt_;
-      const duration = props.clip.buffer.length / props.clip.buffer.sampleRate;
-      const progress = offset / duration;
-      setLeft(progress * props.parent.clientWidth);
+      setLeft(player.progress() * props.parent.clientWidth);
     }
     animationFrame = requestAnimationFrame(tick);
   };
