@@ -201,7 +201,7 @@ const Waveform = (props: { clip: Clip }) => {
           </For>
         </div>
         <Show when={player.playing() && contentRoot}>
-          {<Cursor clip={props.clip} parent={contentRoot!} />}
+          {<Playhead clip={props.clip} parent={contentRoot!} />}
         </Show>
       </div>
       <WaveformSummary clip={props.clip} />
@@ -209,7 +209,7 @@ const Waveform = (props: { clip: Clip }) => {
   );
 };
 
-const Cursor = (props: { clip: Clip; parent: HTMLElement }) => {
+const Playhead = (props: { clip: Clip; parent: HTMLElement }) => {
   let animationFrame: number;
   const [left, setLeft] = createSignal(0);
 
@@ -236,6 +236,7 @@ const Cursor = (props: { clip: Clip; parent: HTMLElement }) => {
         width: "1px",
         height: "100%",
         background: "currentColor",
+        "border-inline": "1px solid white",
       }}
     >
       <svg
@@ -324,7 +325,7 @@ const WaveformSummary = (props: { clip: Clip }) => {
         )}
       </For>
       <Show when={player.playing() && root}>
-        {<Cursor clip={props.clip} parent={root!} />}
+        {<Playhead clip={props.clip} parent={root!} />}
       </Show>
     </div>
   );
