@@ -67,6 +67,7 @@ const player = (function createPlayer() {
   let sourceNode: AudioBufferSourceNode | undefined;
 
   const play = (buffer: AudioBuffer, offset = 0) => {
+    stop();
     setStartOffset(offset);
     const node = audioContext.createBufferSource();
     node.buffer = buffer;
@@ -79,7 +80,9 @@ const player = (function createPlayer() {
   };
 
   const stop = () => {
-    sourceNode?.stop();
+    if (!sourceNode) return;
+    sourceNode.onended = null;
+    sourceNode.stop();
     sourceNode = undefined;
     setStartedAt(undefined);
   };
@@ -178,6 +181,14 @@ const Waveform = (props: { clip: Clip }) => {
             "margin-top": "20px",
             height: props.clip.buffer.numberOfChannels * CANVAS_HEIGHT + "px",
           }}
+          ondblclick={(e) => {
+            if (!contentRoot) return;
+            const contentRect = contentRoot.getBoundingClientRect();
+            const offsetPx = e.clientX - contentRect.left;
+            const offsetRatio = offsetPx / contentRect.width;
+            const offsetSeconds = props.clip.buffer.duration * offsetRatio;
+            player.play(props.clip.buffer, offsetSeconds);
+          }}
         >
           <For each={tileManager.getVirtualItems()}>
             {(virtualItem) => (
@@ -203,10 +214,7 @@ const Cursor = (props: { clip: Clip; parent: HTMLElement }) => {
   const [left, setLeft] = createSignal(0);
 
   const tick = () => {
-    const startedAt_ = player.startedAt();
-    if (startedAt_ !== undefined) {
-      setLeft(player.progress() * props.parent.clientWidth);
-    }
+    setLeft(player.progress() * props.parent.clientWidth);
     animationFrame = requestAnimationFrame(tick);
   };
 
