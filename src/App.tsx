@@ -256,6 +256,7 @@ const Playhead = (props: { clip: Clip; parent: HTMLElement }) => {
 
 const WaveformSummary = (props: { clip: Clip }) => {
   let root: HTMLDivElement | undefined;
+  let dragging = false;
 
   const PositionIndicator = () => {
     let animationFrame: number;
@@ -299,6 +300,40 @@ const WaveformSummary = (props: { clip: Clip }) => {
     );
   };
 
+  const startDrag: JSX.EventHandlerUnion<HTMLDivElement, PointerEvent> = (
+    e,
+  ) => {
+    if (!root || !contentRoot || !scrollRoot) return;
+    const rect = root.getBoundingClientRect();
+    const offsetPx = e.clientX - rect.left;
+    const offsetRatio = offsetPx / rect.width;
+
+    scrollRoot.scrollLeft =
+      contentRoot.getBoundingClientRect().width * offsetRatio -
+      scrollRoot.getBoundingClientRect().width / 2;
+    dragging = true;
+
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const drag: JSX.EventHandlerUnion<HTMLDivElement, PointerEvent> = (e) => {
+    if (!dragging) return;
+    if (!root || !contentRoot || !scrollRoot) return;
+
+    const rect = root.getBoundingClientRect();
+    const offsetPx = e.clientX - rect.left;
+    const offsetRatio = offsetPx / rect.width;
+
+    scrollRoot.scrollLeft =
+      contentRoot.getBoundingClientRect().width * offsetRatio -
+      scrollRoot.getBoundingClientRect().width / 2;
+  };
+
+  const stopDrag: JSX.EventHandlerUnion<HTMLDivElement, PointerEvent> = (e) => {
+    dragging = false;
+  };
+
   return (
     <div
       ref={root}
@@ -307,7 +342,13 @@ const WaveformSummary = (props: { clip: Clip }) => {
         left: "0",
         height: "50px",
         "margin-top": "25px",
+        "touch-action": "none",
       }}
+      onPointerDown={startDrag}
+      onPointerMove={drag}
+      onPointerUp={stopDrag}
+      onPointerLeave={stopDrag}
+      onPointerCancel={stopDrag}
     >
       <PositionIndicator />
       <For each={range(0, props.clip.buffer.numberOfChannels)}>
