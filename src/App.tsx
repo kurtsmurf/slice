@@ -433,6 +433,9 @@ const ChannelSegment = (
         if (!canvas) return;
         drawBars(canvas, buckets);
         setLoading(false);
+      })
+      .catch(e => {
+        if (e.message !== "promise cancelled") console.error(e)
       });
   });
 
@@ -460,6 +463,20 @@ const range = (start: number, end: number, step = 1) =>
   [...new Array(Math.ceil((end - start) / step))].map((_, i) => i * step);
 
 function computeBuckets(data: Float32Array, numBuckets: number): Bucket[] {
+  const min = (arr: Float32Array) => {
+    let output = Infinity;
+    for (const item of arr) {
+      output = Math.min(item, output)
+    }
+    return output
+  }
+  const max = (arr: Float32Array) => {
+    let output = -Infinity;
+    for (const item of arr) {
+      output = Math.max(item, output)
+    }
+    return output
+  }
   const bucketSize = Math.ceil(data.length / numBuckets);
   const buckets = [];
   let startIndex = 0;
@@ -467,9 +484,7 @@ function computeBuckets(data: Float32Array, numBuckets: number): Bucket[] {
   for (let i = 0; i < numBuckets; i++) {
     const endIndex = startIndex + bucketSize;
     const bucket = data.subarray(startIndex, endIndex);
-    const min = Math.min(...bucket);
-    const max = Math.max(...bucket);
-    buckets.push({ min, max });
+    buckets.push({ min: min(bucket), max: max(bucket) });
     startIndex = endIndex;
   }
 
