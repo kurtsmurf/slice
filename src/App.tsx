@@ -300,34 +300,26 @@ const WaveformSummary = (props: { clip: Clip }) => {
     );
   };
 
+  const updateScrollPosition = (e: PointerEvent) => {
+    if (!root || !contentRoot || !scrollRoot) return;
+    const rect = root.getBoundingClientRect();
+    const offsetPx = e.clientX - rect.left;
+    const offsetRatio = offsetPx / rect.width;
+
+    scrollRoot.scrollLeft =
+      contentRoot.getBoundingClientRect().width * offsetRatio -
+      scrollRoot.getBoundingClientRect().width / 2;
+  };
+
   const startDrag: JSX.EventHandlerUnion<HTMLDivElement, PointerEvent> = (
     e,
   ) => {
-    if (!root || !contentRoot || !scrollRoot) return;
-    const rect = root.getBoundingClientRect();
-    const offsetPx = e.clientX - rect.left;
-    const offsetRatio = offsetPx / rect.width;
-
-    scrollRoot.scrollLeft =
-      contentRoot.getBoundingClientRect().width * offsetRatio -
-      scrollRoot.getBoundingClientRect().width / 2;
+    updateScrollPosition(e);
     dragging = true;
-
-    e.preventDefault();
-    e.stopPropagation();
   };
 
   const drag: JSX.EventHandlerUnion<HTMLDivElement, PointerEvent> = (e) => {
-    if (!dragging) return;
-    if (!root || !contentRoot || !scrollRoot) return;
-
-    const rect = root.getBoundingClientRect();
-    const offsetPx = e.clientX - rect.left;
-    const offsetRatio = offsetPx / rect.width;
-
-    scrollRoot.scrollLeft =
-      contentRoot.getBoundingClientRect().width * offsetRatio -
-      scrollRoot.getBoundingClientRect().width / 2;
+    if (dragging) updateScrollPosition(e);
   };
 
   const stopDrag: JSX.EventHandlerUnion<HTMLDivElement, PointerEvent> = (e) => {
@@ -434,8 +426,8 @@ const ChannelSegment = (
         drawBars(canvas, buckets);
         setLoading(false);
       })
-      .catch(e => {
-        if (e.message !== "promise cancelled") console.error(e)
+      .catch((e) => {
+        if (e.message !== "promise cancelled") console.error(e);
       });
   });
 
@@ -466,17 +458,17 @@ function computeBuckets(data: Float32Array, numBuckets: number): Bucket[] {
   const min = (arr: Float32Array) => {
     let output = Infinity;
     for (const item of arr) {
-      output = Math.min(item, output)
+      output = Math.min(item, output);
     }
-    return output
-  }
+    return output;
+  };
   const max = (arr: Float32Array) => {
     let output = -Infinity;
     for (const item of arr) {
-      output = Math.max(item, output)
+      output = Math.max(item, output);
     }
-    return output
-  }
+    return output;
+  };
   const bucketSize = Math.ceil(data.length / numBuckets);
   const buckets = [];
   let startIndex = 0;
