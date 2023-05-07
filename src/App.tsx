@@ -100,9 +100,6 @@ const player = (function createPlayer() {
   return { play, playing, stop, startedAt, progress };
 })();
 
-// @ts-ignore
-window.player = player;
-
 // COMPONENTS ---------------------
 // --------------------------------
 // --------------------------------
@@ -231,12 +228,12 @@ const Playhead = (props: { clip: Clip; parent: HTMLElement }) => {
       style={{
         position: "absolute",
         top: 0,
-        left: 0,
+        left: "-1px",
         transform: `translateX(${left()}px)`,
-        width: "1px",
+        width: "2px",
         height: "100%",
+        // color: "purple",
         background: "currentColor",
-        "border-inline": "1px solid white",
       }}
     >
       <svg
@@ -247,6 +244,7 @@ const Playhead = (props: { clip: Clip; parent: HTMLElement }) => {
           left: "-5px",
           width: "10px",
         }}
+        fill="currentColor"
       >
         <polygon points="0,0 1,0 0.5,1" />
       </svg>
@@ -291,9 +289,9 @@ const WaveformSummary = (props: { clip: Clip }) => {
         style={{
           position: "absolute",
           height: "50px",
-          width: width() + "px",
+          width: Math.max(2, width()) + "px",
           left: left() + "px",
-          background: "#3333",
+          background: "#8888",
         }}
       >
       </div>
@@ -342,7 +340,6 @@ const WaveformSummary = (props: { clip: Clip }) => {
       onPointerLeave={stopDrag}
       onPointerCancel={stopDrag}
     >
-      <PositionIndicator />
       <For each={range(0, props.clip.buffer.numberOfChannels)}>
         {(channelNumber) => (
           <ChannelSegment
@@ -357,6 +354,7 @@ const WaveformSummary = (props: { clip: Clip }) => {
           />
         )}
       </For>
+      <PositionIndicator />
       <Show when={player.playing() && root}>
         {<Playhead clip={props.clip} parent={root!} />}
       </Show>
@@ -410,7 +408,6 @@ const ChannelSegment = (
   },
 ) => {
   let canvas: HTMLCanvasElement | undefined;
-  const [loading, setLoading] = createSignal(true);
   let workerTask: workerpool.Promise<void | Bucket[]> | undefined;
 
   onCleanup(() => {
@@ -422,9 +419,7 @@ const ChannelSegment = (
     workerTask = pool
       .exec(computeBuckets, [props.data, props.numBuckets])
       .then((buckets: Bucket[]) => {
-        if (!canvas) return;
-        drawBars(canvas, buckets);
-        setLoading(false);
+        if (canvas) drawBars(canvas, buckets);
       })
       .catch((e) => {
         if (e.message !== "promise cancelled") console.error(e);
@@ -437,7 +432,6 @@ const ChannelSegment = (
       width={props.width}
       height={props.height}
       style={{
-        "background-color": loading() ? "transparent" : "white",
         width: "100%",
         height: "100%",
         ...props.style,
