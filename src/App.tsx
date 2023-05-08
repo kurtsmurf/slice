@@ -175,7 +175,6 @@ const Waveform = (props: { clip: Clip }) => {
             display: "flex",
             position: "relative",
             "overflow": "hidden",
-            "margin-top": "20px",
             height: props.clip.buffer.numberOfChannels * CANVAS_HEIGHT + "px",
           }}
           ondblclick={(e) => {
@@ -206,7 +205,7 @@ const Waveform = (props: { clip: Clip }) => {
   );
 };
 
-const Playhead = (props: { clip: Clip; parent: HTMLElement }) => {
+const Playhead = (props: { clip: Clip; parent: HTMLElement; }) => {
   let animationFrame: number;
   const [left, setLeft] = createSignal(0);
 
@@ -232,22 +231,10 @@ const Playhead = (props: { clip: Clip; parent: HTMLElement }) => {
         transform: `translateX(${left()}px)`,
         width: "2px",
         height: "100%",
-        // color: "purple",
+        color: "orange",
         background: "currentColor",
       }}
     >
-      <svg
-        viewBox="0 0 1 1"
-        style={{
-          position: "relative",
-          top: "-20px",
-          left: "-5px",
-          width: "10px",
-        }}
-        fill="currentColor"
-      >
-        <polygon points="0,0 1,0 0.5,1" />
-      </svg>
     </div>
   );
 };
@@ -331,7 +318,6 @@ const WaveformSummary = (props: { clip: Clip }) => {
         position: "sticky",
         left: "0",
         height: "50px",
-        "margin-top": "25px",
         "touch-action": "none",
       }}
       onPointerDown={startDrag}
