@@ -196,21 +196,19 @@ const Waveform = (props: { clip: Clip }) => {
             )}
           </For>
         </div>
-        <Show when={player.playing() && contentRoot}>
-          {<Playhead clip={props.clip} parent={contentRoot!} />}
-        </Show>
+        <Playhead clip={props.clip} parent={contentRoot} />
       </div>
       <WaveformSummary clip={props.clip} />
     </div>
   );
 };
 
-const Playhead = (props: { clip: Clip; parent: HTMLElement; }) => {
+const Playhead = (props: { clip: Clip; parent: HTMLElement | undefined }) => {
   let animationFrame: number;
   const [left, setLeft] = createSignal(0);
 
   const tick = () => {
-    setLeft(player.progress() * props.parent.clientWidth);
+    if (props.parent) setLeft(player.progress() * props.parent.clientWidth);
     animationFrame = requestAnimationFrame(tick);
   };
 
@@ -223,19 +221,21 @@ const Playhead = (props: { clip: Clip; parent: HTMLElement; }) => {
   });
 
   return (
-    <div
-      style={{
-        position: "absolute",
-        top: 0,
-        left: "-1px",
-        transform: `translateX(${left()}px)`,
-        width: "2px",
-        height: "100%",
-        color: "orange",
-        background: "currentColor",
-      }}
-    >
-    </div>
+    <Show when={player.playing() && props.parent}>
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: "-1px",
+          transform: `translateX(${left()}px)`,
+          width: "2px",
+          height: "100%",
+          color: "orange",
+          background: "currentColor",
+        }}
+      >
+      </div>
+    </Show>
   );
 };
 
@@ -341,9 +341,7 @@ const WaveformSummary = (props: { clip: Clip }) => {
         )}
       </For>
       <PositionIndicator />
-      <Show when={player.playing() && root}>
-        {<Playhead clip={props.clip} parent={root!} />}
-      </Show>
+      <Playhead clip={props.clip} parent={root} />
     </div>
   );
 };
