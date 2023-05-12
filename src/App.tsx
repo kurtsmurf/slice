@@ -334,7 +334,6 @@ const WaveformSummary = (props: { clip: Clip }) => {
             height={50}
             numBuckets={800}
             style={{
-              background: "transparent",
               position: "absolute",
             }}
           />
