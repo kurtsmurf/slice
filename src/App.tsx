@@ -167,35 +167,33 @@ const Waveform = (props: { buffer: AudioBuffer }) => {
 
   return (
     <div ref={scrollRoot} style={{ overflow: "auto" }}>
-      <div style={{ position: "relative" }}>
-        <div
-          ref={contentRoot}
-          style={{
-            width: `${props.buffer.length / spx()}px`,
-            display: "flex",
-            position: "relative",
-            "overflow": "hidden",
-            height: props.buffer.numberOfChannels * CANVAS_HEIGHT + "px",
-          }}
-          ondblclick={(e) => {
-            if (!contentRoot) return;
-            const contentRect = contentRoot.getBoundingClientRect();
-            const offsetPx = e.clientX - contentRect.left;
-            const offsetRatio = offsetPx / contentRect.width;
-            const offsetSeconds = props.buffer.duration * offsetRatio;
-            player.play(props.buffer, offsetSeconds);
-          }}
-        >
-          <For each={tileManager.getVirtualItems()}>
-            {(virtualItem) => (
-              <WaveformTile
-                buffer={props.buffer}
-                start={virtualItem.start}
-                length={CANVAS_WIDTH}
-              />
-            )}
-          </For>
-        </div>
+      <div
+        ref={contentRoot}
+        style={{
+          width: `${props.buffer.length / spx()}px`,
+          display: "flex",
+          position: "relative",
+          "overflow": "hidden",
+          height: props.buffer.numberOfChannels * CANVAS_HEIGHT + "px",
+        }}
+        ondblclick={(e) => {
+          if (!contentRoot) return;
+          const contentRect = contentRoot.getBoundingClientRect();
+          const offsetPx = e.clientX - contentRect.left;
+          const offsetRatio = offsetPx / contentRect.width;
+          const offsetSeconds = props.buffer.duration * offsetRatio;
+          player.play(props.buffer, offsetSeconds);
+        }}
+      >
+        <For each={tileManager.getVirtualItems()}>
+          {(virtualItem) => (
+            <WaveformTile
+              buffer={props.buffer}
+              start={virtualItem.start}
+              length={CANVAS_WIDTH}
+            />
+          )}
+        </For>
         <Playhead parent={contentRoot} />
       </div>
       <WaveformSummary buffer={props.buffer} />
