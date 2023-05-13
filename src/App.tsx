@@ -138,7 +138,7 @@ export const App = () => {
         {player.playing() ? "stop" : "play"}
       </button>
       <Details clip={clip()!} />
-      <Waveform clip={clip()!} />
+      <Waveform buffer={clip()!.buffer} />
     </Show>
   );
 };
@@ -156,10 +156,10 @@ const Details = (props: { clip: Clip }) => (
   </>
 );
 
-const Waveform = (props: { clip: Clip }) => {
+const Waveform = (props: { buffer: AudioBuffer }) => {
   // @ts-ignore
   const tileManager = createVirtualizer(() => ({
-    count: range(0, props.clip.buffer.length / spx(), CANVAS_WIDTH).length,
+    count: range(0, props.buffer.length / spx(), CANVAS_WIDTH).length,
     getScrollElement: () => scrollRoot,
     estimateSize: () => CANVAS_WIDTH,
     horizontal: true,
@@ -171,39 +171,39 @@ const Waveform = (props: { clip: Clip }) => {
         <div
           ref={contentRoot}
           style={{
-            width: `${props.clip.buffer.length / spx()}px`,
+            width: `${props.buffer.length / spx()}px`,
             display: "flex",
             position: "relative",
             "overflow": "hidden",
-            height: props.clip.buffer.numberOfChannels * CANVAS_HEIGHT + "px",
+            height: props.buffer.numberOfChannels * CANVAS_HEIGHT + "px",
           }}
           ondblclick={(e) => {
             if (!contentRoot) return;
             const contentRect = contentRoot.getBoundingClientRect();
             const offsetPx = e.clientX - contentRect.left;
             const offsetRatio = offsetPx / contentRect.width;
-            const offsetSeconds = props.clip.buffer.duration * offsetRatio;
-            player.play(props.clip.buffer, offsetSeconds);
+            const offsetSeconds = props.buffer.duration * offsetRatio;
+            player.play(props.buffer, offsetSeconds);
           }}
         >
           <For each={tileManager.getVirtualItems()}>
             {(virtualItem) => (
               <WaveformTile
-                clip={props.clip}
+                buffer={props.buffer}
                 start={virtualItem.start}
                 length={CANVAS_WIDTH}
               />
             )}
           </For>
         </div>
-        <Playhead clip={props.clip} parent={contentRoot} />
+        <Playhead parent={contentRoot} />
       </div>
-      <WaveformSummary clip={props.clip} />
+      <WaveformSummary buffer={props.buffer} />
     </div>
   );
 };
 
-const Playhead = (props: { clip: Clip; parent: HTMLElement | undefined }) => {
+const Playhead = (props: { parent: HTMLElement | undefined }) => {
   let animationFrame: number;
   const [left, setLeft] = createSignal(0);
 
@@ -239,7 +239,7 @@ const Playhead = (props: { clip: Clip; parent: HTMLElement | undefined }) => {
   );
 };
 
-const WaveformSummary = (props: { clip: Clip }) => {
+const WaveformSummary = (props: { buffer: AudioBuffer }) => {
   let root: HTMLDivElement | undefined;
   let dragging = false;
 
@@ -326,10 +326,10 @@ const WaveformSummary = (props: { clip: Clip }) => {
       onPointerLeave={stopDrag}
       onPointerCancel={stopDrag}
     >
-      <For each={range(0, props.clip.buffer.numberOfChannels)}>
+      <For each={range(0, props.buffer.numberOfChannels)}>
         {(channelNumber) => (
           <ChannelSegment
-            data={props.clip.buffer.getChannelData(channelNumber)}
+            data={props.buffer.getChannelData(channelNumber)}
             width={800}
             height={50}
             numBuckets={800}
@@ -340,13 +340,13 @@ const WaveformSummary = (props: { clip: Clip }) => {
         )}
       </For>
       <PositionIndicator />
-      <Playhead clip={props.clip} parent={root} />
+      <Playhead parent={root} />
     </div>
   );
 };
 
 const WaveformTile = (
-  props: { start: number; length: number; clip: Clip },
+  props: { start: number; length: number; buffer: AudioBuffer },
 ) => (
   <div
     style={{
@@ -359,10 +359,10 @@ const WaveformTile = (
       width: CANVAS_WIDTH + "px",
     }}
   >
-    <For each={range(0, props.clip.buffer.numberOfChannels)}>
+    <For each={range(0, props.buffer.numberOfChannels)}>
       {(channelNumber) => {
         const data = createMemo(() =>
-          props.clip.buffer.getChannelData(channelNumber)
+          props.buffer.getChannelData(channelNumber)
             .slice(
               props.start * spx(),
               (props.start + props.length) * spx(),
