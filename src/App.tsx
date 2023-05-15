@@ -28,7 +28,7 @@ const CANVAS_WIDTH = 400;
 const CANVAS_HEIGHT = 100;
 
 // samples per pixel
-const [spx, setSpx] = createSignal(32);
+const [samplesPerPixel, setSamplesPerPixel] = createSignal(32);
 
 // the scrollable element
 let scrollRoot: HTMLDivElement | undefined;
@@ -41,20 +41,20 @@ const pool = workerpool.pool();
 
 // TODO: consolidate zoom functions
 const zoomIn = () => {
-  const currentSpx = spx();
+  const currentSpx = samplesPerPixel();
   const nextSpx = Math.max(1, currentSpx / 2);
   if (currentSpx === nextSpx) return;
-  setSpx(nextSpx);
+  setSamplesPerPixel(nextSpx);
 
   const currentScrollLeft = scrollRoot?.scrollLeft || 0;
   const nextScrollLeft = currentScrollLeft * 2;
   if (scrollRoot) scrollRoot.scrollLeft = nextScrollLeft;
 };
 const zoomOut = () => {
-  const currentSpx = spx();
+  const currentSpx = samplesPerPixel();
   const nextSpx = Math.min(512, currentSpx * 2);
   if (currentSpx === nextSpx) return;
-  setSpx(nextSpx);
+  setSamplesPerPixel(nextSpx);
 
   const currentScrollLeft = scrollRoot?.scrollLeft || 0;
   const nextScrollLeft = currentScrollLeft / 2;
@@ -130,8 +130,12 @@ export const App = () => {
       >
         clear
       </button>
-      <button onClick={zoomOut} disabled={spx() === 512}>ZOOM OUT</button>
-      <button onClick={zoomIn} disabled={spx() === 1}>ZOOM IN</button>
+      <button onClick={zoomOut} disabled={samplesPerPixel() === 512}>
+        ZOOM OUT
+      </button>
+      <button onClick={zoomIn} disabled={samplesPerPixel() === 1}>
+        ZOOM IN
+      </button>
       <button
         onClick={() => {
           if (player.playing()) {
@@ -158,14 +162,19 @@ const Details = (props: { clip: Clip }) => (
         (props.clip.buffer.sampleRate || 1)).toFixed(2)} seconds
     </p>
     <p>{props.clip.buffer.length} samples</p>
-    <p>{spx()} samples per pixel</p>
+    <p>{samplesPerPixel()} samples per pixel</p>
   </>
 );
 
 const Waveform = (props: { buffer: AudioBuffer }) => {
+  // a note about this tsignore:
+  // in TS createVirtualizer rejects function parameter
+  // but it works
+  // and it makes the virtualizer reactive to samples per pixel
   // @ts-ignore
   const tileManager = createVirtualizer(() => ({
-    count: range(0, props.buffer.length / spx(), CANVAS_WIDTH).length,
+    count:
+      range(0, props.buffer.length / samplesPerPixel(), CANVAS_WIDTH).length,
     getScrollElement: () => scrollRoot,
     estimateSize: () => CANVAS_WIDTH,
     horizontal: true,
@@ -176,7 +185,7 @@ const Waveform = (props: { buffer: AudioBuffer }) => {
       <div
         ref={contentRoot}
         style={{
-          width: `${props.buffer.length / spx()}px`,
+          width: `${props.buffer.length / samplesPerPixel()}px`,
           display: "flex",
           position: "relative",
           "overflow": "hidden",
@@ -407,8 +416,8 @@ const WaveformTile = (
         const data = createMemo(() =>
           props.buffer.getChannelData(channelNumber)
             .slice(
-              props.start * spx(),
-              (props.start + props.length) * spx(),
+              props.start * samplesPerPixel(),
+              (props.start + props.length) * samplesPerPixel(),
             )
         );
         return (
@@ -416,7 +425,7 @@ const WaveformTile = (
             data={data()}
             width={CANVAS_WIDTH}
             height={CANVAS_HEIGHT}
-            numBuckets={data().length / spx()}
+            numBuckets={data().length / samplesPerPixel()}
           />
         );
       }}
