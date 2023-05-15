@@ -100,6 +100,12 @@ const player = (function createPlayer() {
   return { play, playing, stop, startedAt, progress };
 })();
 
+const [cursor, setCursor] = createSignal<number>(-1);
+
+createEffect(() => {
+  console.log("last touch", cursor());
+});
+
 // COMPONENTS ---------------------
 // --------------------------------
 // --------------------------------
@@ -165,26 +171,6 @@ const Waveform = (props: { buffer: AudioBuffer }) => {
     horizontal: true,
   }));
 
-  const [lastTouch, setLastTouch] = createSignal<number>(-1);
-  const TouchMarker = () => {
-    return (
-      <Show when={lastTouch() >= 0}>
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: "-1px",
-            transform: `translateX(${lastTouch()}px)`,
-            width: "0px",
-            height: "100%",
-            border: "1px dashed gray",
-          }}
-        >
-        </div>
-      </Show>
-    );
-  };
-
   return (
     <div ref={scrollRoot} style={{ overflow: "auto" }}>
       <div
@@ -203,7 +189,7 @@ const Waveform = (props: { buffer: AudioBuffer }) => {
           const offsetRatio = offsetPx / contentRect.width;
           const offsetSeconds = props.buffer.duration * offsetRatio;
           player.play(props.buffer, offsetSeconds);
-          setLastTouch(offsetPx);
+          setCursor(offsetPx / contentRoot.clientWidth);
         }}
       >
         <For each={tileManager.getVirtualItems()}>
@@ -215,11 +201,47 @@ const Waveform = (props: { buffer: AudioBuffer }) => {
             />
           )}
         </For>
+        <TouchMarker parent={contentRoot}></TouchMarker>
         <Playhead parent={contentRoot} />
-        <TouchMarker></TouchMarker>
       </div>
       <WaveformSummary buffer={props.buffer} />
     </div>
+  );
+};
+
+const TouchMarker = (props: { parent: HTMLElement | undefined }) => {
+  let animationFrame: number;
+  const [left, setLeft] = createSignal(0);
+
+  const tick = () => {
+    if (props.parent) setLeft(cursor() * props.parent.clientWidth);
+    animationFrame = requestAnimationFrame(tick);
+  };
+
+  onMount(() => {
+    animationFrame = requestAnimationFrame(tick);
+  });
+
+  onCleanup(() => {
+    cancelAnimationFrame(animationFrame);
+  });
+
+  return (
+    <Show when={props.parent}>
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: "-1px",
+          transform: `translateX(${left()}px)`,
+          width: "0px",
+          height: "100%",
+          border: "1px dashed orange",
+          "box-sizing": "border-box",
+        }}
+      >
+      </div>
+    </Show>
   );
 };
 
@@ -361,6 +383,7 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
       </For>
       <PositionIndicator />
       <Playhead parent={root} />
+      <TouchMarker parent={root}></TouchMarker>
     </div>
   );
 };
