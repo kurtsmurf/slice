@@ -201,7 +201,7 @@ const Waveform = (props: { buffer: AudioBuffer }) => {
             />
           )}
         </For>
-        <TouchMarker parent={contentRoot}></TouchMarker>
+        <Cursor parent={contentRoot}></Cursor>
         <Playhead parent={contentRoot} />
       </div>
       <WaveformSummary buffer={props.buffer} />
@@ -209,7 +209,7 @@ const Waveform = (props: { buffer: AudioBuffer }) => {
   );
 };
 
-const TouchMarker = (props: { parent: HTMLElement | undefined }) => {
+const Cursor = (props: { parent: HTMLElement | undefined }) => {
   let animationFrame: number;
   const [left, setLeft] = createSignal(0);
 
@@ -382,8 +382,8 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
         )}
       </For>
       <PositionIndicator />
+      <Cursor parent={root}></Cursor>
       <Playhead parent={root} />
-      <TouchMarker parent={root}></TouchMarker>
     </div>
   );
 };
