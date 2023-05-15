@@ -165,6 +165,26 @@ const Waveform = (props: { buffer: AudioBuffer }) => {
     horizontal: true,
   }));
 
+  const [lastTouch, setLastTouch] = createSignal<number>(-1);
+  const TouchMarker = () => {
+    return (
+      <Show when={lastTouch() >= 0}>
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: "-1px",
+            transform: `translateX(${lastTouch()}px)`,
+            width: "0px",
+            height: "100%",
+            border: "1px dashed gray",
+          }}
+        >
+        </div>
+      </Show>
+    );
+  };
+
   return (
     <div ref={scrollRoot} style={{ overflow: "auto" }}>
       <div
@@ -183,6 +203,7 @@ const Waveform = (props: { buffer: AudioBuffer }) => {
           const offsetRatio = offsetPx / contentRect.width;
           const offsetSeconds = props.buffer.duration * offsetRatio;
           player.play(props.buffer, offsetSeconds);
+          setLastTouch(offsetPx);
         }}
       >
         <For each={tileManager.getVirtualItems()}>
@@ -195,6 +216,7 @@ const Waveform = (props: { buffer: AudioBuffer }) => {
           )}
         </For>
         <Playhead parent={contentRoot} />
+        <TouchMarker></TouchMarker>
       </div>
       <WaveformSummary buffer={props.buffer} />
     </div>
