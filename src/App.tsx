@@ -27,9 +27,7 @@ type Bucket = { min: number; max: number };
 const CANVAS_WIDTH = 400;
 const CANVAS_HEIGHT = 100;
 
-// samples per pixel
 const [samplesPerPixel, setSamplesPerPixel] = createSignal(32);
-
 const [flags, setFlags] = createSignal<number[]>([]);
 
 // the scrollable element
@@ -218,7 +216,7 @@ const Waveform = (props: { buffer: AudioBuffer }) => {
           )}
         </For>
         <For each={flags()}>
-          {(position) => <Blah parent={contentRoot} pos={position}></Blah>}
+          {(position) => <Flag parent={contentRoot} pos={position}></Flag>}
         </For>
         <Cursor parent={contentRoot}></Cursor>
         <Playhead parent={contentRoot} />
@@ -245,11 +243,10 @@ const useAnimationFrame = (callback: () => void) => {
   });
 };
 
-const Blah = (props: { parent: HTMLElement | undefined; pos: number }) => {
+const Flag = (props: { parent: HTMLElement | undefined; pos: number }) => {
   const [left, setLeft] = createSignal(0);
   useAnimationFrame(() => {
     if (props.parent) {
-      console.log("Hello");
       setLeft(props.pos * props.parent.clientWidth);
     }
   });
@@ -274,22 +271,6 @@ const Blah = (props: { parent: HTMLElement | undefined; pos: number }) => {
 };
 
 const Cursor = (props: { parent: HTMLElement | undefined }) => {
-  // let animationFrame: number;
-  // const [left, setLeft] = createSignal(0);
-
-  // const tick = () => {
-  //   if (props.parent) setLeft(cursor() * props.parent.clientWidth);
-  //   animationFrame = requestAnimationFrame(tick);
-  // };
-
-  // onMount(() => {
-  //   animationFrame = requestAnimationFrame(tick);
-  // });
-
-  // onCleanup(() => {
-  //   cancelAnimationFrame(animationFrame);
-  // });
-
   const [left, setLeft] = createSignal(0);
   useAnimationFrame(() => {
     if (props.parent) setLeft(cursor() * props.parent.clientWidth);
@@ -315,20 +296,9 @@ const Cursor = (props: { parent: HTMLElement | undefined }) => {
 };
 
 const Playhead = (props: { parent: HTMLElement | undefined }) => {
-  let animationFrame: number;
   const [left, setLeft] = createSignal(0);
-
-  const tick = () => {
+  useAnimationFrame(() => {
     if (props.parent) setLeft(player.progress() * props.parent.clientWidth);
-    animationFrame = requestAnimationFrame(tick);
-  };
-
-  onMount(() => {
-    animationFrame = requestAnimationFrame(tick);
-  });
-
-  onCleanup(() => {
-    cancelAnimationFrame(animationFrame);
   });
 
   return (
@@ -355,11 +325,10 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
   let dragging = false;
 
   const PositionIndicator = () => {
-    let animationFrame: number;
     const [left, setLeft] = createSignal(0);
     const [width, setWidth] = createSignal(0);
 
-    const tick = () => {
+    useAnimationFrame(() => {
       if (scrollRoot && contentRoot && root) {
         setLeft(
           scrollRoot.scrollLeft / contentRoot.clientWidth * root.clientWidth,
@@ -371,15 +340,6 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
           ),
         );
       }
-      animationFrame = requestAnimationFrame(tick);
-    };
-
-    onMount(() => {
-      animationFrame = requestAnimationFrame(tick);
-    });
-
-    onCleanup(() => {
-      cancelAnimationFrame(animationFrame);
     });
 
     return (
