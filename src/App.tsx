@@ -30,10 +30,7 @@ const CANVAS_HEIGHT = 100;
 // samples per pixel
 const [samplesPerPixel, setSamplesPerPixel] = createSignal(32);
 
-
 const [flags, setFlags] = createSignal<number[]>([]);
-
-
 
 // the scrollable element
 let scrollRoot: HTMLDivElement | undefined;
@@ -153,7 +150,7 @@ export const App = () => {
       <button
         onClick={() => {
           console.log("drop a flag at", cursor());
-          setFlags(prev => [...prev, cursor()])
+          setFlags((prev) => [...prev, cursor()]);
         }}
       >
         drop a flag
@@ -221,7 +218,7 @@ const Waveform = (props: { buffer: AudioBuffer }) => {
           )}
         </For>
         <For each={flags()}>
-            {(position) => <Blah parent={contentRoot} pos={position}></Blah>}
+          {(position) => <Blah parent={contentRoot} pos={position}></Blah>}
         </For>
         <Cursor parent={contentRoot}></Cursor>
         <Playhead parent={contentRoot} />
@@ -237,7 +234,7 @@ const useAnimationFrame = (callback: () => void) => {
   const tick = () => {
     callback();
     animationFrame = requestAnimationFrame(tick);
-  }
+  };
 
   onMount(() => {
     animationFrame = requestAnimationFrame(tick);
@@ -246,16 +243,16 @@ const useAnimationFrame = (callback: () => void) => {
   onCleanup(() => {
     cancelAnimationFrame(animationFrame);
   });
-}
+};
 
-const Blah = (props: { parent: HTMLElement | undefined, pos: number }) => {
+const Blah = (props: { parent: HTMLElement | undefined; pos: number }) => {
   const [left, setLeft] = createSignal(0);
   useAnimationFrame(() => {
     if (props.parent) {
-      console.log("Hello")
-      setLeft(props.pos * props.parent.clientWidth)
+      console.log("Hello");
+      setLeft(props.pos * props.parent.clientWidth);
     }
-  })
+  });
 
   return (
     <Show when={props.parent}>
@@ -268,7 +265,7 @@ const Blah = (props: { parent: HTMLElement | undefined, pos: number }) => {
           transform: `translateX(${left()}px)`,
           width: "2px",
           height: "100%",
-          background: "purple"
+          background: "purple",
         }}
       >
       </div>
@@ -294,7 +291,9 @@ const Cursor = (props: { parent: HTMLElement | undefined }) => {
   // });
 
   const [left, setLeft] = createSignal(0);
-  useAnimationFrame(() => { if (props.parent) setLeft(cursor() * props.parent.clientWidth)})
+  useAnimationFrame(() => {
+    if (props.parent) setLeft(cursor() * props.parent.clientWidth);
+  });
 
   return (
     <Show when={props.parent}>
