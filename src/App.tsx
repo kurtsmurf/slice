@@ -230,7 +230,31 @@ const Waveform = (props: { buffer: AudioBuffer }) => {
   );
 };
 
+const useAnimationFrame = (callback: () => void) => {
+  let animationFrame: number;
+
+  const tick = () => {
+    callback();
+    animationFrame = requestAnimationFrame(tick);
+  }
+
+  onMount(() => {
+    animationFrame = requestAnimationFrame(tick);
+  });
+
+  onCleanup(() => {
+    cancelAnimationFrame(animationFrame);
+  });
+}
+
 const Blah = (props: { parent: HTMLElement | undefined, pos: number }) => {
+  const [left, setLeft] = createSignal(0);
+  useAnimationFrame(() => {
+    if (props.parent) {
+      console.log("Hello")
+      setLeft(props.pos * props.parent.clientWidth)
+    }
+  })
 
   return (
     <Show when={props.parent}>
@@ -240,7 +264,7 @@ const Blah = (props: { parent: HTMLElement | undefined, pos: number }) => {
           position: "absolute",
           top: 0,
           left: "-1px",
-          transform: `translateX(${props.pos * props.parent!.clientWidth}px)`,
+          transform: `translateX(${left()}px)`,
           width: "2px",
           height: "100%",
           background: "purple"
@@ -252,21 +276,24 @@ const Blah = (props: { parent: HTMLElement | undefined, pos: number }) => {
 };
 
 const Cursor = (props: { parent: HTMLElement | undefined }) => {
-  let animationFrame: number;
+  // let animationFrame: number;
+  // const [left, setLeft] = createSignal(0);
+
+  // const tick = () => {
+  //   if (props.parent) setLeft(cursor() * props.parent.clientWidth);
+  //   animationFrame = requestAnimationFrame(tick);
+  // };
+
+  // onMount(() => {
+  //   animationFrame = requestAnimationFrame(tick);
+  // });
+
+  // onCleanup(() => {
+  //   cancelAnimationFrame(animationFrame);
+  // });
+
   const [left, setLeft] = createSignal(0);
-
-  const tick = () => {
-    if (props.parent) setLeft(cursor() * props.parent.clientWidth);
-    animationFrame = requestAnimationFrame(tick);
-  };
-
-  onMount(() => {
-    animationFrame = requestAnimationFrame(tick);
-  });
-
-  onCleanup(() => {
-    cancelAnimationFrame(animationFrame);
-  });
+  useAnimationFrame(() => { if (props.parent) setLeft(cursor() * props.parent.clientWidth)})
 
   return (
     <Show when={props.parent}>
