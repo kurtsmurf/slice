@@ -126,7 +126,8 @@ export const App = () => {
       <button
         onClick={() => {
           setClip(undefined);
-          setCursor(0)
+          setCursor(0);
+          setFlags([]);
           player.stop();
         }}
       >
