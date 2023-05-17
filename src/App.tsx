@@ -30,6 +30,11 @@ const CANVAS_HEIGHT = 100;
 // samples per pixel
 const [samplesPerPixel, setSamplesPerPixel] = createSignal(32);
 
+
+const [flags, setFlags] = createSignal<number[]>([]);
+
+
+
 // the scrollable element
 let scrollRoot: HTMLDivElement | undefined;
 
@@ -144,6 +149,14 @@ export const App = () => {
       >
         {player.playing() ? "stop" : "play"}
       </button>
+      <button
+        onClick={() => {
+          console.log("drop a flag at", cursor());
+          setFlags(prev => [...prev, cursor()])
+        }}
+      >
+        drop a flag
+      </button>
       <Details clip={clip()!} />
       <Waveform buffer={clip()!.buffer} />
     </Show>
@@ -206,11 +219,35 @@ const Waveform = (props: { buffer: AudioBuffer }) => {
             />
           )}
         </For>
+        <For each={flags()}>
+            {(position) => <Blah parent={contentRoot} pos={position}></Blah>}
+        </For>
         <Cursor parent={contentRoot}></Cursor>
         <Playhead parent={contentRoot} />
       </div>
       <WaveformSummary buffer={props.buffer} />
     </div>
+  );
+};
+
+const Blah = (props: { parent: HTMLElement | undefined, pos: number }) => {
+
+  return (
+    <Show when={props.parent}>
+      <div
+        data-blah
+        style={{
+          position: "absolute",
+          top: 0,
+          left: "-1px",
+          transform: `translateX(${props.pos * props.parent!.clientWidth}px)`,
+          width: "2px",
+          height: "100%",
+          background: "purple"
+        }}
+      >
+      </div>
+    </Show>
   );
 };
 
