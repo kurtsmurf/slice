@@ -100,11 +100,7 @@ const player = (function createPlayer() {
   return { play, playing, stop, startedAt, progress };
 })();
 
-const [cursor, setCursor] = createSignal<number>(-1);
-
-createEffect(() => {
-  console.log("last touch", cursor());
-});
+const [cursor, setCursor] = createSignal<number>(0);
 
 // COMPONENTS ---------------------
 // --------------------------------
@@ -125,6 +121,7 @@ export const App = () => {
       <button
         onClick={() => {
           setClip(undefined);
+          setCursor(0)
           player.stop();
         }}
       >
@@ -167,7 +164,6 @@ const Details = (props: { clip: Clip }) => (
 );
 
 const Waveform = (props: { buffer: AudioBuffer }) => {
-  // a note about this tsignore:
   // in TS createVirtualizer rejects function parameter
   // but it works
   // and it makes the virtualizer reactive to samples per pixel
