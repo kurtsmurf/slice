@@ -30,6 +30,8 @@ const CANVAS_HEIGHT = 100;
 const [samplesPerPixel, setSamplesPerPixel] = createSignal(32);
 const [flags, setFlags] = createSignal<number[]>([]);
 
+// createEffect(() => console.log(flags()))
+
 // the scrollable element
 let scrollRoot: HTMLDivElement | undefined;
 
@@ -139,6 +141,9 @@ export const App = () => {
           if (player.playing()) {
             player.stop();
           } else {
+            // "alt: play from current cursor position"
+            // const offsetSeconds = clip()!.buffer.duration * cursor();
+            // player.play(clip()!.buffer, offsetSeconds);
             player.play(clip()!.buffer);
           }
         }}
@@ -147,7 +152,6 @@ export const App = () => {
       </button>
       <button
         onClick={() => {
-          console.log("drop a flag at", cursor());
           setFlags((prev) => [...prev, cursor()]);
         }}
       >
@@ -254,7 +258,7 @@ const Flag = (props: { parent: HTMLElement | undefined; pos: number }) => {
   return (
     <Show when={props.parent}>
       <div
-        data-blah
+        data-flag
         style={{
           position: "absolute",
           top: 0,
@@ -411,6 +415,9 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
         )}
       </For>
       <PositionIndicator />
+      <For each={flags()}>
+        {(position) => <Flag parent={root} pos={position}></Flag>}
+      </For>
       <Cursor parent={root}></Cursor>
       <Playhead parent={root} />
     </div>
