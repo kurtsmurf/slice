@@ -9,6 +9,7 @@ import {
   onCleanup,
   onMount,
   Show,
+  splitProps,
 } from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
 import workerpool from "workerpool";
@@ -29,8 +30,6 @@ const CANVAS_HEIGHT = 100;
 
 const [samplesPerPixel, setSamplesPerPixel] = createSignal(32);
 const [flags, setFlags] = createSignal<number[]>([]);
-
-// createEffect(() => console.log(flags()))
 
 // the scrollable element
 let scrollRoot: HTMLDivElement | undefined;
@@ -159,7 +158,27 @@ export const App = () => {
       </button>
       <Details clip={clip()!} />
       <Waveform buffer={clip()!.buffer} />
+      <FlagPlayers buffer={clip()!.buffer} />
     </Show>
+  );
+};
+
+const FlagPlayers = (props: { buffer: AudioBuffer }) => {
+  return (
+    <>
+      <For each={flags()}>
+        {(flag) => (
+          <button
+            onClick={() => {
+              const offsetSeconds = props.buffer.duration * flag;
+              player.play(props.buffer, offsetSeconds);
+            }}
+          >
+            &#9654; {flag.toFixed(5)}
+          </button>
+        )}
+      </For>
+    </>
   );
 };
 
@@ -220,7 +239,14 @@ const Waveform = (props: { buffer: AudioBuffer }) => {
           )}
         </For>
         <For each={flags()}>
-          {(position) => <Flag parent={contentRoot} pos={position}></Flag>}
+          {(position) => (
+            <Flag
+              tabIndex="0"
+              parent={contentRoot}
+              pos={position}
+            >
+            </Flag>
+          )}
         </For>
         <Cursor parent={contentRoot}></Cursor>
         <Playhead parent={contentRoot} />
@@ -247,7 +273,13 @@ const useAnimationFrame = (callback: () => void) => {
   });
 };
 
-const Flag = (props: { parent: HTMLElement | undefined; pos: number }) => {
+const Flag = (
+  props: JSX.HTMLAttributes<HTMLDivElement> & {
+    parent: HTMLElement | undefined;
+    pos: number;
+  },
+) => {
+  const [, htmlAttrs] = splitProps(props, ["parent", "pos"]);
   const [left, setLeft] = createSignal(0);
   useAnimationFrame(() => {
     if (props.parent) {
@@ -258,6 +290,7 @@ const Flag = (props: { parent: HTMLElement | undefined; pos: number }) => {
   return (
     <Show when={props.parent}>
       <div
+        {...htmlAttrs}
         data-flag
         style={{
           position: "absolute",
