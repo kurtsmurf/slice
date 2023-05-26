@@ -63,27 +63,40 @@ const zoomOut = () => {
 };
 
 const player = (function createPlayer() {
+  const ramp = 0.01;
   const [startedAt, setStartedAt] = createSignal<number | undefined>(undefined);
   const [startOffset, setStartOffset] = createSignal<number>(0);
   let sourceNode: AudioBufferSourceNode | undefined;
+  let gainNode: GainNode | undefined;
 
   const play = (buffer: AudioBuffer, offset = 0) => {
     stop();
     setStartOffset(offset);
+    setStartedAt(audioContext.currentTime);
+
+    gainNode = audioContext.createGain();
+    gainNode.connect(audioContext.destination);
+    const end = audioContext.currentTime + ramp;
+    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+    gainNode.gain.linearRampToValueAtTime(1, end);
+
     const node = audioContext.createBufferSource();
     node.buffer = buffer;
-    node.connect(audioContext.destination);
+    node.connect(gainNode);
     node.onended = stop;
     node.start(0, offset);
-
-    setStartedAt(audioContext.currentTime);
     sourceNode = node;
   };
 
   const stop = () => {
-    if (!sourceNode) return;
+    if (!sourceNode || !gainNode) return;
+
+    const end = audioContext.currentTime + ramp;
+    gainNode.gain.setValueAtTime(1, audioContext.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0, end);
+
     sourceNode.onended = null;
-    sourceNode.stop();
+    sourceNode.stop(end);
     sourceNode = undefined;
     setStartedAt(undefined);
   };
