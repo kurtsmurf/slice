@@ -231,6 +231,9 @@ const Waveform = (props: { buffer: AudioBuffer }) => {
           position: "relative",
           "overflow": "hidden",
           height: props.buffer.numberOfChannels * CANVAS_HEIGHT + "px",
+          // JSX.CSSProperties doesn't recognize container-type yet
+          // @ts-ignore
+          "container-type": "inline-size",
         }}
         ondblclick={(e) => {
           if (!contentRoot) return;
@@ -255,14 +258,13 @@ const Waveform = (props: { buffer: AudioBuffer }) => {
           {(position) => (
             <Flag
               tabIndex="0"
-              parent={contentRoot}
               pos={position}
             >
             </Flag>
           )}
         </For>
-        <Cursor parent={contentRoot}></Cursor>
-        <Playhead parent={contentRoot} />
+        <Cursor />
+        <Playhead />
       </div>
       <WaveformSummary buffer={props.buffer} />
     </div>
@@ -288,77 +290,56 @@ const useAnimationFrame = (callback: () => void) => {
 
 const Flag = (
   props: JSX.HTMLAttributes<HTMLDivElement> & {
-    parent: HTMLElement | undefined;
     pos: number;
   },
 ) => {
-  const [, htmlAttrs] = splitProps(props, ["parent", "pos"]);
-  const [left, setLeft] = createSignal(0);
-  useAnimationFrame(() => {
-    if (props.parent) {
-      setLeft(props.pos * props.parent.clientWidth);
-    }
-  });
-
+  const [, htmlAttrs] = splitProps(props, ["pos"]);
   return (
-    <Show when={props.parent}>
-      <div
-        {...htmlAttrs}
-        data-flag
-        style={{
-          position: "absolute",
-          top: 0,
-          left: "-1px",
-          transform: `translateX(${left()}px)`,
-          width: "2px",
-          height: "100%",
-          background: "purple",
-        }}
-      >
-      </div>
-    </Show>
+    <div
+      {...htmlAttrs}
+      data-flag
+      style={{
+        position: "absolute",
+        top: 0,
+        left: "-1px",
+        transform: `translateX(${props.pos * 100}cqi)`,
+        width: "2px",
+        height: "100%",
+        background: "purple",
+      }}
+    >
+    </div>
   );
 };
 
-const Cursor = (props: { parent: HTMLElement | undefined }) => {
+const Cursor = () => (
+  <div
+    style={{
+      position: "absolute",
+      top: 0,
+      left: "-1px",
+      transform: `translateX(${cursor() * 100}cqi)`,
+      width: "0px",
+      height: "100%",
+      border: "1px dashed orange",
+      "box-sizing": "border-box",
+    }}
+  >
+  </div>
+);
+
+const Playhead = () => {
   const [left, setLeft] = createSignal(0);
-  useAnimationFrame(() => {
-    if (props.parent) setLeft(cursor() * props.parent.clientWidth);
-  });
+  useAnimationFrame(() => setLeft(player.progress() * 100));
 
   return (
-    <Show when={props.parent}>
+    <Show when={player.playing()}>
       <div
         style={{
           position: "absolute",
           top: 0,
           left: "-1px",
-          transform: `translateX(${left()}px)`,
-          width: "0px",
-          height: "100%",
-          border: "1px dashed orange",
-          "box-sizing": "border-box",
-        }}
-      >
-      </div>
-    </Show>
-  );
-};
-
-const Playhead = (props: { parent: HTMLElement | undefined }) => {
-  const [left, setLeft] = createSignal(0);
-  useAnimationFrame(() => {
-    if (props.parent) setLeft(player.progress() * props.parent.clientWidth);
-  });
-
-  return (
-    <Show when={player.playing() && props.parent}>
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: "-1px",
-          transform: `translateX(${left()}px)`,
+          transform: `translateX(${left()}cqi)`,
           width: "2px",
           height: "100%",
           color: "orange",
@@ -379,15 +360,12 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
     const [width, setWidth] = createSignal(0);
 
     useAnimationFrame(() => {
-      if (scrollRoot && contentRoot && root) {
+      if (scrollRoot && contentRoot) {
         setLeft(
-          scrollRoot.scrollLeft / contentRoot.clientWidth * root.clientWidth,
+          scrollRoot.scrollLeft / contentRoot.clientWidth * 100,
         );
         setWidth(
-          Math.min(
-            scrollRoot.clientWidth / contentRoot.clientWidth * root.clientWidth,
-            root.clientWidth, // do not exceed container width
-          ),
+          scrollRoot.clientWidth / contentRoot.clientWidth * 100,
         );
       }
     });
@@ -397,8 +375,8 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
         style={{
           position: "absolute",
           height: "50px",
-          width: Math.max(2, width()) + "px",
-          left: left() + "px",
+          width: `min(100cqi, max(${width()}cqi, 2px))`,
+          left: left() + "cqi",
           background: "#8888",
         }}
       >
@@ -462,10 +440,10 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
       </For>
       <PositionIndicator />
       <For each={flags()}>
-        {(position) => <Flag parent={root} pos={position}></Flag>}
+        {(position) => <Flag pos={position}></Flag>}
       </For>
-      <Cursor parent={root}></Cursor>
-      <Playhead parent={root} />
+      <Cursor />
+      <Playhead />
     </div>
   );
 };
