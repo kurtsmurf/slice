@@ -76,15 +76,15 @@ const player = (function createPlayer() {
 
     gainNode = audioContext.createGain();
     gainNode.connect(audioContext.destination);
-    const end = audioContext.currentTime + ramp;
     gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(1, end);
+    gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime + ramp);
 
     const node = audioContext.createBufferSource();
     node.buffer = buffer;
     node.connect(gainNode);
     node.onended = stop;
     node.start(0, offset);
+
     sourceNode = node;
   };
 
@@ -221,6 +221,16 @@ const Waveform = (props: { buffer: AudioBuffer }) => {
     horizontal: true,
   }));
 
+  const playFromPointer = (e: MouseEvent) => {
+    if (!contentRoot) return;
+    const contentRect = contentRoot.getBoundingClientRect();
+    const offsetPx = e.clientX - contentRect.left;
+    const offsetRatio = offsetPx / contentRect.width;
+    const offsetSeconds = props.buffer.duration * offsetRatio;
+    player.play(props.buffer, offsetSeconds);
+    setCursor(offsetPx / contentRoot.clientWidth);
+  };
+
   return (
     <div ref={scrollRoot} style={{ overflow: "auto" }}>
       <div
@@ -235,15 +245,7 @@ const Waveform = (props: { buffer: AudioBuffer }) => {
           // @ts-ignore
           "container-type": "inline-size",
         }}
-        ondblclick={(e) => {
-          if (!contentRoot) return;
-          const contentRect = contentRoot.getBoundingClientRect();
-          const offsetPx = e.clientX - contentRect.left;
-          const offsetRatio = offsetPx / contentRect.width;
-          const offsetSeconds = props.buffer.duration * offsetRatio;
-          player.play(props.buffer, offsetSeconds);
-          setCursor(offsetPx / contentRoot.clientWidth);
-        }}
+        ondblclick={playFromPointer}
       >
         <For each={tileManager.getVirtualItems()}>
           {(virtualItem) => (
@@ -535,20 +537,6 @@ const range = (start: number, end: number, step = 1) =>
   [...new Array(Math.ceil((end - start) / step))].map((_, i) => i * step);
 
 function computeBuckets(data: Float32Array, numBuckets: number): Bucket[] {
-  const min = (arr: Float32Array) => {
-    let output = Infinity;
-    for (const item of arr) {
-      output = Math.min(item, output);
-    }
-    return output;
-  };
-  const max = (arr: Float32Array) => {
-    let output = -Infinity;
-    for (const item of arr) {
-      output = Math.max(item, output);
-    }
-    return output;
-  };
   const bucketSize = Math.ceil(data.length / numBuckets);
   const buckets = [];
   let startIndex = 0;
@@ -556,7 +544,17 @@ function computeBuckets(data: Float32Array, numBuckets: number): Bucket[] {
   for (let i = 0; i < numBuckets; i++) {
     const endIndex = startIndex + bucketSize;
     const bucket = data.subarray(startIndex, endIndex);
-    buckets.push({ min: min(bucket), max: max(bucket) });
+
+    let min = Infinity;
+    for (const item of bucket) {
+      min = Math.min(item, min);
+    }
+    let max = -Infinity;
+    for (const item of bucket) {
+      max = Math.max(item, max);
+    }
+
+    buckets.push({ min, max });
     startIndex = endIndex;
   }
 
