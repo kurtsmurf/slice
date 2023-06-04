@@ -28,38 +28,32 @@ type Bucket = { min: number; max: number };
 const CANVAS_WIDTH = 400;
 const CANVAS_HEIGHT = 100;
 
-const [samplesPerPixel, setSamplesPerPixel] = createSignal(32);
-const [flags, setFlags] = createSignal<number[]>([]);
-
 // the scrollable element
 let scrollRoot: HTMLDivElement | undefined;
-
 // the content wrapper
 let contentRoot: HTMLDivElement | undefined;
-
 // Pool of workers for computing buckets
 const pool = workerpool.pool();
 
-// TODO: consolidate zoom functions
-const zoomIn = () => {
-  const currentSpx = samplesPerPixel();
-  const nextSpx = Math.max(1, currentSpx / 2);
-  if (currentSpx === nextSpx) return;
-  setSamplesPerPixel(nextSpx);
+const [flags, setFlags] = createSignal<number[]>([]);
+const [cursor, setCursor] = createSignal<number>(0);
+const [samplesPerPixel, setSamplesPerPixel] = createSignal(32);
 
-  const currentScrollLeft = scrollRoot?.scrollLeft || 0;
-  const nextScrollLeft = currentScrollLeft * 2;
-  if (scrollRoot) scrollRoot.scrollLeft = nextScrollLeft;
-};
-const zoomOut = () => {
+const zoom = (direction: "in" | "out") => {
+  if (!scrollRoot) return;
+  const factor = 2;
   const currentSpx = samplesPerPixel();
-  const nextSpx = Math.min(512, currentSpx * 2);
-  if (currentSpx === nextSpx) return;
-  setSamplesPerPixel(nextSpx);
-
   const currentScrollLeft = scrollRoot?.scrollLeft || 0;
-  const nextScrollLeft = currentScrollLeft / 2;
-  if (scrollRoot) scrollRoot.scrollLeft = nextScrollLeft;
+
+  setSamplesPerPixel(
+    direction === "in"
+      ? Math.max(1, currentSpx / factor)
+      : Math.min(512, currentSpx * factor),
+  );
+
+  scrollRoot.scrollLeft = direction === "in"
+    ? currentScrollLeft * factor
+    : currentScrollLeft / factor;
 };
 
 const player = (function createPlayer() {
@@ -114,8 +108,6 @@ const player = (function createPlayer() {
   return { play, playing, stop, startedAt, progress };
 })();
 
-const [cursor, setCursor] = createSignal<number>(0);
-
 // COMPONENTS ---------------------
 // --------------------------------
 // --------------------------------
@@ -142,10 +134,10 @@ export const App = () => {
       >
         clear
       </button>
-      <button onClick={zoomOut} disabled={samplesPerPixel() === 512}>
+      <button onClick={() => zoom("out")} disabled={samplesPerPixel() === 512}>
         ZOOM OUT
       </button>
-      <button onClick={zoomIn} disabled={samplesPerPixel() === 1}>
+      <button onClick={() => zoom("in")} disabled={samplesPerPixel() === 1}>
         ZOOM IN
       </button>
       <button
