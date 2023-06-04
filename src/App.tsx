@@ -37,24 +37,36 @@ const pool = workerpool.pool();
 
 const [flags, setFlags] = createSignal<number[]>([]);
 const [cursor, setCursor] = createSignal<number>(0);
-const [samplesPerPixel, setSamplesPerPixel] = createSignal(32);
 
-const zoom = (direction: "in" | "out") => {
-  if (!scrollRoot) return;
-  const factor = 2;
-  const currentSpx = samplesPerPixel();
-  const currentScrollLeft = scrollRoot?.scrollLeft || 0;
+const zoom = (function createZoom() {
+  const min = 1, max = 1024;
+  const [samplesPerPixel, setSamplesPerPixel] = createSignal(32);
 
-  setSamplesPerPixel(
-    direction === "in"
-      ? Math.max(1, currentSpx / factor)
-      : Math.min(512, currentSpx * factor),
-  );
+  const zoom = (direction: "in" | "out") => {
+    if (!scrollRoot) return;
+    const factor = 2;
+    const currentSpx = samplesPerPixel();
+    const currentScrollLeft = scrollRoot.scrollLeft;
 
-  scrollRoot.scrollLeft = direction === "in"
-    ? currentScrollLeft * factor
-    : currentScrollLeft / factor;
-};
+    setSamplesPerPixel(
+      direction === "in"
+        ? Math.max(min, currentSpx / factor)
+        : Math.min(max, currentSpx * factor),
+    );
+
+    scrollRoot.scrollLeft = direction === "in"
+      ? currentScrollLeft * factor
+      : currentScrollLeft / factor;
+  };
+
+  return {
+    in: () => zoom("in"),
+    out: () => zoom("out"),
+    samplesPerPixel,
+    inDisabled: () => samplesPerPixel() === min,
+    outDisabled: () => samplesPerPixel() === max,
+  };
+})();
 
 const player = (function createPlayer() {
   const ramp = 0.01;
@@ -134,11 +146,11 @@ export const App = () => {
       >
         clear
       </button>
-      <button onClick={() => zoom("out")} disabled={samplesPerPixel() === 512}>
-        ZOOM OUT
+      <button onClick={zoom.in} disabled={zoom.inDisabled()}>
+        zoom in
       </button>
-      <button onClick={() => zoom("in")} disabled={samplesPerPixel() === 1}>
-        ZOOM IN
+      <button onClick={zoom.out} disabled={zoom.outDisabled()}>
+        zoom out
       </button>
       <button
         onClick={() => {
@@ -196,7 +208,7 @@ const Details = (props: { clip: Clip }) => (
         (props.clip.buffer.sampleRate || 1)).toFixed(2)} seconds
     </p>
     <p>{props.clip.buffer.length} samples</p>
-    <p>{samplesPerPixel()} samples per pixel</p>
+    <p>{zoom.samplesPerPixel()} samples per pixel</p>
   </>
 );
 
@@ -206,8 +218,8 @@ const Waveform = (props: { buffer: AudioBuffer }) => {
   // and it makes the virtualizer reactive to samples per pixel
   // @ts-ignore
   const tileManager = createVirtualizer(() => ({
-    count:
-      range(0, props.buffer.length / samplesPerPixel(), CANVAS_WIDTH).length,
+    count: range(0, props.buffer.length / zoom.samplesPerPixel(), CANVAS_WIDTH)
+      .length,
     getScrollElement: () => scrollRoot,
     estimateSize: () => CANVAS_WIDTH,
     horizontal: true,
@@ -228,7 +240,7 @@ const Waveform = (props: { buffer: AudioBuffer }) => {
       <div
         ref={contentRoot}
         style={{
-          width: `${props.buffer.length / samplesPerPixel()}px`,
+          width: `${props.buffer.length / zoom.samplesPerPixel()}px`,
           display: "flex",
           position: "relative",
           "overflow": "hidden",
@@ -461,8 +473,8 @@ const WaveformTile = (
         const data = createMemo(() =>
           props.buffer.getChannelData(channelNumber)
             .slice(
-              props.start * samplesPerPixel(),
-              (props.start + props.length) * samplesPerPixel(),
+              props.start * zoom.samplesPerPixel(),
+              (props.start + props.length) * zoom.samplesPerPixel(),
             )
         );
         return (
@@ -470,7 +482,7 @@ const WaveformTile = (
             data={data()}
             width={CANVAS_WIDTH}
             height={CANVAS_HEIGHT}
-            numBuckets={data().length / samplesPerPixel()}
+            numBuckets={data().length / zoom.samplesPerPixel()}
           />
         );
       }}
