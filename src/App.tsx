@@ -325,10 +325,10 @@ const Cursor = () => (
       top: 0,
       left: "-1px",
       transform: `translateX(${cursor() * 100}cqi)`,
-      width: "0px",
+      width: "2px",
       height: "100%",
-      border: "1px dashed orange",
-      "box-sizing": "border-box",
+      background: "orange",
+      opacity: 0.5,
     }}
   >
   </div>
