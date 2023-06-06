@@ -35,6 +35,7 @@ let contentRoot: HTMLDivElement | undefined;
 // Pool of workers for computing buckets
 const pool = workerpool.pool();
 
+const [clip, setClip] = createSignal<Clip | undefined>();
 const [flags, setFlags] = createSignal<number[]>([]);
 const [cursor, setCursor] = createSignal<number>(0);
 
@@ -124,61 +125,59 @@ const player = (function createPlayer() {
 // --------------------------------
 // --------------------------------
 
-export const App = () => {
-  const [clip, setClip] = createSignal<Clip | undefined>();
+export const App = () => (
+  <Show
+    when={clip()}
+    fallback={<AudioInput onChange={setClip} />}
+  >
+    <Controls clip={clip()!} />
+    <Details clip={clip()!} />
+    <Waveform buffer={clip()!.buffer} />
+    <FlagPlayers buffer={clip()!.buffer} />
+  </Show>
+);
 
-  createEffect(() => {
-    if (!clip()) stop();
-  });
-
-  return (
-    <Show
-      when={clip()}
-      fallback={<AudioInput onChange={setClip} />}
+const Controls = (props: { clip: Clip }) => (
+  <>
+    <button
+      onClick={() => {
+        setClip(undefined);
+        setCursor(0);
+        setFlags([]);
+        player.stop();
+      }}
     >
-      <button
-        onClick={() => {
-          setClip(undefined);
-          setCursor(0);
-          setFlags([]);
+      clear
+    </button>
+    <button onClick={zoom.in} disabled={zoom.inDisabled()}>
+      zoom in
+    </button>
+    <button onClick={zoom.out} disabled={zoom.outDisabled()}>
+      zoom out
+    </button>
+    <button
+      onClick={() => {
+        if (player.playing()) {
           player.stop();
-        }}
-      >
-        clear
-      </button>
-      <button onClick={zoom.in} disabled={zoom.inDisabled()}>
-        zoom in
-      </button>
-      <button onClick={zoom.out} disabled={zoom.outDisabled()}>
-        zoom out
-      </button>
-      <button
-        onClick={() => {
-          if (player.playing()) {
-            player.stop();
-          } else {
-            // "alt: play from current cursor position"
-            // const offsetSeconds = clip()!.buffer.duration * cursor();
-            // player.play(clip()!.buffer, offsetSeconds);
-            player.play(clip()!.buffer);
-          }
-        }}
-      >
-        {player.playing() ? "stop" : "play"}
-      </button>
-      <button
-        onClick={() => {
-          setFlags((prev) => [...prev, cursor()]);
-        }}
-      >
-        drop a flag
-      </button>
-      <Details clip={clip()!} />
-      <Waveform buffer={clip()!.buffer} />
-      <FlagPlayers buffer={clip()!.buffer} />
-    </Show>
-  );
-};
+        } else {
+          // "alt: play from current cursor position"
+          // const offsetSeconds = clip()!.buffer.duration * cursor();
+          // player.play(clip()!.buffer, offsetSeconds);
+          player.play(props.clip.buffer);
+        }
+      }}
+    >
+      {player.playing() ? "stop" : "play"}
+    </button>
+    <button
+      onClick={() => {
+        setFlags((prev) => [...prev, cursor()]);
+      }}
+    >
+      drop a flag
+    </button>
+  </>
+);
 
 const FlagPlayers = (props: { buffer: AudioBuffer }) => {
   return (
