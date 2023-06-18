@@ -133,9 +133,42 @@ export const App = () => (
     <Controls clip={clip()!} />
     <Details clip={clip()!} />
     <Waveform buffer={clip()!.buffer} />
-    <FlagPlayers buffer={clip()!.buffer} />
   </Show>
 );
+
+const Blah = (props: { buffer: AudioBuffer }) => {
+  return (
+    <div
+      style={{
+        width: `${props.buffer.length / zoom.samplesPerPixel()}px`,
+        // "overflow": "hidden",
+        // JSX.CSSProperties doesn't recognize container-type yet
+        // @ts-ignore
+        "container-type": "inline-size",
+        height: "40px",
+      }}
+    >
+      <For each={flags()}>
+        {(position) => (
+          <button
+            style={{
+              position: "absolute",
+              transform: `translateX(${position * 100}cqi)`,
+              height: "100%",
+            }}
+            onClick={() => {
+              const offsetSeconds = props.buffer.duration * position;
+              player.play(props.buffer, offsetSeconds);
+            }}
+            ondblclick={(e) => e.stopPropagation()}
+          >
+            &#9654; {position.toFixed(5)}
+          </button>
+        )}
+      </For>
+    </div>
+  );
+};
 
 const Controls = (props: { clip: Clip }) => (
   <>
@@ -179,25 +212,6 @@ const Controls = (props: { clip: Clip }) => (
   </>
 );
 
-const FlagPlayers = (props: { buffer: AudioBuffer }) => {
-  return (
-    <>
-      <For each={flags()}>
-        {(flag) => (
-          <button
-            onClick={() => {
-              const offsetSeconds = props.buffer.duration * flag;
-              player.play(props.buffer, offsetSeconds);
-            }}
-          >
-            &#9654; {flag.toFixed(5)}
-          </button>
-        )}
-      </For>
-    </>
-  );
-};
-
 const Details = (props: { clip: Clip }) => (
   <>
     <p>{props.clip.name}</p>
@@ -236,6 +250,7 @@ const Waveform = (props: { buffer: AudioBuffer }) => {
 
   return (
     <div ref={scrollRoot} style={{ overflow: "auto" }}>
+      <Blah buffer={props.buffer} />
       <div
         ref={contentRoot}
         style={{
@@ -260,13 +275,7 @@ const Waveform = (props: { buffer: AudioBuffer }) => {
           )}
         </For>
         <For each={flags()}>
-          {(position) => (
-            <Flag
-              tabIndex="0"
-              pos={position}
-            >
-            </Flag>
-          )}
+          {(position) => <Flag pos={position} />}
         </For>
         <Cursor />
         <Playhead />
@@ -313,6 +322,7 @@ const Flag = (
         background: "purple",
       }}
     >
+      {props.children}
     </div>
   );
 };
