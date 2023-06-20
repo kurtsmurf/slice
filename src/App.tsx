@@ -136,40 +136,6 @@ export const App = () => (
   </Show>
 );
 
-const Blah = (props: { buffer: AudioBuffer }) => {
-  return (
-    <div
-      style={{
-        width: `${props.buffer.length / zoom.samplesPerPixel()}px`,
-        // "overflow": "hidden",
-        // JSX.CSSProperties doesn't recognize container-type yet
-        // @ts-ignore
-        "container-type": "inline-size",
-        height: "40px",
-      }}
-    >
-      <For each={flags()}>
-        {(position) => (
-          <button
-            style={{
-              position: "absolute",
-              transform: `translateX(${position * 100}cqi)`,
-              height: "100%",
-            }}
-            onClick={() => {
-              const offsetSeconds = props.buffer.duration * position;
-              player.play(props.buffer, offsetSeconds);
-            }}
-            ondblclick={(e) => e.stopPropagation()}
-          >
-            &#9654; {position.toFixed(5)}
-          </button>
-        )}
-      </For>
-    </div>
-  );
-};
-
 const Controls = (props: { clip: Clip }) => (
   <>
     <button
@@ -250,7 +216,7 @@ const Waveform = (props: { buffer: AudioBuffer }) => {
 
   return (
     <div ref={scrollRoot} style={{ overflow: "auto" }}>
-      <Blah buffer={props.buffer} />
+      <Triggers buffer={props.buffer} />
       <div
         ref={contentRoot}
         style={{
@@ -281,6 +247,39 @@ const Waveform = (props: { buffer: AudioBuffer }) => {
         <Playhead />
       </div>
       <WaveformSummary buffer={props.buffer} />
+    </div>
+  );
+};
+
+const Triggers = (props: { buffer: AudioBuffer }) => {
+  return (
+    <div
+      style={{
+        width: `${props.buffer.length / zoom.samplesPerPixel()}px`,
+        // JSX.CSSProperties doesn't recognize container-type yet
+        // @ts-ignore
+        "container-type": "inline-size",
+        height: "40px",
+      }}
+    >
+      <For each={flags()}>
+        {(position) => (
+          <button
+            style={{
+              position: "absolute",
+              transform: `translateX(${position * 100}cqi)`,
+              height: "100%",
+            }}
+            onClick={() => {
+              const offsetSeconds = props.buffer.duration * position;
+              player.play(props.buffer, offsetSeconds);
+            }}
+            ondblclick={(e) => e.stopPropagation()}
+          >
+            &#9654; {position.toFixed(5)}
+          </button>
+        )}
+      </For>
     </div>
   );
 };
