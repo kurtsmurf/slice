@@ -74,4 +74,15 @@ export default defineConfig({
   //   url: 'https://localhost:3000/slice/',
   //   reuseExistingServer: !process.env.CI,
   // },
+
+
+  /* Run your local dev server before starting the tests */
+  webServer: process.env.CI
+    // if CI start the dev server
+    ? {
+    command: 'npm run dev',
+    port: 3000,
+  }
+  // otherwise assume it's already up
+  : undefined,
 });
