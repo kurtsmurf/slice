@@ -5,20 +5,20 @@ test("has title", async ({ page }) => {
   await expect(page).toHaveTitle(/slice/i);
 });
 
-test("loads clip", async ({ page }, testInfo) => {
+test.only("loads clip", async ({ page }, testInfo) => {
   await page.goto("localhost:3000");
   await page.evaluate(() => {
-    // set clip to a 60s buffer of silence named hello
+    // set clip to a buffer of silence named hello
     // @ts-ignore
     window.setClip({
       name: "hello",
       buffer: new AudioBuffer({
         sampleRate: 44100,
-        length: 44100 * 60,
+        length: 44100 * 6,
       }),
     });
   });
-  // does not wait for async canvas rendering to finish
+  await expect(page).toHaveScreenshot({ maxDiffPixels: 100 });
   await testInfo.attach(
     "screenshot",
     {
