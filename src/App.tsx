@@ -36,6 +36,11 @@ let contentRoot: HTMLDivElement | undefined;
 const pool = workerpool.pool();
 
 const [clip, setClip] = createSignal<Clip | undefined>();
+
+// exposing setClip on window so that we can setClip from tests
+// @ts-ignore
+window.setClip = setClip;
+
 const [flags, setFlags] = createSignal<number[]>([]);
 const [cursor, setCursor] = createSignal<number>(0);
 
