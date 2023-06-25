@@ -2,7 +2,7 @@ import { AudioInput } from "./AudioInput";
 import { Clip } from "./types";
 import { Show } from "solid-js";
 import { player } from "./player";
-import { clip, cursor, setClip, setCursor, setFlags } from "./signals";
+import { clearFlags, clip, dropFlag, setClip, setCursor } from "./signals";
 import { Waveform, zoom } from "./Waveform";
 
 export const App = () => (
@@ -22,7 +22,7 @@ const Controls = (props: { clip: Clip }) => (
       onClick={() => {
         setClip(undefined);
         setCursor(0);
-        setFlags([]);
+        clearFlags();
         player.stop();
       }}
     >
@@ -46,35 +46,12 @@ const Controls = (props: { clip: Clip }) => (
       {player.playing() ? "stop" : "play"}
     </button>
     <button
-      onClick={() => {
-        setFlags((prev) => {
-          const i = sortedIndex(prev, cursor());
-          if (prev[i] === cursor()) return prev;
-          return [...prev.slice(0, i), cursor(), ...prev.slice(i)];
-        });
-      }}
+      onClick={dropFlag}
     >
       drop a flag
     </button>
   </>
 );
-
-const sortedIndex = (arr: number[], value: number) => {
-  let low = 0;
-  let high = arr.length;
-
-  while (low <= high) {
-    const mid = Math.floor((low + high) / 2);
-    if (arr[mid] < value) {
-      low = mid + 1;
-    } else if (arr[mid] > value) {
-      high = mid - 1;
-    } else {
-      return mid;
-    }
-  }
-  return low;
-};
 
 const Details = (props: { clip: Clip }) => (
   <>

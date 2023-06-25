@@ -1,29 +1,37 @@
-import { createMemo, createSignal, For, JSX, Show, splitProps } from "solid-js";
+import {
+  createMemo,
+  createSignal,
+  For,
+  JSX,
+  onCleanup,
+  onMount,
+  Show,
+  splitProps,
+} from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
 import { player } from "./player";
 import { cursor, flags, setCursor } from "./signals";
-import { useAnimationFrame } from "./useAnimationFrame";
 import { ChannelSegment } from "./ChannelSegment";
 
-const CANVAS_WIDTH = 400;
-const CANVAS_HEIGHT = 100;
+const TILE_WIDTH = 400;
+const TILE_HEIGHT = 100;
 
 // the scrollable element
-let scrollRoot: HTMLDivElement | undefined;
+let scrollElement: HTMLDivElement | undefined;
 // the content wrapper
-let contentRoot: HTMLDivElement | undefined;
+let contentElement: HTMLDivElement | undefined;
 
 export const zoom = (function createZoom() {
   const min = 1, max = 1024;
   const [samplesPerPixel, setSamplesPerPixel] = createSignal(32);
 
   const zoom = (direction: "in" | "out") => {
-    if (!scrollRoot) {
+    if (!scrollElement) {
       return;
     }
     const factor = 2;
     const currentSpx = samplesPerPixel();
-    const currentScrollLeft = scrollRoot.scrollLeft;
+    const currentScrollLeft = scrollElement.scrollLeft;
 
     setSamplesPerPixel(
       direction === "in"
@@ -31,7 +39,7 @@ export const zoom = (function createZoom() {
         : Math.min(max, currentSpx * factor),
     );
 
-    scrollRoot.scrollLeft = direction === "in"
+    scrollElement.scrollLeft = direction === "in"
       ? currentScrollLeft * factor
       : currentScrollLeft / factor;
   };
@@ -46,7 +54,7 @@ export const zoom = (function createZoom() {
 })();
 
 export const Waveform = (props: { buffer: AudioBuffer }) => (
-  <div ref={scrollRoot} data-scroll-root style={{ overflow: "auto" }}>
+  <div ref={scrollElement} data-scroll-element style={{ overflow: "auto" }}>
     <Triggers buffer={props.buffer} />
     <WaveformContent buffer={props.buffer} />
     <WaveformSummary buffer={props.buffer} />
@@ -59,34 +67,35 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
   // and it makes the virtualizer reactive to samples per pixel
   // @ts-ignore
   const tileManager = createVirtualizer(() => ({
-    count: range(0, props.buffer.length / zoom.samplesPerPixel(), CANVAS_WIDTH)
+    count: range(0, props.buffer.length / zoom.samplesPerPixel(), TILE_WIDTH)
       .length,
-    getScrollElement: () => scrollRoot,
-    estimateSize: () => CANVAS_WIDTH,
+    getScrollElement: () => scrollElement,
+    estimateSize: () => TILE_WIDTH,
     horizontal: true,
   }));
 
   const playFromPointer = (e: MouseEvent) => {
-    if (!contentRoot) {
+    if (!contentElement) {
       return;
     }
-    const contentRect = contentRoot.getBoundingClientRect();
+    const contentRect = contentElement.getBoundingClientRect();
     const offsetPx = e.clientX - contentRect.left;
     const offsetRatio = offsetPx / contentRect.width;
     const offsetSeconds = props.buffer.duration * offsetRatio;
     player.play(props.buffer, offsetSeconds);
-    setCursor(offsetPx / contentRoot.clientWidth);
+    setCursor(offsetPx / contentElement.clientWidth);
   };
 
   return (
     <div
-      ref={contentRoot}
+      ref={contentElement}
+      data-content-element
       style={{
         width: `${props.buffer.length / zoom.samplesPerPixel()}px`,
         display: "flex",
         position: "relative",
         "overflow": "hidden",
-        height: props.buffer.numberOfChannels * CANVAS_HEIGHT + "px",
+        height: props.buffer.numberOfChannels * TILE_HEIGHT + "px",
         // JSX.CSSProperties doesn't recognize container-type yet
         // @ts-ignore
         "container-type": "inline-size",
@@ -98,7 +107,7 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
           <WaveformTile
             buffer={props.buffer}
             start={virtualItem.start}
-            length={CANVAS_WIDTH}
+            length={TILE_WIDTH}
           />
         )}
       </For>
@@ -217,12 +226,12 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
     const [width, setWidth] = createSignal(0);
 
     useAnimationFrame(() => {
-      if (scrollRoot && contentRoot) {
+      if (scrollElement && contentElement) {
         setLeft(
-          scrollRoot.scrollLeft / contentRoot.clientWidth * 100,
+          scrollElement.scrollLeft / contentElement.clientWidth * 100,
         );
         setWidth(
-          scrollRoot.clientWidth / contentRoot.clientWidth * 100,
+          scrollElement.clientWidth / contentElement.clientWidth * 100,
         );
       }
     });
@@ -242,16 +251,16 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
   };
 
   const updateScrollPosition = (e: PointerEvent) => {
-    if (!root || !contentRoot || !scrollRoot) {
+    if (!root || !contentElement || !scrollElement) {
       return;
     }
     const rect = root.getBoundingClientRect();
     const offsetPx = e.clientX - rect.left;
     const offsetRatio = offsetPx / rect.width;
 
-    scrollRoot.scrollLeft =
-      contentRoot.getBoundingClientRect().width * offsetRatio -
-      scrollRoot.getBoundingClientRect().width / 2;
+    scrollElement.scrollLeft =
+      contentElement.getBoundingClientRect().width * offsetRatio -
+      scrollElement.getBoundingClientRect().width / 2;
   };
 
   const startDrag: JSX.EventHandlerUnion<HTMLDivElement, PointerEvent> = (
@@ -320,7 +329,7 @@ const WaveformTile = (
       top: 0,
       left: 0,
       transform: `translateX(${props.start}px)`,
-      width: CANVAS_WIDTH + "px",
+      width: TILE_WIDTH + "px",
     }}
   >
     <For each={range(0, props.buffer.numberOfChannels)}>
@@ -335,8 +344,8 @@ const WaveformTile = (
         return (
           <ChannelSegment
             data={data()}
-            width={CANVAS_WIDTH}
-            height={CANVAS_HEIGHT}
+            width={TILE_WIDTH}
+            height={TILE_HEIGHT}
             numBuckets={data().length / zoom.samplesPerPixel()}
           />
         );
@@ -347,3 +356,20 @@ const WaveformTile = (
 
 const range = (start: number, end: number, step = 1) =>
   [...new Array(Math.ceil((end - start) / step))].map((_, i) => i * step);
+
+const useAnimationFrame = (callback: () => void) => {
+  let animationFrame: number;
+
+  const tick = () => {
+    callback();
+    animationFrame = requestAnimationFrame(tick);
+  };
+
+  onMount(() => {
+    animationFrame = requestAnimationFrame(tick);
+  });
+
+  onCleanup(() => {
+    cancelAnimationFrame(animationFrame);
+  });
+};
