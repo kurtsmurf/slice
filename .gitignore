@@ -4,3 +4,4 @@ dist
 /playwright-report/
 /playwright/.cache/
 /tests/*snapshots
+dep-graph.svg

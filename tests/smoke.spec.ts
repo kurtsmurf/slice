@@ -1,11 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("has title", async ({ page }) => {
-  await page.goto("localhost:3000");
-  await expect(page).toHaveTitle(/slice/i);
-});
-
-test.only("loads clip", async ({ page }, testInfo) => {
+test("loads clip", async ({ page }, testInfo) => {
   await page.goto("localhost:3000");
   await page.evaluate(() => {
     // set clip to a buffer of silence named hello
@@ -18,6 +13,12 @@ test.only("loads clip", async ({ page }, testInfo) => {
       }),
     });
   });
+
+  // double click in the center of the visible waveform area
+  await page.locator("[data-scroll-root]").dblclick();
+  // drop a flag at cursor placed in previous step
+  await page.getByText(/drop a flag/i).click();
+
   await expect(page).toHaveScreenshot({ maxDiffPixels: 100 });
   await testInfo.attach(
     "screenshot",
