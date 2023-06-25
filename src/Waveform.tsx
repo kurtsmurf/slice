@@ -45,7 +45,15 @@ export const zoom = (function createZoom() {
   };
 })();
 
-export const Waveform = (props: { buffer: AudioBuffer }) => {
+export const Waveform = (props: { buffer: AudioBuffer }) => (
+  <div ref={scrollRoot} data-scroll-root style={{ overflow: "auto" }}>
+    <Triggers buffer={props.buffer} />
+    <WaveformContent buffer={props.buffer} />
+    <WaveformSummary buffer={props.buffer} />
+  </div>
+);
+
+const WaveformContent = (props: { buffer: AudioBuffer }) => {
   // in TS createVirtualizer rejects function parameter
   // but it works
   // and it makes the virtualizer reactive to samples per pixel
@@ -71,38 +79,34 @@ export const Waveform = (props: { buffer: AudioBuffer }) => {
   };
 
   return (
-    <div ref={scrollRoot} data-scroll-root style={{ overflow: "auto" }}>
-      <Triggers buffer={props.buffer} />
-      <div
-        ref={contentRoot}
-        style={{
-          width: `${props.buffer.length / zoom.samplesPerPixel()}px`,
-          display: "flex",
-          position: "relative",
-          "overflow": "hidden",
-          height: props.buffer.numberOfChannels * CANVAS_HEIGHT + "px",
-          // JSX.CSSProperties doesn't recognize container-type yet
-          // @ts-ignore
-          "container-type": "inline-size",
-        }}
-        ondblclick={playFromPointer}
-      >
-        <For each={tileManager.getVirtualItems()}>
-          {(virtualItem) => (
-            <WaveformTile
-              buffer={props.buffer}
-              start={virtualItem.start}
-              length={CANVAS_WIDTH}
-            />
-          )}
-        </For>
-        <For each={flags()}>
-          {(position) => <Flag pos={position} />}
-        </For>
-        <Cursor />
-        <Playhead />
-      </div>
-      <WaveformSummary buffer={props.buffer} />
+    <div
+      ref={contentRoot}
+      style={{
+        width: `${props.buffer.length / zoom.samplesPerPixel()}px`,
+        display: "flex",
+        position: "relative",
+        "overflow": "hidden",
+        height: props.buffer.numberOfChannels * CANVAS_HEIGHT + "px",
+        // JSX.CSSProperties doesn't recognize container-type yet
+        // @ts-ignore
+        "container-type": "inline-size",
+      }}
+      ondblclick={playFromPointer}
+    >
+      <For each={tileManager.getVirtualItems()}>
+        {(virtualItem) => (
+          <WaveformTile
+            buffer={props.buffer}
+            start={virtualItem.start}
+            length={CANVAS_WIDTH}
+          />
+        )}
+      </For>
+      <For each={flags()}>
+        {(position) => <Flag pos={position} />}
+      </For>
+      <Cursor />
+      <Playhead />
     </div>
   );
 };

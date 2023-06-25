@@ -13,13 +13,13 @@ test("loads clip", async ({ page }, testInfo) => {
       }),
     });
   });
-
   // double click in the center of the visible waveform area
   await page.locator("[data-scroll-root]").dblclick();
   // drop a flag at cursor placed in previous step
   await page.getByText(/drop a flag/i).click();
-
+  // perform visual diff
   await expect(page).toHaveScreenshot({ maxDiffPixels: 100 });
+  // attach screenshot to result
   await testInfo.attach(
     "screenshot",
     {
