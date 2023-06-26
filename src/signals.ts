@@ -8,11 +8,11 @@ window.setClip = setClip;
 
 export const [cursor, setCursor] = createSignal<number>(0);
 
-const flagsSignal = createSignal<number[]>([]);
+const defaultFlags = [0];
+const flagsSignal = createSignal<number[]>(defaultFlags);
 export const flags = flagsSignal[0];
 const setFlags = flagsSignal[1];
-
-export const clearFlags = () => setFlags([]);
+export const clearFlags = () => setFlags(defaultFlags);
 
 const sortedIndex = (arr: number[], value: number) => {
   let low = 0;

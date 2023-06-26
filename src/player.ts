@@ -8,7 +8,7 @@ export const player = (function createPlayer() {
   let sourceNode: AudioBufferSourceNode | undefined;
   let gainNode: GainNode | undefined;
 
-  const play = (buffer: AudioBuffer, offset = 0) => {
+  const play = (buffer: AudioBuffer, offset = 0, duration?: number) => {
     stop();
     setStartOffset(offset);
     setStartedAt(audioContext.currentTime);
@@ -22,7 +22,7 @@ export const player = (function createPlayer() {
     node.buffer = buffer;
     node.connect(gainNode);
     node.onended = stop;
-    node.start(0, offset);
+    node.start(0, offset, duration);
 
     sourceNode = node;
   };
