@@ -38,4 +38,3 @@ export const dropFlag = () => {
     return [...prev.slice(0, i), cursor(), ...prev.slice(i)];
   });
 };
-

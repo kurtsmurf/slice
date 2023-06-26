@@ -270,7 +270,7 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
     dragging = true;
   };
 
-  const drag: JSX.EventHandlerUnion<HTMLDivElement, PointerEvent> = (e) => {
+  const move: JSX.EventHandlerUnion<HTMLDivElement, PointerEvent> = (e) => {
     if (dragging) {
       updateScrollPosition(e);
     }
@@ -291,7 +291,7 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
         "touch-action": "none",
       }}
       onPointerDown={startDrag}
-      onPointerMove={drag}
+      onPointerMove={move}
       onPointerUp={stopDrag}
       onPointerLeave={stopDrag}
       onPointerCancel={stopDrag}
