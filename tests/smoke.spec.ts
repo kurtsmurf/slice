@@ -14,6 +14,7 @@ test("loads clip", async ({ page }, testInfo) => {
     buffer.getChannelData(0).forEach((_, index, array) => {
       const progress = index / array.length;
       for (let i = 1; i < 16; i *= 2) {
+	// quick maths
         array[index] *= Math.sin(progress * i * 4 * Math.PI);
       }
     });
@@ -24,8 +25,13 @@ test("loads clip", async ({ page }, testInfo) => {
       buffer,
     });
   });
+  // click the center of the summary element
+  // should scroll view to halfway point of waveform
+  await page.locator("[data-summary-element]").click();
   // double click in the center of the visible waveform area
-  await page.locator("[data-scroll-element]").dblclick();
+  await page.locator("[data-content-element]").dblclick();
+  // stop playback
+  await page.getByText(/stop/i).click();
   // drop a flag at cursor placed in previous step
   await page.getByText(/drop a flag/i).click();
   // perform visual diff

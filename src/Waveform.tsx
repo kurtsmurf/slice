@@ -283,6 +283,7 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
   return (
     <div
       ref={root}
+      data-summary-element
       style={{
         position: "sticky",
         left: "0",
