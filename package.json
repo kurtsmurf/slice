@@ -7,7 +7,6 @@
     "build": "vite build",
     "serve": "vite preview",
     "test": "npx playwright test",
-    "clear-snapshots": "rm -rf tests/*.ts-snapshots",
     "dep-graph": "npx madge --image=dep-graph.svg src/index.tsx && google-chrome dep-graph.svg"
   },
   "license": "MIT",
