@@ -30,18 +30,18 @@ export const zoom = (function createZoom() {
       return;
     }
     const factor = 2;
-    const currentSpx = samplesPerPixel();
-    const currentScrollLeft = scrollElement.scrollLeft;
+    const currentCenter = scrollElement.scrollLeft +
+      scrollElement.clientWidth / 2;
+    const nextCenter = direction === "in"
+      ? currentCenter * factor
+      : currentCenter / factor;
 
-    setSamplesPerPixel(
+    setSamplesPerPixel((prev) =>
       direction === "in"
-        ? Math.max(min, currentSpx / factor)
-        : Math.min(max, currentSpx * factor),
+        ? Math.max(min, prev / factor)
+        : Math.min(max, prev * factor)
     );
-
-    scrollElement.scrollLeft = direction === "in"
-      ? currentScrollLeft * factor
-      : currentScrollLeft / factor;
+    scrollElement.scrollLeft = nextCenter - scrollElement.clientWidth / 2;
   };
 
   return {
