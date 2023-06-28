@@ -38,3 +38,10 @@ export const dropFlag = () => {
     return [...prev.slice(0, i), cursor(), ...prev.slice(i)];
   });
 };
+
+export const regions = () =>
+  flags().map((flag, i, arr) => {
+    const end = arr[i + 1] || 1;
+
+    return { start: flag, end };
+  });

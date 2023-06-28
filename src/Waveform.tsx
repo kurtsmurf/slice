@@ -10,7 +10,7 @@ import {
 } from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
 import { player } from "./player";
-import { cursor, flags, setCursor } from "./signals";
+import { cursor, flags, regions, setCursor } from "./signals";
 import { ChannelSegment } from "./ChannelSegment";
 
 const TILE_WIDTH = 400;
@@ -111,8 +111,8 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
           />
         )}
       </For>
-      <For each={flags()}>
-        {(position) => <Flag pos={position} />}
+      <For each={regions()}>
+        {(region) => <Flag pos={region.start} />}
       </For>
       <Cursor />
       <Playhead />
@@ -131,21 +131,23 @@ const Triggers = (props: { buffer: AudioBuffer }) => {
         height: "40px",
       }}
     >
-      <For each={flags()}>
-        {(position) => (
+      <For each={regions()}>
+        {({ start, end }) => (
           <button
             style={{
               position: "absolute",
-              transform: `translateX(${position * 100}cqi)`,
+              transform: `translateX(${start * 100}cqi)`,
               height: "100%",
             }}
             onClick={() => {
-              const offsetSeconds = props.buffer.duration * position;
-              player.play(props.buffer, offsetSeconds);
+              const startSeconds = props.buffer.duration * start;
+              const endSeconds = props.buffer.duration * end;
+              const durationSeconds = endSeconds - startSeconds;
+              player.play(props.buffer, startSeconds, durationSeconds);
             }}
             ondblclick={(e) => e.stopPropagation()}
           >
-            &#9654; {position.toFixed(5)}
+            &#9654; {start.toFixed(5)}
           </button>
         )}
       </For>
