@@ -53,15 +53,24 @@ const Controls = (props: { clip: Clip }) => (
   </>
 );
 
+const formatOf = (buffer: AudioBuffer) => {
+  switch (buffer.numberOfChannels) {
+    case (1):
+      return "mono";
+    case (2):
+      return "stereo";
+    default:
+      return buffer.numberOfChannels + " channels";
+  }
+};
+
 const Details = (props: { clip: Clip }) => (
   <>
     <p>{props.clip.name}</p>
-    <p>{props.clip.buffer.numberOfChannels} channels</p>
     <p>
       {((props.clip.buffer.length || 0) /
-        (props.clip.buffer.sampleRate || 1)).toFixed(2)} seconds
+        (props.clip.buffer.sampleRate || 1)).toFixed(2)}s
     </p>
-    <p>{props.clip.buffer.length} samples</p>
-    <p>{zoom.samplesPerPixel()} samples per pixel</p>
+    <p>{formatOf(props.clip.buffer)}</p>
   </>
 );
