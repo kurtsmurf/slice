@@ -40,7 +40,32 @@ const initializePage = () => {
 
   // @ts-ignore
   window.setClip({
-    name: "hello",
+    name: "sinusoid-mono",
+    buffer,
+  });
+};
+
+// sets clip to a stereo buffer with two sine waves a fifth apart
+const initializePageAlt = () => {
+  const buffer = new AudioBuffer({
+    sampleRate: 44100,
+    length: 44100 * 5,
+    numberOfChannels: 2,
+  });
+
+  buffer.getChannelData(0).forEach((_, index, array) => {
+    const progress = index / array.length;
+    array[index] = Math.sin(progress * (44100/8) * Math.PI) * 0.3;
+  });
+
+  buffer.getChannelData(1).forEach((_, index, array) => {
+    const progress = index / array.length;
+    array[index] = Math.sin(progress * (44100/12) * Math.PI) * 0.3;
+  });
+    
+  // @ts-ignore
+  window.setClip({
+    name: "stereo-fifth",
     buffer,
   });
 };
