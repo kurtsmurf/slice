@@ -2,7 +2,7 @@ import { createSignal } from "solid-js";
 import { audioContext } from "./audioContext";
 
 export const player = (function createPlayer() {
-  const ramp = 0.01;
+  const ramp = 0.001;
   const [startedAt, setStartedAt] = createSignal<number | undefined>(undefined);
   const [startOffset, setStartOffset] = createSignal<number>(0);
   let sourceNode: AudioBufferSourceNode | undefined;
@@ -17,6 +17,12 @@ export const player = (function createPlayer() {
     gainNode.connect(audioContext.destination);
     gainNode.gain.setValueAtTime(0, audioContext.currentTime);
     gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime + ramp);
+
+    if (duration) {
+      const end = audioContext.currentTime + duration;
+      gainNode.gain.setValueAtTime(1, end - ramp);
+      gainNode.gain.linearRampToValueAtTime(0, end);
+    }
 
     const node = audioContext.createBufferSource();
     node.buffer = buffer;
@@ -33,6 +39,7 @@ export const player = (function createPlayer() {
     }
 
     const end = audioContext.currentTime + ramp;
+    gainNode.gain.cancelScheduledValues(audioContext.currentTime);
     gainNode.gain.setValueAtTime(1, audioContext.currentTime);
     gainNode.gain.linearRampToValueAtTime(0, end);
 
