@@ -54,7 +54,16 @@ export const zoom = (function createZoom() {
 })();
 
 export const Waveform = (props: { buffer: AudioBuffer }) => (
-  <div ref={scrollElement} data-scroll-element style={{ overflow: "auto" }}>
+  <div
+    ref={scrollElement}
+    data-scroll-element
+    style={{
+      overflow: "auto",
+      position: "sticky",
+      top: 0,
+      background: "white",
+    }}
+  >
     <Triggers buffer={props.buffer} />
     <WaveformContent buffer={props.buffer} />
     <WaveformSummary buffer={props.buffer} />
@@ -112,7 +121,7 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
         )}
       </For>
       <For each={regions()}>
-        {(region) => <Flag pos={region.start} />}
+        {(region) => <Flag pos={region.start} id={region.start.toString()} />}
       </For>
       <Cursor />
       <Playhead />
@@ -291,6 +300,8 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
         left: "0",
         height: "50px",
         "touch-action": "none",
+        // @ts-ignore
+        "container-type": "inline-size",
       }}
       onPointerDown={startDrag}
       onPointerMove={move}
