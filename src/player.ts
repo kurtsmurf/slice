@@ -1,5 +1,6 @@
 import { createSignal } from "solid-js";
 import { audioContext } from "./audioContext";
+import { useAnimationFrame } from "./useAnimationFrame";
 
 export const player = (function createPlayer() {
   const ramp = 0.001;
@@ -51,15 +52,16 @@ export const player = (function createPlayer() {
 
   const playing = () => startedAt() !== undefined;
 
-  const progress = () => {
+  const [progress, setProgress] = createSignal(0);
+  useAnimationFrame(() => {
     const startedAt_ = startedAt();
     if (!startedAt_ || !sourceNode?.buffer) {
       return 0;
     }
     const timeSinceStart = audioContext.currentTime - startedAt_;
     const elapsed = timeSinceStart + startOffset();
-    return elapsed / sourceNode.buffer.duration;
-  };
+    setProgress(elapsed / sourceNode.buffer.duration);
+  });
 
   return { play, playing, stop, startedAt, progress };
 })();

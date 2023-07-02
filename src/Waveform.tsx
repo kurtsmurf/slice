@@ -1,17 +1,9 @@
-import {
-  createMemo,
-  createSignal,
-  For,
-  JSX,
-  onCleanup,
-  onMount,
-  Show,
-  splitProps,
-} from "solid-js";
+import { createMemo, createSignal, For, JSX, Show, splitProps } from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
 import { player } from "./player";
 import { cursor, flags, regions, setCursor } from "./signals";
 import { ChannelSegment } from "./ChannelSegment";
+import { useAnimationFrame } from "./useAnimationFrame";
 
 const TILE_WIDTH = 400;
 const TILE_HEIGHT = 100;
@@ -206,9 +198,6 @@ const Cursor = () => (
 );
 
 const Playhead = () => {
-  const [left, setLeft] = createSignal(0);
-  useAnimationFrame(() => setLeft(player.progress() * 100));
-
   return (
     <Show when={player.playing()}>
       <div
@@ -216,7 +205,7 @@ const Playhead = () => {
           position: "absolute",
           top: 0,
           left: "-1px",
-          transform: `translateX(${left()}cqi)`,
+          transform: `translateX(${player.progress() * 100}cqi)`,
           width: "2px",
           height: "100%",
           color: "orange",
@@ -370,20 +359,3 @@ const WaveformTile = (
 
 const range = (start: number, end: number, step = 1) =>
   [...new Array(Math.ceil((end - start) / step))].map((_, i) => i * step);
-
-const useAnimationFrame = (callback: () => void) => {
-  let animationFrame: number;
-
-  const tick = () => {
-    callback();
-    animationFrame = requestAnimationFrame(tick);
-  };
-
-  onMount(() => {
-    animationFrame = requestAnimationFrame(tick);
-  });
-
-  onCleanup(() => {
-    cancelAnimationFrame(animationFrame);
-  });
-};
