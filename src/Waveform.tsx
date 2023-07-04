@@ -49,12 +49,7 @@ export const Waveform = (props: { buffer: AudioBuffer }) => (
   <div
     ref={scrollElement}
     data-scroll-element
-    style={{
-      overflow: "auto",
-      position: "sticky",
-      top: 0,
-      background: "white",
-    }}
+    style={{ overflow: "auto" }}
   >
     <Triggers buffer={props.buffer} />
     <WaveformContent buffer={props.buffer} />

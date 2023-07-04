@@ -17,9 +17,17 @@ export const App = () => (
     when={clip()}
     fallback={<AudioInput onChange={setClip} />}
   >
-    <Controls clip={clip()!} />
-    <Details clip={clip()!} />
-    <Waveform buffer={clip()!.buffer} />
+    <div
+      style={{
+        position: "sticky",
+        top: 0,
+        background: "white",
+      }}
+    >
+      <Controls clip={clip()!} />
+      <Details clip={clip()!} />
+      <Waveform buffer={clip()!.buffer} />
+    </div>
     <Regions buffer={clip()!.buffer} />
   </Show>
 );
