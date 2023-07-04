@@ -10,7 +10,7 @@ import {
   setClip,
   setCursor,
 } from "./signals";
-import { Waveform, zoom } from "./Waveform";
+import { contentElement, scrollElement, Waveform, zoom } from "./Waveform";
 
 export const App = () => (
   <Show
@@ -99,11 +99,10 @@ const Regions = (props: { buffer: AudioBuffer }) => {
               const endSeconds = props.buffer.duration * end;
               const durationSeconds = endSeconds - startSeconds;
               player.play(props.buffer, startSeconds, durationSeconds);
-              document.getElementById(start.toString())
-                ?.scrollIntoView({
-                  inline: "center",
-                  block: "nearest",
-                });
+              if (scrollElement && contentElement) {
+                scrollElement.scrollLeft = start * contentElement.clientWidth -
+                  scrollElement.clientWidth / 2;
+              }
             }}
           >
             &#9654; {start.toFixed(5)}

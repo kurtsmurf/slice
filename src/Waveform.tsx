@@ -9,9 +9,9 @@ const TILE_WIDTH = 400;
 const TILE_HEIGHT = 100;
 
 // the scrollable element
-let scrollElement: HTMLDivElement | undefined;
+export let scrollElement: HTMLDivElement | undefined;
 // the content wrapper
-let contentElement: HTMLDivElement | undefined;
+export let contentElement: HTMLDivElement | undefined;
 
 export const zoom = (function createZoom() {
   const min = 1, max = 1024;
