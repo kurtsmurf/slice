@@ -17,6 +17,20 @@ export const App = () => (
     when={clip()}
     fallback={<AudioInput onChange={setClip} />}
   >
+    <button
+      onClick={() => {
+        if (confirm("clear for real?")) {
+          setClip(undefined);
+          setCursor(0);
+          clearFlags();
+          player.stop();
+        }
+      }}
+    >
+      clear
+    </button>
+
+    <Details clip={clip()!} />
     <div
       style={{
         position: "sticky",
@@ -25,7 +39,6 @@ export const App = () => (
       }}
     >
       <Controls clip={clip()!} />
-      <Details clip={clip()!} />
       <Waveform buffer={clip()!.buffer} />
     </div>
     <Regions buffer={clip()!.buffer} />
@@ -33,17 +46,7 @@ export const App = () => (
 );
 
 const Controls = (props: { clip: Clip }) => (
-  <>
-    <button
-      onClick={() => {
-        setClip(undefined);
-        setCursor(0);
-        clearFlags();
-        player.stop();
-      }}
-    >
-      clear
-    </button>
+  <div>
     <button onClick={zoom.in} disabled={zoom.inDisabled()}>
       zoom in
     </button>
@@ -66,7 +69,7 @@ const Controls = (props: { clip: Clip }) => (
     >
       drop a flag
     </button>
-  </>
+  </div>
 );
 
 const formatOf = (buffer: AudioBuffer) => {
@@ -81,14 +84,14 @@ const formatOf = (buffer: AudioBuffer) => {
 };
 
 const Details = (props: { clip: Clip }) => (
-  <>
+  <div>
     <p>{props.clip.name}</p>
     <p>
       {((props.clip.buffer.length || 0) /
         (props.clip.buffer.sampleRate || 1)).toFixed(2)}s
     </p>
     <p>{formatOf(props.clip.buffer)}</p>
-  </>
+  </div>
 );
 
 const Regions = (props: { buffer: AudioBuffer }) => {
