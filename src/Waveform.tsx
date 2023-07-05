@@ -169,6 +169,7 @@ const Flag = (
         width: "2px",
         height: "100%",
         background: "purple",
+        opacity: 0.75,
       }}
     >
       {props.children}
@@ -185,8 +186,7 @@ const Cursor = () => (
       transform: `translateX(${cursor() * 100}cqi)`,
       width: "2px",
       height: "100%",
-      background: "orange",
-      opacity: 0.5,
+      background: "repeating-linear-gradient(orange 0px, orange 4px, transparent 4px, transparent 8px)",
     }}
   >
   </div>
@@ -306,10 +306,10 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
           />
         )}
       </For>
-      <PositionIndicator />
       <For each={flags()}>
         {(position) => <Flag pos={position}></Flag>}
       </For>
+      <PositionIndicator />
       <Cursor />
       <Playhead />
     </div>
