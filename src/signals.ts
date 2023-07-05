@@ -1,5 +1,5 @@
 import { Clip } from "./types";
-import { createSignal, createEffect } from "solid-js";
+import { createEffect, createSignal } from "solid-js";
 
 export const [clip, setClip] = createSignal<Clip | undefined>();
 // exposing setClip on window so that we can setClip from tests
@@ -7,11 +7,11 @@ export const [clip, setClip] = createSignal<Clip | undefined>();
 window.setClip = setClip;
 
 createEffect(() => {
-	if (clip()) {
-		window.onbeforeunload = () => "";
-	} else {
-		window.onbeforeunload = undefined;
-	}
+  if (clip()) {
+    window.onbeforeunload = () => "";
+  } else {
+    window.onbeforeunload = undefined;
+  }
 });
 
 export const [cursor, setCursor] = createSignal<number>(0);

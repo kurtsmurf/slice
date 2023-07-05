@@ -186,7 +186,8 @@ const Cursor = () => (
       transform: `translateX(${cursor() * 100}cqi)`,
       width: "2px",
       height: "100%",
-      background: "repeating-linear-gradient(orange 0px, orange 4px, transparent 4px, transparent 8px)",
+      background:
+        "repeating-linear-gradient(orange 0px, orange 4px, transparent 4px, transparent 8px)",
     }}
   >
   </div>
