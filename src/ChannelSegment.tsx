@@ -52,6 +52,11 @@ export const ChannelSegment = (
 // Pool of workers for computing buckets
 const pool = workerpool.pool();
 
+// instrumenting this code with istanbul leads to runtime
+// errors when the function is transfered and eval'ed in
+// the web worker context
+// -----
+// istanbul ignore next
 function computeBuckets(data: Float32Array, numBuckets: number): Bucket[] {
   const bucketSize = Math.ceil(data.length / numBuckets);
   const buckets = [];
