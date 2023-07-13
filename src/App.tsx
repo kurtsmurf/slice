@@ -47,6 +47,7 @@ export const App = () => (
 );
 
 export const [deleting, setDeleting] = createSignal(false)
+export const [editing, setEditing] = createSignal(false);
 
 const Controls = (props: { clip: Clip }) => (
   <div>
@@ -55,7 +56,14 @@ const Controls = (props: { clip: Clip }) => (
         setDeleting(prev => !prev)
       }}
     >
-      { deleting() ? "done deleting" : "delete"}
+      { deleting() ? "done deleting" : "delete" }
+    </button>
+    <button
+      onClick={() => {
+        setEditing(prev => !prev)
+      }}
+    >
+      { editing() ? "done editing" : "edit" }
     </button>
     <button onClick={zoom.in} disabled={zoom.inDisabled()}>
       zoom in

@@ -4,7 +4,7 @@ import { player } from "./player";
 import { cursor, healSlice, regions, setCursor, slice } from "./signals";
 import { ChannelSegment } from "./ChannelSegment";
 import { useAnimationFrame } from "./useAnimationFrame";
-import { deleting } from "./App";
+import { deleting, editing } from "./App";
 
 const TILE_WIDTH = 400;
 const TILE_HEIGHT = 100;
@@ -234,23 +234,45 @@ const Slice = (
     });
 
   return (
-    <div
+    <>
+      <Show when={editing()}>
+
+      <div
       {...htmlAttrs}
       data-slice
       style={{
         position: "absolute",
         top: 0,
-        left: "-4px",
+        left: "-5px",
         transform: `translateX(calc(${props.pos * 100}cqi + ${drag.offset()}px))`,
-        width: "8px",
+        width: "10px",
         height: "100%",
         background: "purple",
         opacity: 0.75,
       }}
       onPointerDown={drag.start}
     >
+    </div>
+
+      </Show>
+        <div
+      {...htmlAttrs}
+      data-slice
+      style={{
+        position: "absolute",
+        top: 0,
+        left: "-1px",
+        transform: `translateX(calc(${props.pos * 100}cqi + ${drag.offset()}px))`,
+        width: "2px",
+        height: "100%",
+        background: "purple",
+        opacity: 0.75,
+        "pointer-events": "none",
+      }}
+    >
       {props.children}
     </div>
+    </>
   );
 };
 
