@@ -163,16 +163,7 @@ const Triggers = (props: { buffer: AudioBuffer }) => {
   );
 };
 
-const pointerUpAnywhere = (el: HTMLElement, callbackAccessor: Accessor<() => void>) => {
-  document.body.addEventListener("pointerup", callbackAccessor())
-  onCleanup(() => document.body.removeEventListener("pointerup", callbackAccessor()))
-}
-const moveAnywhere = (el: HTMLElement, callbackAccessor: Accessor<() => void>) => {
-  document.body.addEventListener("pointermove", callbackAccessor());
-  onCleanup(() => document.body.removeEventListener("pointermove", callbackAccessor()))
-}
-
-export const createDrag = () => {
+export const createDrag = (onFinished: (finalOffset: number) => void) => {
   let initialPosition: number | undefined;
   const [offset, setOffset] = createSignal(0);
 
@@ -182,7 +173,10 @@ export const createDrag = () => {
     document.body.addEventListener("pointermove", move)
   }
   const stop = () => {
+    onFinished(offset())
     initialPosition = undefined;
+    document.body.removeEventListener("pointerup", stop)
+    document.body.removeEventListener("pointermove", move)
     setOffset(0);
   }
   const move = (e: PointerEvent) => {
@@ -190,13 +184,10 @@ export const createDrag = () => {
       setOffset(e.clientX - initialPosition)
     }
   }
-
   return {
     dragging: () => initialPosition !== undefined,
     offset,
     start, 
-    stop,
-    move
   }
 }
 
@@ -206,7 +197,12 @@ const Slice = (
   },
 ) => {
   const [, htmlAttrs] = splitProps(props, ["pos"]);
-  const drag = createDrag();
+  const drag = createDrag(() => {
+      if (contentElement) {
+        healSlice(props.index)
+        slice(props.pos + drag.offset() / contentElement.clientWidth)
+      }
+    });
 
   return (
     <div
@@ -223,20 +219,6 @@ const Slice = (
         opacity: 0.75,
       }}
       onPointerDown={drag.start}
-      onPointerMove={drag.move}
-      // @ts-ignore
-      use:pointerUpAnywhere={() => {
-        if (drag.dragging()) {
-          if (contentElement) {
-            // moveSlice(props.index, props.pos + (drag.offset() / contentElement.clientWidth))
-            healSlice(props.index)
-            slice(props.pos + drag.offset() / contentElement.clientWidth)
-          }
-          drag.stop();
-        }
-      }}
-      // @ts-ignore
-      use:moveAnywhere={drag.move}
     >
       {props.children}
     </div>
