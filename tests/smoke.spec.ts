@@ -9,8 +9,8 @@ test("loads clip", async ({ page }, testInfo) => {
   await page.locator("[data-content-element]").dblclick();
   // stop playback
   await page.getByText(/stop/i).click();
-  // drop a flag at cursor placed in previous step
-  await page.getByText(/drop a flag/i).click();
+  // slice at cursor placed in previous step
+  await page.getByText(/slice/i).click();
   // perform visual diff
   await expect(page).toHaveScreenshot({ maxDiffPixels: 100 });
   // attach screenshot to result

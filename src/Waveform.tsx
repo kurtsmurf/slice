@@ -1,7 +1,7 @@
-import { createMemo, createSignal, For, JSX, Show, splitProps } from "solid-js";
+import { Accessor, createMemo, createSignal, For, JSX, onCleanup, Show, splitProps } from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
 import { player } from "./player";
-import { cursor, flags, regions, setCursor } from "./signals";
+import { cursor, healSlice, regions, setCursor, slice } from "./signals";
 import { ChannelSegment } from "./ChannelSegment";
 import { useAnimationFrame } from "./useAnimationFrame";
 
@@ -108,7 +108,7 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
         )}
       </For>
       <For each={regions()}>
-        {(region) => <Flag pos={region.start} id={region.start.toString()} />}
+        {(region, index) => <Slice pos={region.start} index={index()} id={region.start.toString()} />}
       </For>
       <Cursor />
       <Playhead />
@@ -128,54 +128,147 @@ const Triggers = (props: { buffer: AudioBuffer }) => {
       }}
     >
       <For each={regions()}>
-        {({ start, end }) => (
-          <button
+        {({ start, end }, index) => (
+          <div
             style={{
               position: "absolute",
               transform: `translateX(${start * 100}cqi)`,
               height: "100%",
+              display: "flex",
+              "flex-direction": "column",
             }}
-            onClick={() => {
-              const startSeconds = props.buffer.duration * start;
-              const endSeconds = props.buffer.duration * end;
-              const durationSeconds = endSeconds - startSeconds;
-              player.play(props.buffer, startSeconds, durationSeconds);
-            }}
-            ondblclick={(e) => e.stopPropagation()}
           >
-            &#9654; {start.toFixed(5)}
-          </button>
+            <button
+              onClick={() => {
+                healSlice(index())
+              }}
+            >
+              delete
+            </button>
+            <button
+              onClick={() => {
+                const startSeconds = props.buffer.duration * start;
+                const endSeconds = props.buffer.duration * end;
+                const durationSeconds = endSeconds - startSeconds;
+                player.play(props.buffer, startSeconds, durationSeconds);
+              }}
+              ondblclick={(e) => e.stopPropagation()}
+            >
+              &#9654; {start.toFixed(5)}
+            </button>
+          </div>
         )}
       </For>
     </div>
   );
 };
 
-const Flag = (
+const pointerUpAnywhere = (el: HTMLElement, callbackAccessor: Accessor<() => void>) => {
+  document.body.addEventListener("pointerup", callbackAccessor())
+  onCleanup(() => document.body.removeEventListener("pointerup", callbackAccessor()))
+}
+const moveAnywhere = (el: HTMLElement, callbackAccessor: Accessor<() => void>) => {
+  document.body.addEventListener("pointermove", callbackAccessor());
+  onCleanup(() => document.body.removeEventListener("pointermove", callbackAccessor()))
+}
+
+export const createDrag = () => {
+  let initialPosition: number | undefined;
+  const [offset, setOffset] = createSignal(0);
+
+  const start = (e: PointerEvent) => {
+    initialPosition = e.clientX;
+    document.body.addEventListener("pointerup", stop)
+    document.body.addEventListener("pointermove", move)
+  }
+  const stop = () => {
+    initialPosition = undefined;
+    setOffset(0);
+  }
+  const move = (e: PointerEvent) => {
+    if (initialPosition !== undefined) {
+      setOffset(e.clientX - initialPosition)
+    }
+  }
+
+  return {
+    dragging: () => initialPosition !== undefined,
+    offset,
+    start, 
+    stop,
+    move
+  }
+}
+
+const Slice = (
   props: JSX.HTMLAttributes<HTMLDivElement> & {
-    pos: number;
+    pos: number; index: number
   },
 ) => {
   const [, htmlAttrs] = splitProps(props, ["pos"]);
+  const drag = createDrag();
+
   return (
     <div
       {...htmlAttrs}
-      data-flag
+      data-slice
       style={{
         position: "absolute",
         top: 0,
-        left: "-1px",
-        transform: `translateX(${props.pos * 100}cqi)`,
-        width: "2px",
+        left: "-4px",
+        transform: `translateX(calc(${props.pos * 100}cqi + ${drag.offset()}px))`,
+        width: "8px",
         height: "100%",
         background: "purple",
         opacity: 0.75,
       }}
+      onPointerDown={drag.start}
+      onPointerMove={drag.move}
+      // @ts-ignore
+      use:pointerUpAnywhere={() => {
+        if (drag.dragging()) {
+          if (contentElement) {
+            // moveSlice(props.index, props.pos + (drag.offset() / contentElement.clientWidth))
+            healSlice(props.index)
+            slice(props.pos + drag.offset() / contentElement.clientWidth)
+          }
+          drag.stop();
+        }
+      }}
+      // @ts-ignore
+      use:moveAnywhere={drag.move}
     >
       {props.children}
     </div>
   );
 };
+
+// const Stick = (
+//   props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "style"> & {
+//     pos: number;
+//     background: string;
+//     opacity: number;
+//   },
+// ) => {
+//   const [, htmlAttrs] = splitProps(props, ["pos"]);
+//   return (
+//     <div
+//       {...htmlAttrs}
+//       style={{
+//         position: "absolute",
+//         top: 0,
+//         left: "-4px",
+//         transform: `translateX(calc(${props.pos * 100}cqi))`,
+//         width: "8px",
+//         height: "100%",
+//         background: "purple",
+//         opacity: 0.75,
+//       }}
+//     >
+//       {props.children}
+//     </div>
+//   );
+// };
 
 const Cursor = () => (
   <div
@@ -307,8 +400,8 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
           />
         )}
       </For>
-      <For each={flags()}>
-        {(position) => <Flag pos={position}></Flag>}
+      <For each={regions()}>
+        {({start}, index) => <Slice pos={start} index={index()}></Slice>}
       </For>
       <PositionIndicator />
       <Cursor />

@@ -10,18 +10,14 @@ createEffect(() => {
   if (clip()) {
     window.onbeforeunload = () => "";
   } else {
-    window.onbeforeunload = undefined;
+    window.onbeforeunload = null;
   }
 });
 
 export const [cursor, setCursor] = createSignal<number>(0);
 
-const defaultFlags = [0];
-const flagsSignal = createSignal<number[]>(defaultFlags);
-export const flags = flagsSignal[0];
-const setFlags = flagsSignal[1];
-
-export const clearFlags = () => setFlags(defaultFlags);
+const defaultSlices = [0];
+const [slices, setSlices] = createSignal<number[]>(defaultSlices);
 
 const sortedIndex = (arr: number[], value: number) => {
   let low = 0;
@@ -40,17 +36,25 @@ const sortedIndex = (arr: number[], value: number) => {
   return low;
 };
 
-export const dropFlag = () => {
-  setFlags((prev) => {
-    const i = sortedIndex(prev, cursor());
-    if (prev[i] === cursor()) return prev;
-    return [...prev.slice(0, i), cursor(), ...prev.slice(i)];
+export const slice = (position: number) => {
+  setSlices((prev) => {
+    const i = sortedIndex(prev, position);
+    if (prev[i] === position) return prev;
+    return [...prev.slice(0, i), position, ...prev.slice(i)];
   });
 };
 
-export const regions = () =>
-  flags().map((flag, i, arr) => {
-    const end = arr[i + 1] || 1;
+export const healSlice = (index: number) =>
+  setSlices(prev => prev.filter((_, i) => index !== i))
 
-    return { start: flag, end };
+export const regions = () =>
+  slices().map((slice, i, arr) => {
+    const end = arr[i + 1] || 1;
+    return { start: slice, end };
   });
+
+
+// @ts-ignore
+window.regions = regions
+
+export const clearRegions = () => setSlices(defaultSlices);

@@ -3,12 +3,13 @@ import { Clip } from "./types";
 import { For, Show } from "solid-js";
 import { player } from "./player";
 import {
-  clearFlags,
+  clearRegions,
   clip,
-  dropFlag,
+  slice,
   regions,
   setClip,
   setCursor,
+  cursor
 } from "./signals";
 import { contentElement, scrollElement, Waveform, zoom } from "./Waveform";
 
@@ -22,7 +23,7 @@ export const App = () => (
         if (confirm("clear for real?")) {
           setClip(undefined);
           setCursor(0);
-          clearFlags();
+          clearRegions();
           player.stop();
         }
       }}
@@ -65,9 +66,9 @@ const Controls = (props: { clip: Clip }) => (
       {player.playing() ? "stop" : "play"}
     </button>
     <button
-      onClick={dropFlag}
+      onClick={() => slice(cursor())}
     >
-      drop a flag
+      slice
     </button>
   </div>
 );
