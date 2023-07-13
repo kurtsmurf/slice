@@ -191,6 +191,31 @@ export const createDrag = (onFinished: (finalOffset: number) => void) => {
   }
 }
 
+const Stick = (
+  props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "style"> & {
+    pos: number; index: number;
+  },
+) => {
+  const [, htmlAttrs] = splitProps(props, ["pos"]);
+
+  return (
+    <div
+      {...htmlAttrs}
+      style={{
+        position: "absolute",
+        top: 0,
+        left: "-1px",
+        transform: `translateX(calc(${props.pos * 100}cqi))`,
+        width: "2px",
+        height: "100%",
+        background: "purple",
+        opacity: 0.75,
+      }}
+    >
+    </div>
+  );
+};
+
 const Slice = (
   props: JSX.HTMLAttributes<HTMLDivElement> & {
     pos: number; index: number
@@ -383,7 +408,7 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
         )}
       </For>
       <For each={regions()}>
-        {({start}, index) => <Slice pos={start} index={index()}></Slice>}
+        {({start}, index) => <Stick pos={start} index={index()}></Stick>}
       </For>
       <PositionIndicator />
       <Cursor />
