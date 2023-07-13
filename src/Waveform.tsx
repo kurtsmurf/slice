@@ -4,6 +4,7 @@ import { player } from "./player";
 import { cursor, healSlice, regions, setCursor, slice } from "./signals";
 import { ChannelSegment } from "./ChannelSegment";
 import { useAnimationFrame } from "./useAnimationFrame";
+import { deleting } from "./App";
 
 const TILE_WIDTH = 400;
 const TILE_HEIGHT = 100;
@@ -138,14 +139,17 @@ const Triggers = (props: { buffer: AudioBuffer }) => {
               "flex-direction": "column",
             }}
           >
+            <Show when={deleting()}>
+              <button
+                onClick={() => {
+                  healSlice(index())
+                }}
+              >
+                delete
+              </button>
+            </Show>
             <button
-              onClick={() => {
-                healSlice(index())
-              }}
-            >
-              delete
-            </button>
-            <button
+              style="flex-grow: 1;"
               onClick={() => {
                 const startSeconds = props.buffer.duration * start;
                 const endSeconds = props.buffer.duration * end;

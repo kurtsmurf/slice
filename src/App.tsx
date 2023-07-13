@@ -1,6 +1,6 @@
 import { AudioInput } from "./AudioInput";
 import { Clip } from "./types";
-import { For, Show } from "solid-js";
+import { For, Show, createSignal } from "solid-js";
 import { player } from "./player";
 import {
   clearRegions,
@@ -46,8 +46,17 @@ export const App = () => (
   </Show>
 );
 
+export const [deleting, setDeleting] = createSignal(false)
+
 const Controls = (props: { clip: Clip }) => (
   <div>
+    <button
+      onClick={() => {
+        setDeleting(prev => !prev)
+      }}
+    >
+      { deleting() ? "done deleting" : "delete"}
+    </button>
     <button onClick={zoom.in} disabled={zoom.inDisabled()}>
       zoom in
     </button>
