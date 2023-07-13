@@ -1,4 +1,13 @@
-import { Accessor, createMemo, createSignal, For, JSX, onCleanup, Show, splitProps } from "solid-js";
+import {
+  Accessor,
+  createMemo,
+  createSignal,
+  For,
+  JSX,
+  onCleanup,
+  Show,
+  splitProps,
+} from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
 import { player } from "./player";
 import { cursor, healSlice, regions, setCursor, slice } from "./signals";
@@ -109,7 +118,13 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
         )}
       </For>
       <For each={regions()}>
-        {(region, index) => <Slice pos={region.start} index={index()} id={region.start.toString()} />}
+        {(region, index) => (
+          <Slice
+            pos={region.start}
+            index={index()}
+            id={region.start.toString()}
+          />
+        )}
       </For>
       <Cursor />
       <Playhead />
@@ -142,7 +157,7 @@ const Triggers = (props: { buffer: AudioBuffer }) => {
             <Show when={deleting()}>
               <button
                 onClick={() => {
-                  healSlice(index())
+                  healSlice(index());
                 }}
               >
                 delete
@@ -173,31 +188,32 @@ export const createDrag = (onFinished: (finalOffset: number) => void) => {
 
   const start = (e: PointerEvent) => {
     initialPosition = e.clientX;
-    document.body.addEventListener("pointerup", stop)
-    document.body.addEventListener("pointermove", move)
-  }
+    document.body.addEventListener("pointerup", stop);
+    document.body.addEventListener("pointermove", move);
+  };
   const stop = () => {
-    onFinished(offset())
+    onFinished(offset());
     initialPosition = undefined;
-    document.body.removeEventListener("pointerup", stop)
-    document.body.removeEventListener("pointermove", move)
+    document.body.removeEventListener("pointerup", stop);
+    document.body.removeEventListener("pointermove", move);
     setOffset(0);
-  }
+  };
   const move = (e: PointerEvent) => {
     if (initialPosition !== undefined) {
-      setOffset(e.clientX - initialPosition)
+      setOffset(e.clientX - initialPosition);
     }
-  }
+  };
   return {
     dragging: () => initialPosition !== undefined,
     offset,
-    start, 
-  }
-}
+    start,
+  };
+};
 
 const Stick = (
   props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "style"> & {
-    pos: number; index: number;
+    pos: number;
+    index: number;
   },
 ) => {
   const [, htmlAttrs] = splitProps(props, ["pos"]);
@@ -222,56 +238,59 @@ const Stick = (
 
 const Slice = (
   props: JSX.HTMLAttributes<HTMLDivElement> & {
-    pos: number; index: number
+    pos: number;
+    index: number;
   },
 ) => {
   const [, htmlAttrs] = splitProps(props, ["pos"]);
   const drag = createDrag(() => {
-      if (contentElement) {
-        healSlice(props.index)
-        slice(props.pos + drag.offset() / contentElement.clientWidth)
-      }
-    });
+    if (contentElement) {
+      healSlice(props.index);
+      slice(props.pos + drag.offset() / contentElement.clientWidth);
+    }
+  });
 
   return (
     <>
       <Show when={editing()}>
-
-      <div
-      {...htmlAttrs}
-      data-slice
-      style={{
-        position: "absolute",
-        top: 0,
-        left: "-5px",
-        transform: `translateX(calc(${props.pos * 100}cqi + ${drag.offset()}px))`,
-        width: "10px",
-        height: "100%",
-        background: "purple",
-        opacity: 0.75,
-      }}
-      onPointerDown={drag.start}
-    >
-    </div>
-
-      </Show>
         <div
-      {...htmlAttrs}
-      data-slice
-      style={{
-        position: "absolute",
-        top: 0,
-        left: "-1px",
-        transform: `translateX(calc(${props.pos * 100}cqi + ${drag.offset()}px))`,
-        width: "2px",
-        height: "100%",
-        background: "purple",
-        opacity: 0.75,
-        "pointer-events": "none",
-      }}
-    >
-      {props.children}
-    </div>
+          {...htmlAttrs}
+          data-slice
+          style={{
+            position: "absolute",
+            top: 0,
+            left: "-5px",
+            transform: `translateX(calc(${
+              props.pos * 100
+            }cqi + ${drag.offset()}px))`,
+            width: "10px",
+            height: "100%",
+            background: "purple",
+            opacity: 0.75,
+          }}
+          onPointerDown={drag.start}
+        >
+        </div>
+      </Show>
+      <div
+        {...htmlAttrs}
+        data-slice
+        style={{
+          position: "absolute",
+          top: 0,
+          left: "-1px",
+          transform: `translateX(calc(${
+            props.pos * 100
+          }cqi + ${drag.offset()}px))`,
+          width: "2px",
+          height: "100%",
+          background: "purple",
+          opacity: 0.75,
+          "pointer-events": "none",
+        }}
+      >
+        {props.children}
+      </div>
     </>
   );
 };
@@ -434,7 +453,7 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
         )}
       </For>
       <For each={regions()}>
-        {({start}, index) => <Stick pos={start} index={index()}></Stick>}
+        {({ start }, index) => <Stick pos={start} index={index()}></Stick>}
       </For>
       <PositionIndicator />
       <Cursor />

@@ -45,7 +45,7 @@ export const slice = (position: number) => {
 };
 
 export const healSlice = (index: number) =>
-  setSlices(prev => prev.filter((_, i) => index !== i))
+  setSlices((prev) => prev.filter((_, i) => index !== i));
 
 export const regions = () =>
   slices().map((slice, i, arr) => {
@@ -53,8 +53,7 @@ export const regions = () =>
     return { start: slice, end };
   });
 
-
 // @ts-ignore
-window.regions = regions
+window.regions = regions;
 
 export const clearRegions = () => setSlices(defaultSlices);

@@ -1,15 +1,15 @@
 import { AudioInput } from "./AudioInput";
 import { Clip } from "./types";
-import { For, Show, createSignal } from "solid-js";
+import { createSignal, For, Show } from "solid-js";
 import { player } from "./player";
 import {
   clearRegions,
   clip,
-  slice,
+  cursor,
   regions,
   setClip,
   setCursor,
-  cursor
+  slice,
 } from "./signals";
 import { contentElement, scrollElement, Waveform, zoom } from "./Waveform";
 
@@ -46,24 +46,24 @@ export const App = () => (
   </Show>
 );
 
-export const [deleting, setDeleting] = createSignal(false)
+export const [deleting, setDeleting] = createSignal(false);
 export const [editing, setEditing] = createSignal(false);
 
 const Controls = (props: { clip: Clip }) => (
   <div>
     <button
       onClick={() => {
-        setDeleting(prev => !prev)
+        setDeleting((prev) => !prev);
       }}
     >
-      { deleting() ? "done deleting" : "delete" }
+      {deleting() ? "done deleting" : "delete"}
     </button>
     <button
       onClick={() => {
-        setEditing(prev => !prev)
+        setEditing((prev) => !prev);
       }}
     >
-      { editing() ? "done editing" : "edit" }
+      {editing() ? "done editing" : "edit"}
     </button>
     <button onClick={zoom.in} disabled={zoom.inDisabled()}>
       zoom in
