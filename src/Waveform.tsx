@@ -262,14 +262,14 @@ const Slice = (
           style={{
             position: "absolute",
             top: 0,
-            left: "-5px",
+            left: "-6px",
             transform: `translateX(calc(${
               props.pos * 100
             }cqi + ${drag.offset()}px))`,
-            width: "10px",
+            width: "12px",
             height: "100%",
             background: "purple",
-            opacity: 0.75,
+            opacity: 0.5,
           }}
           onPointerDown={drag.start}
         >
