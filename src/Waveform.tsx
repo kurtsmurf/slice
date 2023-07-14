@@ -24,7 +24,7 @@ export let scrollElement: HTMLDivElement | undefined;
 export let contentElement: HTMLDivElement | undefined;
 
 export const zoom = (function createZoom() {
-  const min = 1, max = 1024;
+  const min = 1, max = Math.pow(2, 10);
   const [samplesPerPixel, setSamplesPerPixel] = createSignal(32);
 
   const zoom = (direction: "in" | "out") => {
@@ -262,11 +262,11 @@ const Slice = (
           style={{
             position: "absolute",
             top: 0,
-            left: "-6px",
+            left: "-15px",
             transform: `translateX(calc(${
               props.pos * 100
             }cqi + ${drag.offset()}px))`,
-            width: "12px",
+            width: "30px",
             height: "100%",
             background: "purple",
             opacity: 0.5,
