@@ -6,14 +6,6 @@ export const [clip, setClip] = createSignal<Clip | undefined>();
 // @ts-ignore
 window.setClip = setClip;
 
-createEffect(() => {
-  if (clip()) {
-    window.onbeforeunload = () => "";
-  } else {
-    window.onbeforeunload = null;
-  }
-});
-
 export const [cursor, setCursor] = createSignal<number>(0);
 
 const defaultSlices = [0];

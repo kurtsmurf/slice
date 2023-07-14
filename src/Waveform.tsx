@@ -186,14 +186,18 @@ export const createDrag = (onFinished: (finalOffset: number) => void) => {
   let initialPosition: number | undefined;
   const [offset, setOffset] = createSignal(0);
 
+  const preventDefault = (e: Event) => e.preventDefault();
+
   const start = (e: PointerEvent) => {
     initialPosition = e.clientX;
+    scrollElement?.addEventListener("touchmove", preventDefault);
     document.body.addEventListener("pointerup", stop);
     document.body.addEventListener("pointermove", move);
   };
   const stop = () => {
     onFinished(offset());
     initialPosition = undefined;
+    scrollElement?.removeEventListener("touchmove", preventDefault);
     document.body.removeEventListener("pointerup", stop);
     document.body.removeEventListener("pointermove", move);
     setOffset(0);
@@ -204,7 +208,6 @@ export const createDrag = (onFinished: (finalOffset: number) => void) => {
     }
   };
   return {
-    dragging: () => initialPosition !== undefined,
     offset,
     start,
   };
