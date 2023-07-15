@@ -80,15 +80,12 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
     horizontal: true,
   }));
 
-  const playFromPointer = (e: MouseEvent) => {
+  const placeCursor = (e: MouseEvent) => {
     if (!contentElement) {
       return;
     }
     const contentRect = contentElement.getBoundingClientRect();
     const offsetPx = e.clientX - contentRect.left;
-    const offsetRatio = offsetPx / contentRect.width;
-    const offsetSeconds = props.buffer.duration * offsetRatio;
-    player.play(props.buffer, offsetSeconds);
     setCursor(offsetPx / contentElement.clientWidth);
   };
 
@@ -106,7 +103,7 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
         // @ts-ignore
         "container-type": "inline-size",
       }}
-      ondblclick={playFromPointer}
+      ondblclick={placeCursor}
     >
       <For each={tileManager.getVirtualItems()}>
         {(virtualItem) => (
