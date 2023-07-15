@@ -178,6 +178,36 @@ const Triggers = (props: { buffer: AudioBuffer }) => {
           </div>
         )}
       </For>
+      <Show
+        when={
+          // FIXME: expensive
+          !regions().map(({ start }) => start).includes(cursor())
+        }
+      >
+        <div
+          style={{
+            position: "absolute",
+            transform: `translateX(${cursor() * 100}cqi)`,
+            height: "100%",
+            display: "flex",
+          }}
+        >
+          <button
+            onClick={() => {
+              slice(cursor());
+            }}
+          >
+            slice
+          </button>
+          <button
+            onClick={() => {
+              player.play(props.buffer, cursor() * props.buffer.duration);
+            }}
+          >
+            play
+          </button>
+        </div>
+      </Show>
     </div>
   );
 };

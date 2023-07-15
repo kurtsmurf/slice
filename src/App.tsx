@@ -82,11 +82,6 @@ const Controls = (props: { clip: Clip }) => (
     >
       {player.playing() ? "stop" : "play"}
     </button>
-    <button
-      onClick={() => slice(cursor())}
-    >
-      slice
-    </button>
   </div>
 );
 
