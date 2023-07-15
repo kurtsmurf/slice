@@ -87,6 +87,7 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
     const contentRect = contentElement.getBoundingClientRect();
     const offsetPx = e.clientX - contentRect.left;
     setCursor(offsetPx / contentElement.clientWidth);
+    setCursorControlsVisible(true);
   };
 
   return (
@@ -128,6 +129,9 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
     </div>
   );
 };
+
+// cursor controls visible
+const [cursorControlsVisible, setCursorControlsVisible] = createSignal(false);
 
 const Triggers = (props: { buffer: AudioBuffer }) => {
   return (
@@ -176,10 +180,7 @@ const Triggers = (props: { buffer: AudioBuffer }) => {
         )}
       </For>
       <Show
-        when={
-          // FIXME: expensive
-          !regions().map(({ start }) => start).includes(cursor())
-        }
+        when={cursorControlsVisible()}
       >
         <div
           style={{
@@ -192,6 +193,7 @@ const Triggers = (props: { buffer: AudioBuffer }) => {
           <button
             onClick={() => {
               slice(cursor());
+              setCursorControlsVisible(false);
             }}
           >
             slice
