@@ -7,8 +7,6 @@ test("loads clip", async ({ page }, testInfo) => {
   await page.locator("[data-summary-element]").click();
   // double click the waveform, setting cursor and starting playback
   await page.locator("[data-content-element]").dblclick();
-  // stop playback
-  await page.getByText(/stop/i).click();
   // slice at cursor placed in previous step
   await page.getByText(/slice/i).click();
   // perform visual diff
