@@ -36,6 +36,9 @@ export const slice = (position: number) => {
   });
 };
 
+// @ts-ignore
+window.slice = slice;
+
 export const healSlice = (index: number) =>
   setSlices((prev) => prev.filter((_, i) => index !== i));
 
