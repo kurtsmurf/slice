@@ -9,9 +9,13 @@ export const player = (function createPlayer() {
   let sourceNode: AudioBufferSourceNode | undefined;
   let gainNode: GainNode | undefined;
 
-  const play = (buffer: AudioBuffer, offset = 0, duration?: number) => {
+  const play = (buffer: AudioBuffer, region = { start: 0, end: 1 }) => {
+    const startSeconds = buffer.duration * region.start;
+    const endSeconds = buffer.duration * region.end;
+    const durationSeconds = endSeconds - startSeconds;
+
     stop();
-    setStartOffset(offset);
+    setStartOffset(startSeconds);
     setStartedAt(audioContext.currentTime);
 
     gainNode = audioContext.createGain();
@@ -19,17 +23,15 @@ export const player = (function createPlayer() {
     gainNode.gain.setValueAtTime(0, audioContext.currentTime);
     gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime + ramp);
 
-    if (duration) {
-      const end = audioContext.currentTime + duration;
-      gainNode.gain.setValueAtTime(1, end - ramp);
-      gainNode.gain.linearRampToValueAtTime(0, end);
-    }
+    const end = audioContext.currentTime + durationSeconds;
+    gainNode.gain.setValueAtTime(1, end - ramp);
+    gainNode.gain.linearRampToValueAtTime(0, end);
 
     const node = audioContext.createBufferSource();
     node.buffer = buffer;
     node.connect(gainNode);
     node.onended = stop;
-    node.start(0, offset, duration);
+    node.start(0, startSeconds, durationSeconds);
 
     sourceNode = node;
   };

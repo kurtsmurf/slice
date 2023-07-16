@@ -1,13 +1,4 @@
-import {
-  Accessor,
-  createMemo,
-  createSignal,
-  For,
-  JSX,
-  onCleanup,
-  Show,
-  splitProps,
-} from "solid-js";
+import { createMemo, createSignal, For, JSX, Show, splitProps } from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
 import { player } from "./player";
 import { cursor, healSlice, regions, setCursor, slice } from "./signals";
@@ -145,11 +136,11 @@ const Triggers = (props: { buffer: AudioBuffer }) => {
       }}
     >
       <For each={regions()}>
-        {({ start, end }, index) => (
+        {(region, index) => (
           <div
             style={{
               position: "absolute",
-              transform: `translateX(${start * 100}cqi)`,
+              transform: `translateX(${region.start * 100}cqi)`,
               height: "100%",
               display: "flex",
               "flex-direction": "column",
@@ -167,14 +158,11 @@ const Triggers = (props: { buffer: AudioBuffer }) => {
             <button
               style="flex-grow: 1;"
               onClick={() => {
-                const startSeconds = props.buffer.duration * start;
-                const endSeconds = props.buffer.duration * end;
-                const durationSeconds = endSeconds - startSeconds;
-                player.play(props.buffer, startSeconds, durationSeconds);
+                player.play(props.buffer, region);
               }}
               ondblclick={(e) => e.stopPropagation()}
             >
-              &#9654; {start.toFixed(5)}
+              &#9654; {region.start.toFixed(5)}
             </button>
           </div>
         )}
@@ -200,7 +188,7 @@ const Triggers = (props: { buffer: AudioBuffer }) => {
           </button>
           <button
             onClick={() => {
-              player.play(props.buffer, cursor() * props.buffer.duration);
+              player.play(props.buffer, { start: cursor(), end: 1 });
             }}
           >
             play
