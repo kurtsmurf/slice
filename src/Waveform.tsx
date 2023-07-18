@@ -143,7 +143,6 @@ const Triggers = (props: { buffer: AudioBuffer }) => {
               transform: `translateX(${region.start * 100}cqi)`,
               height: "100%",
               display: "flex",
-              "flex-direction": "column",
             }}
           >
             <Show when={deleting()}>

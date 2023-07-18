@@ -4,6 +4,8 @@
 button {
   /* prevents ios zoom on double tap button */
   touch-action: manipulation;
+  min-height: 40px;
+  min-width: 40px;
 }
 body {
   /* prevents selection of waveform elements */
@@ -14,3 +16,4 @@ body {
   -ms-user-select: none;
   user-select: none;
 }
+
