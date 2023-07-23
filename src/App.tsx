@@ -115,24 +115,23 @@ const Regions = (props: { buffer: AudioBuffer }) => {
     ">
       <For each={regions()}>
         {(region) => (
-            <button
-              style={{
-                height: "100%",
-                width: "100%",
-              }}
-              onClick={() => {
-                player.play(props.buffer, region);
-                if (scrollElement && contentElement) {
-                  scrollElement.scrollLeft =
-                    region.start * contentElement.clientWidth -
-                    scrollElement.clientWidth / 2;
-                }
-              }}
-            >
-              &#9654; {region.start.toFixed(5)}
-            </button>
-          )
-        }
+          <button
+            style={{
+              height: "100%",
+              width: "100%",
+            }}
+            onClick={() => {
+              player.play(props.buffer, region);
+              if (scrollElement && contentElement) {
+                scrollElement.scrollLeft =
+                  region.start * contentElement.clientWidth -
+                  scrollElement.clientWidth / 2;
+              }
+            }}
+          >
+            &#9654; {region.start.toFixed(5)}
+          </button>
+        )}
       </For>
     </div>
   );
