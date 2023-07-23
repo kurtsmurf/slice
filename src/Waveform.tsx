@@ -91,7 +91,6 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
         position: "relative",
         "overflow": "hidden",
         height: props.buffer.numberOfChannels * TILE_HEIGHT + "px",
-        // JSX.CSSProperties doesn't recognize container-type yet
         // @ts-ignore
         "container-type": "inline-size",
       }}
@@ -121,7 +120,6 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
   );
 };
 
-// cursor controls visible
 const [cursorControlsVisible, setCursorControlsVisible] = createSignal(false);
 
 const Triggers = (props: { buffer: AudioBuffer }) => {
@@ -129,7 +127,6 @@ const Triggers = (props: { buffer: AudioBuffer }) => {
     <div
       style={{
         width: `${props.buffer.length / zoom.samplesPerPixel()}px`,
-        // JSX.CSSProperties doesn't recognize container-type yet
         // @ts-ignore
         "container-type": "inline-size",
         height: "40px",
@@ -232,7 +229,9 @@ export const createDrag = (onFinished: (finalOffset: number) => void) => {
 const Stick = (
   props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "style"> & {
     pos: number;
-    index: number;
+    width: number;
+    background: string;
+    opacity?: number;
   },
 ) => {
   const [, htmlAttrs] = splitProps(props, ["pos"]);
@@ -243,12 +242,12 @@ const Stick = (
       style={{
         position: "absolute",
         top: 0,
-        left: "-1px",
-        transform: `translateX(calc(${props.pos * 100}cqi))`,
-        width: "2px",
+        left: `${props.width / -2}px`,
+        transform: `translateX(${props.pos * 100}cqi)`,
+        width: `${props.width}px`,
         height: "100%",
-        background: "purple",
-        opacity: 0.75,
+        background: props.background,
+        opacity: props.opacity,
       }}
     >
     </div>
@@ -272,107 +271,45 @@ const Slice = (
   return (
     <>
       <Show when={editing()}>
-        <div
-          {...htmlAttrs}
-          data-slice
-          style={{
-            position: "absolute",
-            top: 0,
-            left: "-15px",
-            transform: `translateX(calc(${
-              props.pos * 100
-            }cqi + ${drag.offset()}px))`,
-            width: "30px",
-            height: "100%",
-            background: "purple",
-            opacity: 0.5,
-          }}
+        <Stick
+          pos={props.pos}
+          width={30}
+          opacity={0.5}
+          background="purple"
           onPointerDown={drag.start}
         >
-        </div>
+        </Stick>
       </Show>
-      <div
-        {...htmlAttrs}
-        data-slice
-        style={{
-          position: "absolute",
-          top: 0,
-          left: "-1px",
-          transform: `translateX(calc(${
-            props.pos * 100
-          }cqi + ${drag.offset()}px))`,
-          width: "2px",
-          height: "100%",
-          background: "purple",
-          opacity: 0.75,
-          "pointer-events": "none",
-        }}
+      <Stick
+        pos={props.pos}
+        width={2}
+        background="purple"
+        opacity={0.75}
+        onPointerDown={editing() ? drag.start : undefined}
       >
-        {props.children}
-      </div>
+      </Stick>
     </>
   );
 };
 
-// const Stick = (
-//   props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "style"> & {
-//     pos: number;
-//     background: string;
-//     opacity: number;
-//   },
-// ) => {
-//   const [, htmlAttrs] = splitProps(props, ["pos"]);
-//   return (
-//     <div
-//       {...htmlAttrs}
-//       style={{
-//         position: "absolute",
-//         top: 0,
-//         left: "-4px",
-//         transform: `translateX(calc(${props.pos * 100}cqi))`,
-//         width: "8px",
-//         height: "100%",
-//         background: "purple",
-//         opacity: 0.75,
-//       }}
-//     >
-//       {props.children}
-//     </div>
-//   );
-// };
-
 const Cursor = () => (
-  <div
-    style={{
-      position: "absolute",
-      top: 0,
-      left: "-1px",
-      transform: `translateX(${cursor() * 100}cqi)`,
-      width: "2px",
-      height: "100%",
-      background:
-        "repeating-linear-gradient(orange 0px, orange 4px, transparent 4px, transparent 8px)",
-    }}
+  <Stick
+    pos={cursor()}
+    width={2}
+    background="repeating-linear-gradient(orange 0px, orange 4px, transparent 4px, transparent 8px)"
   >
-  </div>
+  </Stick>
 );
 
 const Playhead = () => {
   return (
     <Show when={player.playing()}>
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: "-1px",
-          transform: `translateX(${player.progress() * 100}cqi)`,
-          width: "2px",
-          height: "100%",
-          color: "orange",
-          background: "currentColor",
-        }}
+      <Stick
+        pos={player.progress()}
+        width={2}
+        background="orange"
       >
-      </div>
+      </Stick>
     </Show>
   );
 };
@@ -472,7 +409,15 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
         )}
       </For>
       <For each={regions()}>
-        {({ start }, index) => <Stick pos={start} index={index()}></Stick>}
+        {({ start }) => (
+          <Stick
+            pos={start}
+            background="purple"
+            opacity={0.75}
+            width={2}
+          >
+          </Stick>
+        )}
       </For>
       <PositionIndicator />
       <Cursor />
