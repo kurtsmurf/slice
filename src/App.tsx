@@ -5,11 +5,13 @@ import { player } from "./player";
 import {
   clearRegions,
   clip,
-  cursor,
+  deleting,
+  editing,
   regions,
   setClip,
   setCursor,
-  slice,
+  setDeleting,
+  setEditing,
 } from "./signals";
 import { contentElement, scrollElement, Waveform, zoom } from "./Waveform";
 
@@ -45,9 +47,6 @@ export const App = () => (
     <Regions buffer={clip()!.buffer} />
   </Show>
 );
-
-export const [deleting, setDeleting] = createSignal(false);
-export const [editing, setEditing] = createSignal(false);
 
 const Controls = (props: { clip: Clip }) => (
   <div>

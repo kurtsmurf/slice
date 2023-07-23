@@ -1,5 +1,5 @@
 import { Clip } from "./types";
-import { createEffect, createSignal } from "solid-js";
+import { createSignal } from "solid-js";
 
 export const [clip, setClip] = createSignal<Clip | undefined>();
 // exposing setClip on window so that we can setClip from tests
@@ -52,3 +52,6 @@ export const regions = () =>
 window.regions = regions;
 
 export const clearRegions = () => setSlices(defaultSlices);
+
+export const [deleting, setDeleting] = createSignal(false);
+export const [editing, setEditing] = createSignal(false);

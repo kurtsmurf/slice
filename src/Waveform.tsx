@@ -4,7 +4,7 @@ import { player } from "./player";
 import { cursor, healSlice, regions, setCursor, slice } from "./signals";
 import { ChannelSegment } from "./ChannelSegment";
 import { useAnimationFrame } from "./useAnimationFrame";
-import { deleting, editing } from "./App";
+import { deleting, editing } from "./signals";
 
 const TILE_WIDTH = 400;
 const TILE_HEIGHT = 100;
