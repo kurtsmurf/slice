@@ -1,6 +1,6 @@
 import { AudioInput } from "./AudioInput";
 import { Clip } from "./types";
-import { createSignal, For, Show } from "solid-js";
+import { For, Show } from "solid-js";
 import { player } from "./player";
 import {
   clearRegions,
@@ -32,7 +32,6 @@ export const App = () => (
     >
       clear
     </button>
-
     <Details clip={clip()!} />
     <div
       style={{
@@ -108,11 +107,13 @@ const Details = (props: { clip: Clip }) => (
 
 const Regions = (props: { buffer: AudioBuffer }) => {
   return (
-    <div style="
-      display: grid;
-      grid-template-columns: repeat( auto-fit, minmax(100px, 1fr) );
-      grid-auto-rows: 100px;
-    ">
+    <div
+      style={{
+        display: "grid",
+        "grid-template-columns": "repeat( auto-fit, minmax(100px, 1fr) )",
+        "grid-auto-rows": "100px",
+      }}
+    >
       <For each={regions()}>
         {(region) => (
           <button
