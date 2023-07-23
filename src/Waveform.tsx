@@ -260,19 +260,23 @@ const Slice = (
     index: number;
   },
 ) => {
-  const [, htmlAttrs] = splitProps(props, ["pos"]);
   const drag = createDrag(() => {
-    if (contentElement) {
-      healSlice(props.index);
-      slice(props.pos + drag.offset() / contentElement.clientWidth);
-    }
+    healSlice(props.index);
+    slice(dragPos());
   });
+
+  const dragPos = () => {
+    if (contentElement) {
+      return props.pos + drag.offset() / contentElement.clientWidth;
+    }
+    return props.pos;
+  };
 
   return (
     <>
       <Show when={editing()}>
         <Stick
-          pos={props.pos}
+          pos={dragPos()}
           width={30}
           opacity={0.5}
           background="purple"
@@ -281,7 +285,7 @@ const Slice = (
         </Stick>
       </Show>
       <Stick
-        pos={props.pos}
+        pos={dragPos()}
         width={2}
         background="purple"
         opacity={0.75}
