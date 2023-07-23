@@ -10,7 +10,7 @@ test("loads clip", async ({ page }, testInfo) => {
   // slice at cursor placed in previous step
   await page.getByText(/slice/i).click();
   // perform visual diff
-  await expect(page).toHaveScreenshot({ maxDiffPixels: 100 });
+  await expect(page).toHaveScreenshot();
   // attach screenshot to result
   await testInfo.attach(
     "screenshot",
