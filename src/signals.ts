@@ -6,8 +6,6 @@ export const [clip, setClip] = createSignal<Clip | undefined>();
 // @ts-ignore
 window.setClip = setClip;
 
-export const [cursor, setCursor] = createSignal<number>(0);
-
 const defaultSlices = [0];
 const [slices, setSlices] = createSignal<number[]>(defaultSlices);
 
@@ -36,5 +34,7 @@ window.regions = regions;
 
 export const clearRegions = () => setSlices(defaultSlices);
 
+export const [cursor, setCursor] = createSignal<number>(0);
 export const [deleting, setDeleting] = createSignal(false);
 export const [editing, setEditing] = createSignal(false);
+export const [cursorControlsVisible, setCursorControlsVisible] = createSignal(false);

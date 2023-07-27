@@ -1,7 +1,7 @@
 import { createMemo, createSignal, For, JSX, Show, splitProps } from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
 import { player } from "./player";
-import { cursor, healSlice, regions, setCursor, slice } from "./signals";
+import { cursor, healSlice, regions, setCursor, slice, cursorControlsVisible, setCursorControlsVisible } from "./signals";
 import { ChannelSegment } from "./ChannelSegment";
 import { useAnimationFrame } from "./useAnimationFrame";
 import { deleting, editing } from "./signals";
@@ -121,8 +121,6 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
     </div>
   );
 };
-
-const [cursorControlsVisible, setCursorControlsVisible] = createSignal(false);
 
 const Triggers = (props: { buffer: AudioBuffer }) => {
   const cursorRegion = createMemo(() =>
