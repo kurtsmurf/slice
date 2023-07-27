@@ -6,6 +6,7 @@ import { ChannelSegment } from "./ChannelSegment";
 import { useAnimationFrame } from "./useAnimationFrame";
 import { deleting, editing } from "./signals";
 import { sortedIndex } from "./sortedIndex";
+import { createDrag } from "./createDrag";
 
 const TILE_WIDTH = 400;
 const TILE_HEIGHT = 100;
@@ -206,37 +207,6 @@ const Triggers = (props: { buffer: AudioBuffer }) => {
   );
 };
 
-export const createDrag = (onFinished: (finalOffset: number) => void) => {
-  let initialPosition: number | undefined;
-  const [offset, setOffset] = createSignal(0);
-
-  const preventDefault = (e: Event) => e.preventDefault();
-
-  const start = (e: PointerEvent) => {
-    initialPosition = e.clientX;
-    scrollElement?.addEventListener("touchmove", preventDefault);
-    document.body.addEventListener("pointerup", stop);
-    document.body.addEventListener("pointermove", move);
-  };
-  const stop = () => {
-    onFinished(offset());
-    initialPosition = undefined;
-    scrollElement?.removeEventListener("touchmove", preventDefault);
-    document.body.removeEventListener("pointerup", stop);
-    document.body.removeEventListener("pointermove", move);
-    setOffset(0);
-  };
-  const move = (e: PointerEvent) => {
-    if (initialPosition !== undefined) {
-      setOffset(e.clientX - initialPosition);
-    }
-  };
-  return {
-    offset,
-    start,
-  };
-};
-
 const Stick = (
   props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "style"> & {
     pos: number;
@@ -271,9 +241,16 @@ const Slice = (
     index: number;
   },
 ) => {
-  const drag = createDrag(() => {
-    healSlice(props.index);
-    slice(dragPos());
+  const preventDefault = (e: Event) => e.preventDefault();
+  const drag = createDrag({
+    onStart: () => {
+      scrollElement?.addEventListener("touchmove", preventDefault);
+    },
+    onFinished: () => {
+      healSlice(props.index);
+      slice(dragPos());
+      scrollElement?.removeEventListener("touchmove", preventDefault);
+    },
   });
 
   const dragPos = () => {
@@ -333,7 +310,6 @@ const Playhead = () => {
 
 const WaveformSummary = (props: { buffer: AudioBuffer }) => {
   let root: HTMLDivElement | undefined;
-  let dragging = false;
 
   const PositionIndicator = () => {
     const [left, setLeft] = createSignal(0);
@@ -377,22 +353,10 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
       scrollElement.getBoundingClientRect().width / 2;
   };
 
-  const startDrag: JSX.EventHandlerUnion<HTMLDivElement, PointerEvent> = (
-    e,
-  ) => {
-    updateScrollPosition(e);
-    dragging = true;
-  };
-
-  const move: JSX.EventHandlerUnion<HTMLDivElement, PointerEvent> = (e) => {
-    if (dragging) {
-      updateScrollPosition(e);
-    }
-  };
-
-  const stopDrag: JSX.EventHandlerUnion<HTMLDivElement, PointerEvent> = (e) => {
-    dragging = false;
-  };
+  const drag = createDrag({
+    onStart: updateScrollPosition,
+    onMove: updateScrollPosition,
+  });
 
   return (
     <div
@@ -406,11 +370,7 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
         // @ts-ignore
         "container-type": "inline-size",
       }}
-      onPointerDown={startDrag}
-      onPointerMove={move}
-      onPointerUp={stopDrag}
-      onPointerLeave={stopDrag}
-      onPointerCancel={stopDrag}
+      onPointerDown={drag.start}
     >
       <For each={range(0, props.buffer.numberOfChannels)}>
         {(channelNumber) => (
