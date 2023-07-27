@@ -5,6 +5,7 @@ import { cursor, healSlice, regions, setCursor, slice } from "./signals";
 import { ChannelSegment } from "./ChannelSegment";
 import { useAnimationFrame } from "./useAnimationFrame";
 import { deleting, editing } from "./signals";
+import { sortedIndex } from "./sortedIndex";
 
 const TILE_WIDTH = 400;
 const TILE_HEIGHT = 100;
@@ -17,12 +18,12 @@ export let contentElement: HTMLDivElement | undefined;
 export const zoom = (function createZoom() {
   const min = 1, max = Math.pow(2, 10);
   const [samplesPerPixel, setSamplesPerPixel] = createSignal(32);
+  const factor = 2;
 
   const zoom = (direction: "in" | "out") => {
     if (!scrollElement) {
       return;
     }
-    const factor = 2;
     const currentCenter = scrollElement.scrollLeft +
       scrollElement.clientWidth / 2;
     const nextCenter = direction === "in"
@@ -123,6 +124,10 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
 const [cursorControlsVisible, setCursorControlsVisible] = createSignal(false);
 
 const Triggers = (props: { buffer: AudioBuffer }) => {
+  const cursorRegion = createMemo(() =>
+    regions()[sortedIndex(regions().map((r) => r.start), cursor())]?.start || 1
+  );
+
   return (
     <div
       style={{
@@ -184,7 +189,13 @@ const Triggers = (props: { buffer: AudioBuffer }) => {
           </button>
           <button
             onClick={() => {
-              player.play(props.buffer, { start: cursor(), end: 1 });
+              player.play(
+                props.buffer,
+                {
+                  start: cursor(),
+                  end: cursorRegion(),
+                },
+              );
             }}
           >
             play

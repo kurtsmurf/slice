@@ -1,3 +1,4 @@
+import { sortedIndex } from "./sortedIndex";
 import { Clip } from "./types";
 import { createSignal } from "solid-js";
 
@@ -9,23 +10,6 @@ export const [cursor, setCursor] = createSignal<number>(0);
 
 const defaultSlices = [0];
 const [slices, setSlices] = createSignal<number[]>(defaultSlices);
-
-const sortedIndex = (arr: number[], value: number) => {
-  let low = 0;
-  let high = arr.length;
-
-  while (low <= high) {
-    const mid = Math.floor((low + high) / 2);
-    if (arr[mid] < value) {
-      low = mid + 1;
-    } else if (arr[mid] > value) {
-      high = mid - 1;
-    } else {
-      return mid;
-    }
-  }
-  return low;
-};
 
 export const slice = (position: number) => {
   setSlices((prev) => {
