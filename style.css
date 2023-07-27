@@ -1,11 +1,8 @@
 * {
   margin: 0;
 }
-button {
-  /* prevents ios zoom on double tap button */
-  touch-action: manipulation;
-  min-height: 40px;
-  min-width: 40px;
+html {
+  background: white;
 }
 body {
   /* prevents selection of waveform elements */
@@ -15,5 +12,12 @@ body {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+  --min-btn-dimension: 48px;
+  background: white;
 }
-
+button {
+  /* prevents ios zoom on double tap button */
+  touch-action: manipulation;
+  height: var(--min-btn-dimension);
+  min-width: var(--min-btn-dimension);
+}

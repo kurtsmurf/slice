@@ -134,7 +134,7 @@ const Triggers = (props: { buffer: AudioBuffer }) => {
         width: `${props.buffer.length / zoom.samplesPerPixel()}px`,
         // @ts-ignore
         "container-type": "inline-size",
-        height: "40px",
+        height: "var(--min-btn-dimension",
       }}
     >
       <For each={regions()}>
@@ -308,12 +308,14 @@ const Slice = (
 };
 
 const Cursor = () => (
-  <Stick
-    pos={cursor()}
-    width={2}
-    background="repeating-linear-gradient(orange 0px, orange 4px, transparent 4px, transparent 8px)"
-  >
-  </Stick>
+  <div style={{ "pointer-events": "none" }}>
+    <Stick
+      pos={cursor()}
+      width={2}
+      background="repeating-linear-gradient(orange 0px, orange 4px, transparent 4px, transparent 8px)"
+    >
+    </Stick>
+  </div>
 );
 
 const Playhead = () => {
