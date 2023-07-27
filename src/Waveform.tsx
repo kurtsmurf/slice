@@ -1,10 +1,9 @@
 import { createMemo, createSignal, For, JSX, Show, splitProps } from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
 import { player } from "./player";
-import { cursor, healSlice, regions, setCursor, slice, cursorControlsVisible, setCursorControlsVisible } from "./signals";
+import { dispatch, state } from "./signals";
 import { ChannelSegment } from "./ChannelSegment";
 import { useAnimationFrame } from "./useAnimationFrame";
-import { deleting, editing } from "./signals";
 import { sortedIndex } from "./sortedIndex";
 import { createDrag } from "./createDrag";
 
@@ -79,8 +78,8 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
     }
     const contentRect = contentElement.getBoundingClientRect();
     const offsetPx = e.clientX - contentRect.left;
-    setCursor(offsetPx / contentElement.clientWidth);
-    setCursorControlsVisible(true);
+    dispatch.setCursor(offsetPx / contentElement.clientWidth);
+    dispatch.showCursorControls();
   };
 
   return (
@@ -107,7 +106,7 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
           />
         )}
       </For>
-      <For each={regions()}>
+      <For each={state.regions}>
         {(region, index) => (
           <Slice
             pos={region.start}
@@ -124,7 +123,8 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
 
 const Triggers = (props: { buffer: AudioBuffer }) => {
   const cursorRegion = createMemo(() =>
-    regions()[sortedIndex(regions().map((r) => r.start), cursor())]?.start || 1
+    state.regions[sortedIndex(state.regions.map((r) => r.start), state.cursor)]
+      ?.start || 1
   );
 
   return (
@@ -136,7 +136,7 @@ const Triggers = (props: { buffer: AudioBuffer }) => {
         height: "var(--min-btn-dimension",
       }}
     >
-      <For each={regions()}>
+      <For each={state.regions}>
         {(region, index) => (
           <div
             style={{
@@ -146,10 +146,10 @@ const Triggers = (props: { buffer: AudioBuffer }) => {
               display: "flex",
             }}
           >
-            <Show when={deleting()}>
+            <Show when={state.deleting}>
               <button
                 onClick={() => {
-                  healSlice(index());
+                  dispatch.healSlice(index());
                 }}
               >
                 delete
@@ -168,20 +168,20 @@ const Triggers = (props: { buffer: AudioBuffer }) => {
         )}
       </For>
       <Show
-        when={cursorControlsVisible()}
+        when={state.cursorControlsVisible}
       >
         <div
           style={{
             position: "absolute",
-            transform: `translateX(${cursor() * 100}cqi)`,
+            transform: `translateX(${state.cursor * 100}cqi)`,
             height: "100%",
             display: "flex",
           }}
         >
           <button
             onClick={() => {
-              slice(cursor());
-              setCursorControlsVisible(false);
+              dispatch.slice(state.cursor);
+              dispatch.hideCursorControls();
             }}
           >
             slice
@@ -191,7 +191,7 @@ const Triggers = (props: { buffer: AudioBuffer }) => {
               player.play(
                 props.buffer,
                 {
-                  start: cursor(),
+                  start: state.cursor,
                   end: cursorRegion(),
                 },
               );
@@ -245,8 +245,8 @@ const Slice = (
       scrollElement?.addEventListener("touchmove", preventDefault);
     },
     onFinished: () => {
-      healSlice(props.index);
-      slice(dragPos());
+      dispatch.healSlice(props.index);
+      dispatch.slice(dragPos());
       scrollElement?.removeEventListener("touchmove", preventDefault);
     },
   });
@@ -260,7 +260,7 @@ const Slice = (
 
   return (
     <>
-      <Show when={editing()}>
+      <Show when={state.editing}>
         <Stick
           pos={dragPos()}
           width={30}
@@ -275,7 +275,7 @@ const Slice = (
         width={2}
         background="purple"
         opacity={0.75}
-        onPointerDown={editing() ? drag.start : undefined}
+        onPointerDown={state.editing ? drag.start : undefined}
       >
       </Stick>
     </>
@@ -285,7 +285,7 @@ const Slice = (
 const Cursor = () => (
   <div style={{ "pointer-events": "none" }}>
     <Stick
-      pos={cursor()}
+      pos={state.cursor}
       width={2}
       background="repeating-linear-gradient(orange 0px, orange 4px, transparent 4px, transparent 8px)"
     >
@@ -383,7 +383,7 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
           />
         )}
       </For>
-      <For each={regions()}>
+      <For each={state.regions}>
         {({ start }) => (
           <Stick
             pos={start}

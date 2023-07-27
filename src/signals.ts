@@ -1,40 +1,70 @@
 import { sortedIndex } from "./sortedIndex";
 import { Clip } from "./types";
-import { createSignal } from "solid-js";
+import { createStore } from "solid-js/store";
 
-export const [clip, setClip] = createSignal<Clip | undefined>();
+type State = {
+  cursor: number;
+  cursorControlsVisible: boolean;
+  deleting: boolean;
+  editing: boolean;
+  clip: Clip | undefined;
+  regions: { start: number; end: number }[];
+};
+
+// freeze to prevent mutation by createStore
+const defaultState: State = Object.freeze({
+  cursor: 0,
+  deleting: false,
+  editing: false,
+  cursorControlsVisible: false,
+  clip: undefined,
+  regions: [{ start: 0, end: 1 }],
+});
+
 // @ts-ignore
-window.setClip = setClip;
+window.defaultState = defaultState;
 
-const defaultSlices = [0];
-const [slices, setSlices] = createSignal<number[]>(defaultSlices);
+const [store, setStore] = createStore<State>(defaultState);
 
-export const slice = (position: number) => {
-  setSlices((prev) => {
-    const i = sortedIndex(prev, position);
-    if (prev[i] === position) return prev;
-    return [...prev.slice(0, i), position, ...prev.slice(i)];
-  });
+export const state = store;
+export const dispatch = {
+  reset: () => setStore(defaultState),
+  setClip: (c: Clip) => setStore("clip", c),
+  setCursor: (pos: number) => setStore("cursor", pos),
+  showCursorControls: () => setStore("cursorControlsVisible", true),
+  hideCursorControls: () => setStore("cursorControlsVisible", false),
+  startEditing: () => setStore("editing", true),
+  stopEditing: () => setStore("editing", false),
+  startDeleting: () => setStore("deleting", true),
+  stopDeleting: () => setStore("deleting", false),
+  slice: (pos: number) => {
+    const index = sortedIndex(store.regions.map((r) => r.start), pos);
+    if (store.regions[index]?.start === pos) return;
+    setStore("regions", (prev) => [
+      ...prev.slice(0, index).map((v, i) =>
+        // update right bound of new region left neighbor
+        i === index - 1 ? { start: v.start, end: pos } : v
+      ),
+      // insert region
+      { start: pos, end: prev[index]?.start || 1 },
+      ...prev.slice(index),
+    ]);
+  },
+  healSlice: (index: number) => {
+    setStore("regions", (prev) => [
+      ...prev.slice(0, index).map((v, i) =>
+        // update right bound of removed region left neighbor
+        i === index - 1
+          ? { start: v.start, end: prev[index + 1]?.start || 1 }
+          : v
+      ),
+      // omit region
+      ...prev.slice(index + 1),
+    ]);
+  },
 };
 
 // @ts-ignore
-window.slice = slice;
-
-export const healSlice = (index: number) =>
-  setSlices((prev) => prev.filter((_, i) => index !== i));
-
-export const regions = () =>
-  slices().map((slice, i, arr) => {
-    const end = arr[i + 1] || 1;
-    return { start: slice, end };
-  });
-
+window.state = state;
 // @ts-ignore
-window.regions = regions;
-
-export const clearRegions = () => setSlices(defaultSlices);
-
-export const [cursor, setCursor] = createSignal<number>(0);
-export const [deleting, setDeleting] = createSignal(false);
-export const [editing, setEditing] = createSignal(false);
-export const [cursorControlsVisible, setCursorControlsVisible] = createSignal(false);
+window.dispatch = dispatch;

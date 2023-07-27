@@ -37,7 +37,7 @@ const initializePage = () => {
   });
 
   // @ts-ignore
-  window.setClip({
+  window.dispatch.setClip({
     name: "sinusoid-mono",
     buffer,
   });
@@ -62,7 +62,7 @@ const initializePageAlt = () => {
   });
 
   // @ts-ignore
-  window.setClip({
+  window.dispatch.setClip({
     name: "stereo-fifth",
     buffer,
   });

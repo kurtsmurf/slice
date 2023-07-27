@@ -14,14 +14,14 @@ export const createDrag = (
     props.onStart?.(e);
     initialClientX = e.clientX;
     document.body.addEventListener("pointerup", finish);
-    document.body.addEventListener("pointerleave", finish)
+    document.body.addEventListener("pointerleave", finish);
     document.body.addEventListener("pointermove", move);
   };
   const finish = (e: PointerEvent) => {
     props.onFinished?.(e);
     initialClientX = undefined;
     document.body.removeEventListener("pointerup", finish);
-    document.body.removeEventListener("pointerleave", finish)
+    document.body.removeEventListener("pointerleave", finish);
     document.body.removeEventListener("pointermove", move);
     setOffset(0);
   };

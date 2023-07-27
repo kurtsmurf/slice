@@ -2,37 +2,25 @@ import { AudioInput } from "./AudioInput";
 import { Clip } from "./types";
 import { For, Show } from "solid-js";
 import { player } from "./player";
-import {
-  clearRegions,
-  clip,
-  deleting,
-  editing,
-  regions,
-  setClip,
-  setCursor,
-  setDeleting,
-  setEditing,
-} from "./signals";
+import { dispatch, state } from "./signals";
 import { contentElement, scrollElement, Waveform, zoom } from "./Waveform";
 
 export const App = () => (
   <Show
-    when={clip()}
-    fallback={<AudioInput onChange={setClip} />}
+    when={state.clip}
+    fallback={<AudioInput onChange={dispatch.setClip} />}
   >
     <button
       onClick={() => {
-        if (confirm("clear for real?")) {
-          setClip(undefined);
-          setCursor(0);
-          clearRegions();
+        if (confirm("Are you sure?")) {
+          dispatch.reset();
           player.stop();
         }
       }}
     >
       clear
     </button>
-    <Details clip={clip()!} />
+    <Details clip={state.clip!} />
     <div
       style={{
         position: "sticky",
@@ -40,10 +28,10 @@ export const App = () => (
         background: "white",
       }}
     >
-      <Controls clip={clip()!} />
-      <Waveform buffer={clip()!.buffer} />
+      <Controls clip={state.clip!} />
+      <Waveform buffer={state.clip!.buffer} />
     </div>
-    <Regions buffer={clip()!.buffer} />
+    <Regions buffer={state.clip!.buffer} />
   </Show>
 );
 
@@ -51,17 +39,19 @@ const Controls = (props: { clip: Clip }) => (
   <div>
     <button
       onClick={() => {
-        setDeleting((prev) => !prev);
+        if (state.deleting) dispatch.stopDeleting();
+        else dispatch.startDeleting();
       }}
     >
-      {deleting() ? "done deleting" : "delete"}
+      {state.deleting ? "done deleting" : "delete"}
     </button>
     <button
       onClick={() => {
-        setEditing((prev) => !prev);
+        if (state.editing) dispatch.stopEditing();
+        else dispatch.startEditing();
       }}
     >
-      {editing() ? "done editing" : "edit"}
+      {state.editing ? "done editing" : "edit"}
     </button>
     <button onClick={zoom.in} disabled={zoom.inDisabled()}>
       zoom in
@@ -98,8 +88,8 @@ const Details = (props: { clip: Clip }) => (
   <div>
     <p>{props.clip.name}</p>
     <p>
-      {((props.clip.buffer.length || 0) /
-        (props.clip.buffer.sampleRate || 1)).toFixed(2)}s
+      {((props.clip.buffer.length) /
+        (props.clip.buffer.sampleRate)).toFixed(2)}s
     </p>
     <p>{formatOf(props.clip.buffer)}</p>
   </div>
@@ -114,7 +104,7 @@ const Regions = (props: { buffer: AudioBuffer }) => {
         "grid-auto-rows": "100px",
       }}
     >
-      <For each={regions()}>
+      <For each={state.regions}>
         {(region) => (
           <button
             style={{
