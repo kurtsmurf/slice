@@ -355,7 +355,7 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
 
   const drag = createDrag({
     onStart: updateScrollPosition,
-    onMove: updateScrollPosition,
+    onDrag: updateScrollPosition,
   });
 
   return (
