@@ -1,4 +1,4 @@
-import { createMemo, createSignal, For, JSX, Show, splitProps } from "solid-js";
+import { createMemo, createSignal, For, JSX, Show } from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
 import { player } from "./player";
 import { dispatch, state } from "./signals";
@@ -6,6 +6,8 @@ import { ChannelSegment } from "./ChannelSegment";
 import { useAnimationFrame } from "./useAnimationFrame";
 import { sortedIndex } from "./sortedIndex";
 import { createDrag } from "./createDrag";
+import { range } from "./range";
+import { Stick } from "./Stick";
 
 const TILE_WIDTH = 400;
 const TILE_HEIGHT = 100;
@@ -201,34 +203,6 @@ const Triggers = (props: { buffer: AudioBuffer }) => {
           </button>
         </div>
       </Show>
-    </div>
-  );
-};
-
-const Stick = (
-  props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "style"> & {
-    pos: number;
-    width: number;
-    background: string;
-    opacity?: number;
-  },
-) => {
-  const [, htmlAttrs] = splitProps(props, ["pos"]);
-
-  return (
-    <div
-      {...htmlAttrs}
-      style={{
-        position: "absolute",
-        top: 0,
-        left: `${props.width / -2}px`,
-        transform: `translateX(${props.pos * 100}cqi)`,
-        width: `${props.width}px`,
-        height: "100%",
-        background: props.background,
-        opacity: props.opacity,
-      }}
-    >
     </div>
   );
 };
@@ -436,6 +410,3 @@ const WaveformTile = (
     </For>
   </div>
 );
-
-const range = (start: number, end: number, step = 1) =>
-  [...new Array(Math.ceil((end - start) / step))].map((_, i) => i * step);
