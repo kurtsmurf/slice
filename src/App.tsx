@@ -31,7 +31,7 @@ export const App = () => (
       <Controls clip={state.clip!} />
       <Waveform buffer={state.clip!.buffer} />
     </div>
-    <Regions buffer={state.clip!.buffer} />
+    <Pads buffer={state.clip!.buffer} />
   </Show>
 );
 
@@ -95,7 +95,7 @@ const Details = (props: { clip: Clip }) => (
   </div>
 );
 
-const Regions = (props: { buffer: AudioBuffer }) => {
+const Pads = (props: { buffer: AudioBuffer }) => {
   return (
     <div
       style={{

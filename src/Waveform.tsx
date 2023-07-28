@@ -107,6 +107,26 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
         )}
       </For>
       <For each={state.regions}>
+        {(region) => (
+          <div
+            style={{
+              position: "absolute",
+              opacity:
+                player.playing() && player.progress() < region.end &&
+                  player.progress() >= region.start
+                  ? 1
+                  : 0,
+              transition: "opacity 0.1s",
+              height: "100%",
+              width: (region.end - region.start) * 100 + "cqi",
+              left: region.start * 100 + "cqi",
+              background: `hsl(${region.start * 360}deg 50% 50% / 50%)`,
+            }}
+          >
+          </div>
+        )}
+      </For>
+      <For each={state.regions}>
         {(region, index) => (
           <Slice
             pos={region.start}
