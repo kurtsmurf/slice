@@ -1,12 +1,4 @@
 import { render } from "solid-js/web";
-import { App } from "./App";
-// import { Canary } from "./Canary";
+import { App } from "./components/App";
 
-const Blah = () => (
-  <>
-    {/* <Canary /> */}
-    <App />
-  </>
-);
-
-render(Blah, document.getElementById("root")!);
+render(App, document.getElementById("root")!);

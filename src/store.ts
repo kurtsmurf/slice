@@ -1,4 +1,4 @@
-import { sortedIndex } from "./sortedIndex";
+import { sortedIndex } from "./util/sortedIndex";
 import { Clip } from "./types";
 import { createStore } from "solid-js/store";
 

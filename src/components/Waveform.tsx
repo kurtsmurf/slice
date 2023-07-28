@@ -1,12 +1,12 @@
 import { createMemo, createSignal, For, JSX, Show } from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
-import { player } from "./player";
-import { dispatch, state } from "./signals";
+import { player } from "../player";
+import { dispatch, state } from "../store";
 import { ChannelSegment } from "./ChannelSegment";
-import { useAnimationFrame } from "./useAnimationFrame";
-import { sortedIndex } from "./sortedIndex";
-import { createDrag } from "./createDrag";
-import { range } from "./range";
+import { useAnimationFrame } from "../signals/useAnimationFrame";
+import { sortedIndex } from "../util/sortedIndex";
+import { createDrag } from "../signals/createDrag";
+import { range } from "../util/range";
 import { Stick } from "./Stick";
 
 const TILE_WIDTH = 400;

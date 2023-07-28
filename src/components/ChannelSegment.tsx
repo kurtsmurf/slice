@@ -1,4 +1,4 @@
-import { Bucket } from "./types";
+import { Bucket } from "../types";
 import { createEffect, JSX, onCleanup } from "solid-js";
 import workerpool from "workerpool";
 
@@ -86,7 +86,7 @@ const drawBars = (
     return;
   }
 
-  const LINE_WIDTH = 2;
+  const LINE_WIDTH = 1;
   context.lineWidth = LINE_WIDTH;
   context.clearRect(0, 0, canvas.width, canvas.height);
 

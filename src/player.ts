@@ -1,6 +1,6 @@
 import { createSignal } from "solid-js";
 import { audioContext } from "./audioContext";
-import { useAnimationFrame } from "./useAnimationFrame";
+import { useAnimationFrame } from "./signals/useAnimationFrame";
 
 export const player = (function createPlayer() {
   const ramp = 0.001;
