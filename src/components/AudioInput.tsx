@@ -7,18 +7,12 @@ export const AudioInput = (props: Props) => {
   let input: HTMLInputElement | undefined;
 
   return (
-    <label
-      role="button"
-      tabIndex="0"
-      onKeyPress={(e) => {
-        if (["Space", "Enter"].includes(e.code)) {
-          e.preventDefault();
-          input?.click();
-        }
-      }}
-      class="audio-input"
-    >
-      <span>load audio</span>
+    <>
+      <button
+        onClick={() => input?.click()}
+      >
+        load audio
+      </button>
       <input
         ref={input}
         type="file"
@@ -29,7 +23,7 @@ export const AudioInput = (props: Props) => {
           clipOfFile(file).then(props.onChange);
         }}
       />
-    </label>
+    </>
   );
 };
 
