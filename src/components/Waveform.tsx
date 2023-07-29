@@ -8,6 +8,7 @@ import { createDrag } from "../signals/createDrag";
 import { range } from "../util/range";
 import { Stick } from "./Stick";
 import { Triggers } from "./Triggers";
+import { sortedIndex } from "../util/sortedIndex";
 
 const TILE_WIDTH = 400;
 const TILE_HEIGHT = 100;
@@ -53,7 +54,9 @@ export const Waveform = (props: { buffer: AudioBuffer }) => (
   <div
     ref={scrollElement}
     data-scroll-element
-    style={{ overflow: "auto" }}
+    style={{
+      overflow: "auto",
+    }}
   >
     <Triggers buffer={props.buffer} />
     <WaveformContent buffer={props.buffer} />
@@ -92,8 +95,8 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
         width: `${props.buffer.length / zoom.samplesPerPixel()}px`,
         display: "flex",
         position: "relative",
-        "overflow": "hidden",
-        height: props.buffer.numberOfChannels * TILE_HEIGHT + "px",
+        // "overflow": "hidden",
+        height: props.buffer.numberOfChannels * TILE_HEIGHT +  "px",
         // @ts-ignore
         "container-type": "inline-size",
       }}
@@ -194,8 +197,50 @@ const DraggableCursor = (
     return state.cursor;
   };
 
+  const cursorRegion = createMemo(() =>
+  state.regions[sortedIndex(state.regions.map((r) => r.start), state.cursor)]
+    ?.start || 1
+  );
+
+
   return (
     <>
+          <Show
+        when={state.cursorControlsVisible}
+      >
+        <div
+          style={{
+            position: "absolute",
+            transform: `translateX(${dragPos() * 100}cqi)`,
+            height: "100%",
+            display: "flex",
+            top: "calc(-1 * var(--min-btn-dimension))"
+          }}
+          ondblclick={e => e.stopPropagation()}
+        >
+          <button
+            onClick={() => {
+              dispatch.slice(state.cursor);
+              dispatch.hideCursorControls();
+            }}
+          >
+            slice
+          </button>
+          <button
+            onClick={() => {
+              player.play(
+                state.clip!.buffer,
+                {
+                  start: state.cursor,
+                  end: cursorRegion(),
+                },
+              );
+            }}
+          >
+            play
+          </button>
+        </div>
+      </Show>
       <Show when={!state.editing}>
         <Stick
           pos={dragPos()}

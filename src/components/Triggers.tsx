@@ -5,10 +5,6 @@ import { sortedIndex } from "../util/sortedIndex";
 import { zoom } from "./Waveform";
 
 export const Triggers = (props: { buffer: AudioBuffer }) => {
-  const cursorRegion = createMemo(() =>
-    state.regions[sortedIndex(state.regions.map((r) => r.start), state.cursor)]
-      ?.start || 1
-  );
 
   return (
     <div
@@ -29,6 +25,9 @@ export const Triggers = (props: { buffer: AudioBuffer }) => {
               height: "100%",
               display: "flex",
             }}
+            onKeyDown={
+              console.log
+            }
           >
             <Show when={state.deleting}>
               <button
@@ -52,40 +51,7 @@ export const Triggers = (props: { buffer: AudioBuffer }) => {
         )}
       </For>
       {/* cursor controls */}
-      <Show
-        when={state.cursorControlsVisible}
-      >
-        <div
-          style={{
-            position: "absolute",
-            transform: `translateX(${state.cursor * 100}cqi)`,
-            height: "100%",
-            display: "flex",
-          }}
-        >
-          <button
-            onClick={() => {
-              dispatch.slice(state.cursor);
-              dispatch.hideCursorControls();
-            }}
-          >
-            slice
-          </button>
-          <button
-            onClick={() => {
-              player.play(
-                props.buffer,
-                {
-                  start: state.cursor,
-                  end: cursorRegion(),
-                },
-              );
-            }}
-          >
-            play
-          </button>
-        </div>
-      </Show>
+
     </div>
   );
 };
