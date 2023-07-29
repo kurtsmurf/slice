@@ -3,11 +3,11 @@ import { expect, test } from "@playwright/test";
 test("loads clip", async ({ page }, testInfo) => {
   await page.goto("localhost:3000");
   await page.evaluate(initializePage);
-  // click the center of the summary element
+  // click center of summary element to jump to center of waveform
   await page.locator("[data-summary-element]").click();
-  // double click the waveform, setting cursor and starting playback
+  // double click waveform to place cursor
   await page.locator("[data-content-element]").dblclick();
-  // slice at cursor placed in previous step
+  // slice at cursor
   await page.getByText(/slice/i).click();
   // perform visual diff
   await expect(page).toHaveScreenshot();
