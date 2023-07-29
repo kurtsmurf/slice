@@ -1,7 +1,7 @@
 import { Clip } from "../types";
 import { formatOf } from "../util/formatOf";
 
-export const Details = (props: { clip: Clip; }) => (
+export const Details = (props: { clip: Clip }) => (
   <div>
     <p>{props.clip.name}</p>
     <p>

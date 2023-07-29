@@ -86,7 +86,7 @@ const drawBars = (
     return;
   }
 
-  const LINE_WIDTH = 1;
+  const LINE_WIDTH = 2;
   context.lineWidth = LINE_WIDTH;
   context.clearRect(0, 0, canvas.width, canvas.height);
 

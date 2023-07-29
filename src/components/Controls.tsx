@@ -3,7 +3,7 @@ import { player } from "../player";
 import { dispatch, state } from "../store";
 import { zoom } from "./Waveform";
 
-export const Controls = (props: { clip: Clip; }) => (
+export const Controls = (props: { clip: Clip }) => (
   <div>
     <button
       onClick={() => {

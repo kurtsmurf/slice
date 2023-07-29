@@ -23,7 +23,7 @@ export const App = () => (
       clear
     </button>
     <Details clip={state.clip!} />
-    <main
+    <div
       style={{
         position: "sticky",
         top: 0,
@@ -32,7 +32,7 @@ export const App = () => (
     >
       <Controls clip={state.clip!} />
       <Waveform buffer={state.clip!.buffer} />
-    </main>
+    </div>
     <Pads buffer={state.clip!.buffer} />
   </Show>
 );

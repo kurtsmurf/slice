@@ -3,7 +3,7 @@ import { player } from "../player";
 import { state } from "../store";
 import { contentElement, scrollElement } from "./Waveform";
 
-export const Pads = (props: { buffer: AudioBuffer; }) => {
+export const Pads = (props: { buffer: AudioBuffer }) => {
   return (
     <div
       style={{
