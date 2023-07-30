@@ -7,7 +7,6 @@ import { useAnimationFrame } from "../signals/useAnimationFrame";
 import { createDrag } from "../signals/createDrag";
 import { range } from "../util/range";
 import { Stick } from "./Stick";
-import { Triggers } from "./Triggers";
 import { sortedIndex } from "../util/sortedIndex";
 
 const TILE_WIDTH = 400;
@@ -58,7 +57,7 @@ export const Waveform = (props: { buffer: AudioBuffer }) => (
       overflow: "auto",
     }}
   >
-    <Triggers buffer={props.buffer} />
+    <div style={{ height: "var(--min-btn-dimension)" }} />
     <WaveformContent buffer={props.buffer} />
     <WaveformSummary buffer={props.buffer} />
   </div>
@@ -95,8 +94,7 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
         width: `${props.buffer.length / zoom.samplesPerPixel()}px`,
         display: "flex",
         position: "relative",
-        // "overflow": "hidden",
-        height: props.buffer.numberOfChannels * TILE_HEIGHT +  "px",
+        height: props.buffer.numberOfChannels * TILE_HEIGHT + "px",
         // @ts-ignore
         "container-type": "inline-size",
       }}
@@ -114,7 +112,7 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
       <For each={state.regions}>
         {(region, index) => (
           <Slice
-            pos={region.start}
+            region={region}
             index={index()}
             id={region.start.toString()}
           />
@@ -128,7 +126,7 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
 
 const Slice = (
   props: JSX.HTMLAttributes<HTMLDivElement> & {
-    pos: number;
+    region: { start: number; end: number };
     index: number;
   },
 ) => {
@@ -146,13 +144,45 @@ const Slice = (
 
   const dragPos = () => {
     if (contentElement) {
-      return props.pos + drag.offset() / contentElement.clientWidth;
+      const pos = props.region.start +
+        drag.offset() / contentElement.clientWidth;
+      return Math.max(0, Math.min(1, pos));
     }
-    return props.pos;
+    return props.region.start;
   };
 
   return (
     <>
+      <div
+        style={{
+          position: "absolute",
+          transform: `translateX(${dragPos() * 100}cqi)`,
+          height: "100%",
+          display: "flex",
+          top: "calc(-1 * var(--min-btn-dimension))",
+        }}
+        onKeyDown={console.log}
+      >
+        <Show when={state.deleting}>
+          <button
+            onClick={() => {
+              dispatch.healSlice(props.index);
+            }}
+          >
+            delete
+          </button>
+        </Show>
+        <button
+          style="flex-grow: 1;"
+          onClick={() => {
+            player.play(state.clip!.buffer, props.region);
+          }}
+          ondblclick={(e) => e.stopPropagation()}
+        >
+          &#9654; {props.region.start.toFixed(5)}
+        </button>
+      </div>
+
       <Show when={state.editing}>
         <Stick
           pos={dragPos()}
@@ -192,20 +222,20 @@ const DraggableCursor = (
 
   const dragPos = () => {
     if (contentElement) {
-      return state.cursor + drag.offset() / contentElement.clientWidth;
+      const pos = state.cursor + drag.offset() / contentElement.clientWidth;
+      return Math.max(0, Math.min(1, pos));
     }
     return state.cursor;
   };
 
   const cursorRegion = createMemo(() =>
-  state.regions[sortedIndex(state.regions.map((r) => r.start), state.cursor)]
-    ?.start || 1
+    state.regions[sortedIndex(state.regions.map((r) => r.start), state.cursor)]
+      ?.start || 1
   );
-
 
   return (
     <>
-          <Show
+      <Show
         when={state.cursorControlsVisible}
       >
         <div
@@ -214,9 +244,9 @@ const DraggableCursor = (
             transform: `translateX(${dragPos() * 100}cqi)`,
             height: "100%",
             display: "flex",
-            top: "calc(-1 * var(--min-btn-dimension))"
+            top: "calc(-1 * var(--min-btn-dimension))",
           }}
-          ondblclick={e => e.stopPropagation()}
+          ondblclick={(e) => e.stopPropagation()}
         >
           <button
             onClick={() => {
@@ -251,21 +281,17 @@ const DraggableCursor = (
         >
         </Stick>
       </Show>
-      <Cursor pos={dragPos()} />
+      <div style={{ "pointer-events": "none" }}>
+        <Stick
+          pos={dragPos()}
+          width={2}
+          background="repeating-linear-gradient(orange 0px, orange 4px, transparent 4px, transparent 8px)"
+        >
+        </Stick>
+      </div>
     </>
   );
 };
-
-const Cursor = (props: { pos: number }) => (
-  <div style={{ "pointer-events": "none" }}>
-    <Stick
-      pos={props.pos}
-      width={2}
-      background="repeating-linear-gradient(orange 0px, orange 4px, transparent 4px, transparent 8px)"
-    >
-    </Stick>
-  </div>
-);
 
 const Playhead = () => {
   return (
@@ -369,7 +395,12 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
         )}
       </For>
       <PositionIndicator />
-      <Cursor pos={state.cursor} />
+      <Stick
+        pos={state.cursor}
+        width={2}
+        background="repeating-linear-gradient(orange 0px, orange 4px, transparent 4px, transparent 8px)"
+      >
+      </Stick>
       <Playhead />
     </div>
   );
