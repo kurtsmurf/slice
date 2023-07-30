@@ -11,7 +11,7 @@ type State = {
   regions: { start: number; end: number }[];
 };
 
-// freeze to prevent mutation by createStore
+// frozen to prevent mutation on store update
 const defaultState: State = Object.freeze({
   cursor: 0,
   deleting: false,
@@ -20,9 +20,6 @@ const defaultState: State = Object.freeze({
   clip: undefined,
   regions: [{ start: 0, end: 1 }],
 });
-
-// @ts-ignore
-window.defaultState = defaultState;
 
 const [store, setStore] = createStore<State>(defaultState);
 

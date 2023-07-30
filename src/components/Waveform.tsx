@@ -3,8 +3,8 @@ import { createVirtualizer } from "@tanstack/solid-virtual";
 import { player } from "../player";
 import { dispatch, state } from "../store";
 import { ChannelSegment } from "./ChannelSegment";
-import { useAnimationFrame } from "../signals/useAnimationFrame";
-import { createDrag } from "../signals/createDrag";
+import { useAnimationFrame } from "../behaviors/useAnimationFrame";
+import { createDrag } from "../behaviors/createDrag";
 import { range } from "../util/range";
 import { Stick } from "./Stick";
 import { sortedIndex } from "../util/sortedIndex";
@@ -118,7 +118,7 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
           />
         )}
       </For>
-      <DraggableCursor />
+      <Cursor />
       <Playhead />
     </div>
   );
@@ -205,7 +205,7 @@ const Slice = (
   );
 };
 
-const DraggableCursor = (
+const Cursor = (
   props: JSX.HTMLAttributes<HTMLDivElement>,
 ) => {
   const preventDefault = (e: Event) => e.preventDefault();
