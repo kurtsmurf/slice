@@ -302,6 +302,7 @@ const Cursor = (
     <>
       <Show when={!state.editing}>
         <Stick
+          ref={ref}
           pos={dragPos()}
           width={30}
           opacity={0.5}
@@ -314,7 +315,6 @@ const Cursor = (
       </Show>
       <div style={{ "pointer-events": "none" }}>
         <Stick
-          ref={ref}
           pos={dragPos()}
           width={2}
           background="repeating-linear-gradient(orange 0px, orange 4px, transparent 4px, transparent 8px)"
@@ -338,6 +338,7 @@ const Cursor = (
             onClick={() => {
               dispatch.slice(state.cursor);
               dispatch.hideCursorControls();
+              ref?.focus();
             }}
           >
             slice
