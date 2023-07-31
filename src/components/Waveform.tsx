@@ -237,6 +237,20 @@ const Cursor = (
 
   const onKeyDown = (e: KeyboardEvent) => {
     if (!scrollElement || !contentElement || !ref) return;
+    if (
+      ![
+        "ArrowRight",
+        "ArrowLeft",
+        "PageDown",
+        "PageUp",
+        "Home",
+        "End",
+      ].includes(e.key)
+    ) {
+      return;
+    }
+
+    dispatch.showCursorControls();
 
     const stepPx = Math.max(scrollElement.clientWidth / 100, 1);
     const stepCqi = stepPx / contentElement.clientWidth;
@@ -274,7 +288,6 @@ const Cursor = (
       dispatch.setCursor(state.cursor - pageCqi);
       ref.scrollIntoView({ inline: "center" });
     }
-
     if (e.key === "Home") {
       dispatch.setCursor(0);
       ref.scrollIntoView({ inline: "center" });
@@ -287,6 +300,27 @@ const Cursor = (
 
   return (
     <>
+      <Show when={!state.editing}>
+        <Stick
+          pos={dragPos()}
+          width={30}
+          opacity={0.5}
+          background="orange"
+          onPointerDown={drag.start}
+          onKeyDown={onKeyDown}
+          tabIndex={0}
+        >
+        </Stick>
+      </Show>
+      <div style={{ "pointer-events": "none" }}>
+        <Stick
+          ref={ref}
+          pos={dragPos()}
+          width={2}
+          background="repeating-linear-gradient(orange 0px, orange 4px, transparent 4px, transparent 8px)"
+        >
+        </Stick>
+      </div>
       <Show
         when={state.cursorControlsVisible}
       >
@@ -294,7 +328,6 @@ const Cursor = (
           style={{
             position: "absolute",
             transform: `translateX(${dragPos() * 100}cqi)`,
-            height: "100%",
             display: "flex",
             top: "calc(-1 * var(--min-btn-dimension))",
           }}
@@ -324,27 +357,6 @@ const Cursor = (
           </button>
         </div>
       </Show>
-      <Show when={!state.editing}>
-        <Stick
-          pos={dragPos()}
-          width={30}
-          opacity={0.5}
-          background="orange"
-          onPointerDown={drag.start}
-          onKeyDown={onKeyDown}
-          tabIndex={0}
-        >
-        </Stick>
-      </Show>
-      <div style={{ "pointer-events": "none" }}>
-        <Stick
-          ref={ref}
-          pos={dragPos()}
-          width={2}
-          background="repeating-linear-gradient(orange 0px, orange 4px, transparent 4px, transparent 8px)"
-        >
-        </Stick>
-      </div>
     </>
   );
 };
