@@ -161,7 +161,6 @@ const Slice = (
           display: "flex",
           top: "calc(-1 * var(--min-btn-dimension))",
         }}
-        onKeyDown={console.log}
       >
         <Show when={state.deleting}>
           <button
@@ -237,6 +236,26 @@ const Cursor = (
 
   const onKeyDown = (e: KeyboardEvent) => {
     if (!scrollElement || !contentElement || !ref) return;
+
+    if (e.ctrlKey) {
+      if ((e.key === "+" || e.key === "=")) {
+        e.preventDefault();
+        zoom.in();
+        if (scrollElement && contentElement) {
+          scrollElement.scrollLeft = state.cursor * contentElement.clientWidth -
+            scrollElement.clientWidth / 2;
+        }
+      }
+      if ((e.key === "-" || e.key === "_")) {
+        e.preventDefault();
+        zoom.out();
+        if (scrollElement && contentElement) {
+          scrollElement.scrollLeft = state.cursor * contentElement.clientWidth -
+            scrollElement.clientWidth / 2;
+        }
+      }
+    }
+
     if (
       ![
         "ArrowRight",
