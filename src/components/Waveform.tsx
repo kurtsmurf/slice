@@ -233,6 +233,45 @@ const Cursor = (
       ?.start || 1
   );
 
+  let ref: HTMLElement | undefined;
+
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (!scrollElement || !contentElement || !ref) return;
+
+    const stepPx = Math.max(scrollElement.clientWidth / 100, 1);
+    const stepCqi = stepPx / contentElement.clientWidth;
+    const step = e.ctrlKey ? stepCqi * 10 : stepCqi;
+
+    if (e.key === "ArrowRight") {
+      e.preventDefault();
+      dispatch.setCursor(state.cursor + step);
+      // ref.scrollIntoView({
+      //   inline: "center"
+      // });
+    }
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      dispatch.setCursor(state.cursor - step);
+    }
+
+    const pagePx = scrollElement.clientWidth;
+    const pageCqi = pagePx / contentElement.clientWidth;
+
+    if (e.key === "PageDown") {
+      dispatch.setCursor(state.cursor + pageCqi);
+    }
+    if (e.key === "PageUp") {
+      dispatch.setCursor(state.cursor - pageCqi);
+    }
+
+    if (e.key === "Home") {
+      dispatch.setCursor(0);
+    }
+    if (e.key === "End") {
+      dispatch.setCursor(1);
+    }
+  };
+
   return (
     <>
       <Show
@@ -247,6 +286,7 @@ const Cursor = (
             top: "calc(-1 * var(--min-btn-dimension))",
           }}
           ondblclick={(e) => e.stopPropagation()}
+          onKeyDown={onKeyDown}
         >
           <button
             onClick={() => {
@@ -278,11 +318,14 @@ const Cursor = (
           opacity={0.5}
           background="orange"
           onPointerDown={drag.start}
+          onKeyDown={onKeyDown}
+          tabIndex={0}
         >
         </Stick>
       </Show>
       <div style={{ "pointer-events": "none" }}>
         <Stick
+          ref={ref}
           pos={dragPos()}
           width={2}
           background="repeating-linear-gradient(orange 0px, orange 4px, transparent 4px, transparent 8px)"
