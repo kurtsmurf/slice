@@ -1,4 +1,4 @@
-import { createMemo, createSignal, For, JSX, Show } from "solid-js";
+import { createMemo, createSignal, For, JSX, onMount, Show } from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
 import { player } from "../player";
 import { dispatch, state } from "../store";
@@ -233,7 +233,7 @@ const Cursor = (
       ?.start || 1
   );
 
-  let ref: HTMLElement | undefined;
+  let ref: HTMLDivElement | undefined;
 
   const onKeyDown = (e: KeyboardEvent) => {
     if (!scrollElement || !contentElement || !ref) return;
@@ -245,13 +245,22 @@ const Cursor = (
     if (e.key === "ArrowRight") {
       e.preventDefault();
       dispatch.setCursor(state.cursor + step);
-      // ref.scrollIntoView({
-      //   inline: "center"
-      // });
+      if (
+        ref.getBoundingClientRect().right >
+          scrollElement.getBoundingClientRect().right
+      ) {
+        ref.scrollIntoView({ inline: "start" });
+      }
     }
     if (e.key === "ArrowLeft") {
       e.preventDefault();
       dispatch.setCursor(state.cursor - step);
+      if (
+        ref.getBoundingClientRect().left <
+          scrollElement.getBoundingClientRect().left
+      ) {
+        ref.scrollIntoView({ inline: "end" });
+      }
     }
 
     const pagePx = scrollElement.clientWidth;
@@ -259,16 +268,20 @@ const Cursor = (
 
     if (e.key === "PageDown") {
       dispatch.setCursor(state.cursor + pageCqi);
+      ref.scrollIntoView({ inline: "center" });
     }
     if (e.key === "PageUp") {
       dispatch.setCursor(state.cursor - pageCqi);
+      ref.scrollIntoView({ inline: "center" });
     }
 
     if (e.key === "Home") {
       dispatch.setCursor(0);
+      ref.scrollIntoView({ inline: "center" });
     }
     if (e.key === "End") {
       dispatch.setCursor(1);
+      ref.scrollIntoView({ inline: "center" });
     }
   };
 
