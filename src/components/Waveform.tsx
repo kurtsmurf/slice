@@ -237,83 +237,78 @@ const Cursor = (
   const onKeyDown = (e: KeyboardEvent) => {
     if (!scrollElement || !contentElement || !ref) return;
 
+    // handle zoom
     if (e.ctrlKey) {
       if ((e.key === "+" || e.key === "=")) {
         e.preventDefault();
         zoom.in();
-        if (scrollElement && contentElement) {
-          scrollElement.scrollLeft = state.cursor * contentElement.clientWidth -
-            scrollElement.clientWidth / 2;
-        }
+        ref.scrollIntoView({ inline: "center", "block": "nearest" });
       }
       if ((e.key === "-" || e.key === "_")) {
         e.preventDefault();
         zoom.out();
-        if (scrollElement && contentElement) {
-          scrollElement.scrollLeft = state.cursor * contentElement.clientWidth -
-            scrollElement.clientWidth / 2;
-        }
+        ref.scrollIntoView({ inline: "center", "block": "nearest" });
       }
     }
 
+    // handle movement
     if (
-      ![
+      [
         "ArrowRight",
         "ArrowLeft",
+        "ArrowUp",
+        "ArrowDown",
         "PageDown",
         "PageUp",
         "Home",
         "End",
       ].includes(e.key)
     ) {
-      return;
-    }
-
-    dispatch.showCursorControls();
-
-    const stepPx = Math.max(scrollElement.clientWidth / 100, 1);
-    const stepCqi = stepPx / contentElement.clientWidth;
-    const step = e.ctrlKey ? stepCqi * 10 : stepCqi;
-
-    if (e.key === "ArrowRight") {
       e.preventDefault();
-      dispatch.setCursor(state.cursor + step);
-      if (
-        ref.getBoundingClientRect().right >
-          scrollElement.getBoundingClientRect().right
-      ) {
-        ref.scrollIntoView({ inline: "start" });
-      }
-    }
-    if (e.key === "ArrowLeft") {
-      e.preventDefault();
-      dispatch.setCursor(state.cursor - step);
-      if (
-        ref.getBoundingClientRect().left <
-          scrollElement.getBoundingClientRect().left
-      ) {
-        ref.scrollIntoView({ inline: "end" });
-      }
-    }
+      dispatch.showCursorControls();
 
-    const pagePx = scrollElement.clientWidth;
-    const pageCqi = pagePx / contentElement.clientWidth;
+      const stepPx = Math.max(scrollElement.clientWidth / 100, 1);
+      const stepCqi = stepPx / contentElement.clientWidth;
+      const step = e.ctrlKey ? stepCqi * 10 : stepCqi;
 
-    if (e.key === "PageDown") {
-      dispatch.setCursor(state.cursor + pageCqi);
-      ref.scrollIntoView({ inline: "center" });
-    }
-    if (e.key === "PageUp") {
-      dispatch.setCursor(state.cursor - pageCqi);
-      ref.scrollIntoView({ inline: "center" });
-    }
-    if (e.key === "Home") {
-      dispatch.setCursor(0);
-      ref.scrollIntoView({ inline: "center" });
-    }
-    if (e.key === "End") {
-      dispatch.setCursor(1);
-      ref.scrollIntoView({ inline: "center" });
+      if (e.key === "ArrowRight") {
+        dispatch.setCursor(state.cursor + step);
+        if (
+          ref.getBoundingClientRect().right >
+            scrollElement.getBoundingClientRect().right
+        ) {
+          ref.scrollIntoView({ inline: "start", "block": "nearest" });
+        }
+      }
+      if (e.key === "ArrowLeft") {
+        dispatch.setCursor(state.cursor - step);
+        if (
+          ref.getBoundingClientRect().left <
+            scrollElement.getBoundingClientRect().left
+        ) {
+          ref.scrollIntoView({ inline: "end", "block": "nearest" });
+        }
+      }
+
+      const pagePx = scrollElement.clientWidth;
+      const pageCqi = pagePx / contentElement.clientWidth;
+
+      if (e.key === "PageDown") {
+        dispatch.setCursor(state.cursor + pageCqi);
+        ref.scrollIntoView({ inline: "center", "block": "nearest" });
+      }
+      if (e.key === "PageUp") {
+        dispatch.setCursor(state.cursor - pageCqi);
+        ref.scrollIntoView({ inline: "center", "block": "nearest" });
+      }
+      if (e.key === "Home") {
+        dispatch.setCursor(0);
+        ref.scrollIntoView({ inline: "center", "block": "nearest" });
+      }
+      if (e.key === "End") {
+        dispatch.setCursor(1);
+        ref.scrollIntoView({ inline: "center", "block": "nearest" });
+      }
     }
   };
 
