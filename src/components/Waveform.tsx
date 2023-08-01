@@ -316,6 +316,7 @@ const Cursor = (
     <>
       <Show when={!state.editing}>
         <Stick
+          id="cursor-thumb"
           ref={ref}
           pos={dragPos()}
           width={30}

@@ -21,10 +21,22 @@ export const Controls = (props: { clip: Clip }) => (
     >
       {state.editing ? "done editing" : "edit"}
     </button>
-    <button onClick={zoom.in} disabled={zoom.inDisabled()}>
+    <button onClick={() => {
+      zoom.in()
+      document.getElementById("cursor-thumb")?.scrollIntoView({
+        inline: "center",
+        block: "nearest",
+      })
+    }} disabled={zoom.inDisabled()}>
       zoom in
     </button>
-    <button onClick={zoom.out} disabled={zoom.outDisabled()}>
+    <button onClick={() => {
+      zoom.out()
+      document.getElementById("cursor-thumb")?.scrollIntoView({
+        inline: "center",
+        block: "nearest",
+      })
+      }} disabled={zoom.outDisabled()}>
       zoom out
     </button>
     <button
