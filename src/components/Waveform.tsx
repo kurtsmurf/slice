@@ -233,7 +233,9 @@ const Cursor = (
   );
 
   const onKeyDown = (e: KeyboardEvent) => {
-    if (!scrollElement || !contentElement || !(e.target instanceof Element)) return;
+    if (!scrollElement || !contentElement || !(e.target instanceof Element)) {
+      return;
+    }
 
     // handle zoom
     if (e.ctrlKey) {
