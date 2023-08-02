@@ -56,6 +56,21 @@ export const Waveform = (props: { buffer: AudioBuffer }) => (
     style={{
       overflow: "auto",
     }}
+    onKeyDown={(e) => {
+      // handle zoom
+      if (e.ctrlKey) {
+        if ((e.key === "+" || e.key === "=")) {
+          e.preventDefault();
+          zoom.in();
+          e.target.scrollIntoView({ inline: "center", "block": "nearest" });
+        }
+        if ((e.key === "-" || e.key === "_")) {
+          e.preventDefault();
+          zoom.out();
+          e.target.scrollIntoView({ inline: "center", "block": "nearest" });
+        }
+      }
+    }}
   >
     <div style={{ height: "var(--min-btn-dimension)" }} />
     <WaveformContent buffer={props.buffer} />
@@ -235,20 +250,6 @@ const Cursor = (
   const onKeyDown = (e: KeyboardEvent) => {
     if (!scrollElement || !contentElement || !(e.target instanceof Element)) {
       return;
-    }
-
-    // handle zoom
-    if (e.ctrlKey) {
-      if ((e.key === "+" || e.key === "=")) {
-        e.preventDefault();
-        zoom.in();
-        e.target.scrollIntoView({ inline: "center", "block": "nearest" });
-      }
-      if ((e.key === "-" || e.key === "_")) {
-        e.preventDefault();
-        zoom.out();
-        e.target.scrollIntoView({ inline: "center", "block": "nearest" });
-      }
     }
 
     // handle movement
