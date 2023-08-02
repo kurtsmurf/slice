@@ -232,22 +232,20 @@ const Cursor = (
       ?.start || 1
   );
 
-  let ref: HTMLDivElement | undefined;
-
   const onKeyDown = (e: KeyboardEvent) => {
-    if (!scrollElement || !contentElement || !ref) return;
+    if (!scrollElement || !contentElement || !(e.target instanceof Element)) return;
 
     // handle zoom
     if (e.ctrlKey) {
       if ((e.key === "+" || e.key === "=")) {
         e.preventDefault();
         zoom.in();
-        ref.scrollIntoView({ inline: "center", "block": "nearest" });
+        e.target.scrollIntoView({ inline: "center", "block": "nearest" });
       }
       if ((e.key === "-" || e.key === "_")) {
         e.preventDefault();
         zoom.out();
-        ref.scrollIntoView({ inline: "center", "block": "nearest" });
+        e.target.scrollIntoView({ inline: "center", "block": "nearest" });
       }
     }
 
@@ -274,19 +272,19 @@ const Cursor = (
       if (e.key === "ArrowRight") {
         dispatch.setCursor(state.cursor + step);
         if (
-          ref.getBoundingClientRect().right >
+          e.target.getBoundingClientRect().right >
             scrollElement.getBoundingClientRect().right
         ) {
-          ref.scrollIntoView({ inline: "start", "block": "nearest" });
+          e.target.scrollIntoView({ inline: "start", "block": "nearest" });
         }
       }
       if (e.key === "ArrowLeft") {
         dispatch.setCursor(state.cursor - step);
         if (
-          ref.getBoundingClientRect().left <
+          e.target.getBoundingClientRect().left <
             scrollElement.getBoundingClientRect().left
         ) {
-          ref.scrollIntoView({ inline: "end", "block": "nearest" });
+          e.target.scrollIntoView({ inline: "end", "block": "nearest" });
         }
       }
 
@@ -295,29 +293,31 @@ const Cursor = (
 
       if (e.key === "PageDown") {
         dispatch.setCursor(state.cursor + pageCqi);
-        ref.scrollIntoView({ inline: "center", "block": "nearest" });
+        e.target.scrollIntoView({ inline: "center", "block": "nearest" });
       }
       if (e.key === "PageUp") {
         dispatch.setCursor(state.cursor - pageCqi);
-        ref.scrollIntoView({ inline: "center", "block": "nearest" });
+        e.target.scrollIntoView({ inline: "center", "block": "nearest" });
       }
       if (e.key === "Home") {
         dispatch.setCursor(0);
-        ref.scrollIntoView({ inline: "center", "block": "nearest" });
+        e.target.scrollIntoView({ inline: "center", "block": "nearest" });
       }
       if (e.key === "End") {
         dispatch.setCursor(1);
-        ref.scrollIntoView({ inline: "center", "block": "nearest" });
+        e.target.scrollIntoView({ inline: "center", "block": "nearest" });
       }
     }
   };
+
+  let ref: HTMLDivElement | undefined;
 
   return (
     <>
       <Show when={!state.editing}>
         <Stick
-          id="cursor-thumb"
           ref={ref}
+          id="cursor-thumb"
           pos={dragPos()}
           width={30}
           opacity={0.5}
