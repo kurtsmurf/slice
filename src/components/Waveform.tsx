@@ -153,6 +153,7 @@ const Slice = (
     onFinished: () => {
       dispatch.healSlice(props.index);
       dispatch.slice(dragPos());
+      document.getElementById(`slice-${dragPos()}`)?.focus();
       scrollElement?.removeEventListener("touchmove", preventDefault);
     },
   });
@@ -166,13 +167,54 @@ const Slice = (
     return props.region.start;
   };
 
+  const onKeyDown = createKeyboardMovementHandler((delta) => {
+    const _clip = state.clip;
+    if (!_clip || !contentElement) return;
+
+    const lengthSeconds = _clip.buffer.length / _clip.buffer.sampleRate;
+    const marginSeconds = 0.005;
+
+    const marginCqi = marginSeconds / lengthSeconds;
+    const leftBound = state.regions[props.index - 1]?.start + marginCqi || 0;
+    const rightBound = props.region.end - marginCqi;
+    const next = Math.max(
+      leftBound,
+      Math.min(rightBound, props.region.start + delta),
+    );
+
+    dispatch.healSlice(props.index);
+    dispatch.slice(next);
+    document.getElementById(`slice-${next}`)?.focus();
+  });
+
   return (
     <>
+      <Show when={state.editing}>
+        <Stick
+          pos={dragPos()}
+          width={30}
+          opacity={0.5}
+          background="purple"
+          onPointerDown={drag.start}
+          tabIndex={0}
+          onkeydown={onKeyDown}
+          id={`slice-${props.region.start}`}
+        >
+        </Stick>
+      </Show>
+      <Stick
+        pos={dragPos()}
+        width={2}
+        background="purple"
+        opacity={0.75}
+        onPointerDown={state.editing ? drag.start : undefined}
+      >
+      </Stick>
+
       <div
         style={{
           position: "absolute",
           transform: `translateX(${dragPos() * 100}cqi)`,
-          height: "100%",
           display: "flex",
           top: "calc(-1 * var(--min-btn-dimension))",
         }}
@@ -196,25 +238,6 @@ const Slice = (
           &#9654; {props.region.start.toFixed(5)}
         </button>
       </div>
-
-      <Show when={state.editing}>
-        <Stick
-          pos={dragPos()}
-          width={30}
-          opacity={0.5}
-          background="purple"
-          onPointerDown={drag.start}
-        >
-        </Stick>
-      </Show>
-      <Stick
-        pos={dragPos()}
-        width={2}
-        background="purple"
-        opacity={0.75}
-        onPointerDown={state.editing ? drag.start : undefined}
-      >
-      </Stick>
     </>
   );
 };
