@@ -160,26 +160,41 @@ const Slice = (
 
   const dragPos = () => {
     if (contentElement) {
+      const bounds = getBounds();
+
       const pos = props.region.start +
         drag.offset() / contentElement.clientWidth;
-      return Math.max(0, Math.min(1, pos));
+
+      const next = Math.max(
+        bounds.left,
+        Math.min(bounds.right, pos),
+      );
+
+      return next;
     }
     return props.region.start;
   };
 
-  const onKeyDown = createKeyboardMovementHandler((delta) => {
+  const getBounds = () => {
     const _clip = state.clip;
-    if (!_clip || !contentElement) return;
+    if (!_clip || !contentElement) throw "AAAAAAH";
 
     const lengthSeconds = _clip.buffer.length / _clip.buffer.sampleRate;
     const marginSeconds = 0.005;
 
     const marginCqi = marginSeconds / lengthSeconds;
-    const leftBound = state.regions[props.index - 1]?.start + marginCqi || 0;
-    const rightBound = props.region.end - marginCqi;
+    const left = state.regions[props.index - 1]?.start + marginCqi || 0;
+    const right = props.region.end - marginCqi;
+
+    return { left, right };
+  };
+
+  const onKeyDown = createKeyboardMovementHandler((delta) => {
+    const bounds = getBounds();
+
     const next = Math.max(
-      leftBound,
-      Math.min(rightBound, props.region.start + delta),
+      bounds.left,
+      Math.min(bounds.right, props.region.start + delta),
     );
 
     dispatch.healSlice(props.index);
