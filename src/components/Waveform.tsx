@@ -268,7 +268,7 @@ const Cursor = (
       e.preventDefault();
       dispatch.showCursorControls();
 
-      const stepPx = Math.max(scrollElement.clientWidth / 100, 1);
+      const stepPx = 10;
       const stepCqi = stepPx / contentElement.clientWidth;
       const step = e.ctrlKey ? stepCqi * 10 : stepCqi;
 
