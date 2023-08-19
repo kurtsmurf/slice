@@ -219,6 +219,73 @@ const Slice = (
   );
 };
 
+const createKeyboardMovementHandler = (move: (deltaCqi: number) => void) => {
+  return (e: KeyboardEvent) => {
+    if (!scrollElement || !contentElement || !(e.target instanceof Element)) {
+      return;
+    }
+
+    // handle movement
+    if (
+      [
+        "ArrowRight",
+        "ArrowLeft",
+        "ArrowUp",
+        "ArrowDown",
+        "PageDown",
+        "PageUp",
+        "Home",
+        "End",
+      ].includes(e.key)
+    ) {
+      e.preventDefault();
+
+      const stepPx = 10;
+      const stepCqi = stepPx / contentElement.clientWidth;
+      const step = e.ctrlKey ? stepCqi * 10 : stepCqi;
+
+      if (e.key === "ArrowRight") {
+        move(step);
+        if (
+          e.target.getBoundingClientRect().right >
+            scrollElement.getBoundingClientRect().right
+        ) {
+          e.target.scrollIntoView({ inline: "start", "block": "nearest" });
+        }
+      }
+      if (e.key === "ArrowLeft") {
+        move(-step);
+        if (
+          e.target.getBoundingClientRect().left <
+            scrollElement.getBoundingClientRect().left
+        ) {
+          e.target.scrollIntoView({ inline: "end", "block": "nearest" });
+        }
+      }
+
+      const pagePx = scrollElement.clientWidth;
+      const pageCqi = pagePx / contentElement.clientWidth;
+
+      if (e.key === "PageDown") {
+        move(pageCqi);
+        e.target.scrollIntoView({ inline: "center", "block": "nearest" });
+      }
+      if (e.key === "PageUp") {
+        move(-pageCqi);
+        e.target.scrollIntoView({ inline: "center", "block": "nearest" });
+      }
+      if (e.key === "Home") {
+        move(-1);
+        e.target.scrollIntoView({ inline: "center", "block": "nearest" });
+      }
+      if (e.key === "End") {
+        move(1);
+        e.target.scrollIntoView({ inline: "center", "block": "nearest" });
+      }
+    }
+  };
+};
+
 const Cursor = (
   props: JSX.HTMLAttributes<HTMLDivElement>,
 ) => {
@@ -247,71 +314,10 @@ const Cursor = (
       ?.start || 1
   );
 
-  const onKeyDown = (e: KeyboardEvent) => {
-    if (!scrollElement || !contentElement || !(e.target instanceof Element)) {
-      return;
-    }
-
-    // handle movement
-    if (
-      [
-        "ArrowRight",
-        "ArrowLeft",
-        "ArrowUp",
-        "ArrowDown",
-        "PageDown",
-        "PageUp",
-        "Home",
-        "End",
-      ].includes(e.key)
-    ) {
-      e.preventDefault();
-      dispatch.showCursorControls();
-
-      const stepPx = 10;
-      const stepCqi = stepPx / contentElement.clientWidth;
-      const step = e.ctrlKey ? stepCqi * 10 : stepCqi;
-
-      if (e.key === "ArrowRight") {
-        dispatch.setCursor(state.cursor + step);
-        if (
-          e.target.getBoundingClientRect().right >
-            scrollElement.getBoundingClientRect().right
-        ) {
-          e.target.scrollIntoView({ inline: "start", "block": "nearest" });
-        }
-      }
-      if (e.key === "ArrowLeft") {
-        dispatch.setCursor(state.cursor - step);
-        if (
-          e.target.getBoundingClientRect().left <
-            scrollElement.getBoundingClientRect().left
-        ) {
-          e.target.scrollIntoView({ inline: "end", "block": "nearest" });
-        }
-      }
-
-      const pagePx = scrollElement.clientWidth;
-      const pageCqi = pagePx / contentElement.clientWidth;
-
-      if (e.key === "PageDown") {
-        dispatch.setCursor(state.cursor + pageCqi);
-        e.target.scrollIntoView({ inline: "center", "block": "nearest" });
-      }
-      if (e.key === "PageUp") {
-        dispatch.setCursor(state.cursor - pageCqi);
-        e.target.scrollIntoView({ inline: "center", "block": "nearest" });
-      }
-      if (e.key === "Home") {
-        dispatch.setCursor(0);
-        e.target.scrollIntoView({ inline: "center", "block": "nearest" });
-      }
-      if (e.key === "End") {
-        dispatch.setCursor(1);
-        e.target.scrollIntoView({ inline: "center", "block": "nearest" });
-      }
-    }
-  };
+  const onKeyDown = createKeyboardMovementHandler((delta) => {
+    dispatch.showCursorControls();
+    dispatch.setCursor(state.cursor + delta);
+  });
 
   let ref: HTMLDivElement | undefined;
 
