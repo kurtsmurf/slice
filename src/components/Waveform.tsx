@@ -553,19 +553,18 @@ const WaveformTile = (
   >
     <For each={range(0, props.buffer.numberOfChannels)}>
       {(channelNumber) => {
-        const data = createMemo(() =>
-          props.buffer.getChannelData(channelNumber)
-            .slice(
-              props.start * zoom.samplesPerPixel(),
-              (props.start + props.length) * zoom.samplesPerPixel(),
-            )
-        );
+        const data = props.buffer.getChannelData(channelNumber)
+          .slice(
+            props.start * zoom.samplesPerPixel(),
+            (props.start + props.length) * zoom.samplesPerPixel(),
+          )
+
         return (
           <ChannelSegment
-            data={data()}
+            data={data}
             width={TILE_WIDTH}
             height={TILE_HEIGHT}
-            numBuckets={data().length / zoom.samplesPerPixel()}
+            numBuckets={data.length / zoom.samplesPerPixel()}
           />
         );
       }}
