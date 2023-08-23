@@ -6,10 +6,15 @@ export const player = (function createPlayer() {
   const ramp = 0.001;
   const [startedAt, setStartedAt] = createSignal<number | undefined>(undefined);
   const [startOffset, setStartOffset] = createSignal<number>(0);
+  const [region, setRegion] = createSignal<{ start: number; end: number }>({
+    start: 0,
+    end: 1,
+  });
   let sourceNode: AudioBufferSourceNode | undefined;
   let gainNode: GainNode | undefined;
 
   const play = (buffer: AudioBuffer, region = { start: 0, end: 1 }) => {
+    setRegion(region);
     const startSeconds = buffer.duration * region.start;
     const endSeconds = buffer.duration * region.end;
     const durationSeconds = endSeconds - startSeconds;
@@ -65,5 +70,5 @@ export const player = (function createPlayer() {
     setProgress(elapsed / sourceNode.buffer.duration);
   });
 
-  return { play, playing, stop, startedAt, progress };
+  return { play, playing, region, stop, progress };
 })();

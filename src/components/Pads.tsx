@@ -1,7 +1,7 @@
 import { For } from "solid-js";
-import { player } from "../player";
 import { state } from "../store";
 import { contentElement, scrollElement } from "./Waveform";
+import { Trigger } from "./Trigger";
 
 export const Pads = (props: { buffer: AudioBuffer }) => {
   return (
@@ -14,22 +14,17 @@ export const Pads = (props: { buffer: AudioBuffer }) => {
     >
       <For each={state.regions}>
         {(region) => (
-          <button
-            style={{
-              height: "100%",
-              width: "100%",
-            }}
-            onClick={() => {
-              player.play(props.buffer, region);
+          <Trigger
+            region={region}
+            style={{ height: "100%", width: "100%" }}
+            onTrigger={() => {
               if (scrollElement && contentElement) {
                 scrollElement.scrollLeft =
                   region.start * contentElement.clientWidth -
                   scrollElement.clientWidth / 2;
               }
             }}
-          >
-            &#9654; {region.start.toFixed(5)}
-          </button>
+          />
         )}
       </For>
     </div>

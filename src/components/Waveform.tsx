@@ -8,6 +8,7 @@ import { createDrag } from "../behaviors/createDrag";
 import { range } from "../util/range";
 import { Stick } from "./Stick";
 import { sortedIndex } from "../util/sortedIndex";
+import { Trigger } from "./Trigger";
 
 const TILE_WIDTH = 400;
 const TILE_HEIGHT = 100;
@@ -241,15 +242,7 @@ const Slice = (
             delete
           </button>
         </Show>
-        <button
-          style="flex-grow: 1;"
-          onClick={() => {
-            player.play(state.clip!.buffer, props.region);
-          }}
-          ondblclick={(e) => e.stopPropagation()}
-        >
-          &#9654; {props.region.start.toFixed(5)}
-        </button>
+        <Trigger region={props.region} />
       </div>
     </>
   );
