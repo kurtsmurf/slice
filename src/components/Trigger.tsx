@@ -1,4 +1,4 @@
-import { createMemo, JSX } from "solid-js";
+import { createMemo, JSX, Show } from "solid-js";
 import { player } from "../player";
 import { state } from "../store";
 
@@ -29,11 +29,13 @@ export const Trigger = (props: {
       <span
         style={{
           display: "inline-block",
-          width: "1.2em",
+          "font-family": "monospace",
+          "font-size": "1rem",
         }}
       >
         {active() ? <>&#9632;</> : <>&#9654;</>}
       </span>
+      <Show when={props.text}>&nbsp;</Show>
       {props.text}
     </button>
   );
