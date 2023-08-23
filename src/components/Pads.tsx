@@ -24,6 +24,7 @@ export const Pads = (props: { buffer: AudioBuffer }) => {
                   scrollElement.clientWidth / 2;
               }
             }}
+            text={region.start.toFixed(5)}
           />
         )}
       </For>

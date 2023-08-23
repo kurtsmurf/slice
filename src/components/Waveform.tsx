@@ -242,7 +242,10 @@ const Slice = (
             delete
           </button>
         </Show>
-        <Trigger region={props.region} />
+        <Trigger
+          region={props.region}
+          text={props.region.start.toFixed(5)}
+        />
       </div>
     </>
   );
@@ -338,7 +341,7 @@ const Cursor = (
     return state.cursor;
   };
 
-  const cursorRegion = createMemo(() =>
+  const end = createMemo(() =>
     state.regions[sortedIndex(state.regions.map((r) => r.start), state.cursor)]
       ?.start || 1
   );
@@ -395,19 +398,9 @@ const Cursor = (
           >
             slice
           </button>
-          <button
-            onClick={() => {
-              player.play(
-                state.clip!.buffer,
-                {
-                  start: state.cursor,
-                  end: cursorRegion(),
-                },
-              );
-            }}
-          >
-            play
-          </button>
+          <Trigger
+            region={{ start: state.cursor, end: end() }}
+          />
         </div>
       </Show>
     </>

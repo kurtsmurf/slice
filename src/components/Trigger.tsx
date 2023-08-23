@@ -5,6 +5,7 @@ import { state } from "../store";
 export const Trigger = (props: {
   region: { start: number; end: number };
   style?: JSX.CSSProperties;
+  text?: string;
   onTrigger?: () => void;
 }) => {
   const active = createMemo(() =>
@@ -33,7 +34,7 @@ export const Trigger = (props: {
       >
         {active() ? <>&#9632;</> : <>&#9654;</>}
       </span>
-      {props.region.start.toFixed(5)}
+      {props.text}
     </button>
   );
 };
