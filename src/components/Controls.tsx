@@ -1,5 +1,4 @@
 import { Clip } from "../types";
-import { player } from "../player";
 import { dispatch, state } from "../store";
 import { zoom } from "./Waveform";
 
@@ -44,17 +43,6 @@ export const Controls = (props: { clip: Clip }) => (
       disabled={zoom.outDisabled()}
     >
       zoom out
-    </button>
-    <button
-      onClick={() => {
-        if (player.playing()) {
-          player.stop();
-        } else {
-          player.play(props.clip.buffer);
-        }
-      }}
-    >
-      {player.playing() ? "stop" : "play"}
     </button>
   </div>
 );
