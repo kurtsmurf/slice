@@ -208,8 +208,7 @@ const Slice = (
         <Stick
           pos={dragPos()}
           width={30}
-          opacity={0.5}
-          background="purple"
+          background="hsl(300deg 100% 25% / 50%)"
           onPointerDown={drag.start}
           tabIndex={0}
           onkeydown={onKeyDown}
@@ -220,8 +219,7 @@ const Slice = (
       <Stick
         pos={dragPos()}
         width={2}
-        background="purple"
-        opacity={0.75}
+        background="hsl(300deg 100% 25% / 75%)"
         onPointerDown={state.editing ? drag.start : undefined}
       >
       </Stick>
@@ -367,8 +365,7 @@ const Cursor = (
           id="cursor-thumb"
           pos={dragPos()}
           width={30}
-          opacity={0.5}
-          background="orange"
+          background="hsl(39deg 100% 50% / 50%)"
           onPointerDown={drag.start}
           onKeyDown={onKeyDown}
           tabIndex={0}
@@ -518,8 +515,7 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
         {({ start }) => (
           <Stick
             pos={start}
-            background="purple"
-            opacity={0.75}
+            background="hsl(300deg 100% 25% / 75%)"
             width={2}
           >
           </Stick>

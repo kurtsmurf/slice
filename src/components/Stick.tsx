@@ -5,7 +5,6 @@ export const Stick = (
     pos: number;
     width: number;
     background: string;
-    opacity?: number;
   },
 ) => {
   const [, htmlAttrs] = splitProps(props, ["pos"]);
@@ -21,7 +20,6 @@ export const Stick = (
         width: `${props.width}px`,
         height: "100%",
         background: props.background,
-        opacity: props.opacity,
       }}
     >
     </div>
