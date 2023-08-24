@@ -23,10 +23,10 @@ export const Controls = (props: { clip: Clip }) => (
     <button
       onClick={() => {
         zoom.in();
-        document.getElementById("cursor-thumb")?.scrollIntoView({
-          inline: "center",
-          block: "nearest",
-        });
+        // document.getElementById("cursor-thumb")?.scrollIntoView({
+        //   inline: "center",
+        //   block: "nearest",
+        // });
       }}
       disabled={zoom.inDisabled()}
     >
@@ -35,10 +35,10 @@ export const Controls = (props: { clip: Clip }) => (
     <button
       onClick={() => {
         zoom.out();
-        document.getElementById("cursor-thumb")?.scrollIntoView({
-          inline: "center",
-          block: "nearest",
-        });
+        // document.getElementById("cursor-thumb")?.scrollIntoView({
+        //   inline: "center",
+        //   block: "nearest",
+        // });
       }}
       disabled={zoom.outDisabled()}
     >

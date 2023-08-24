@@ -63,12 +63,12 @@ export const Waveform = (props: { buffer: AudioBuffer }) => (
         if ((e.key === "+" || e.key === "=")) {
           e.preventDefault();
           zoom.in();
-          e.target.scrollIntoView({ inline: "center", "block": "nearest" });
+          // e.target.scrollIntoView({ inline: "center", "block": "nearest" });
         }
         if ((e.key === "-" || e.key === "_")) {
           e.preventDefault();
           zoom.out();
-          e.target.scrollIntoView({ inline: "center", "block": "nearest" });
+          // e.target.scrollIntoView({ inline: "center", "block": "nearest" });
         }
       }
     }}
@@ -115,6 +115,20 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
         "container-type": "inline-size",
       }}
       ondblclick={placeCursor}
+      onwheel={e => {
+        if (!e.ctrlKey || !scrollElement || !contentElement) return;
+        e.preventDefault();
+
+        const pointerPos = (e.x - scrollElement.clientLeft + scrollElement.scrollLeft) / contentElement.clientWidth;
+        console.log(pointerPos)
+
+        if (e.deltaY > 0 && !zoom.outDisabled()) {
+          zoom.out();
+        }
+        if (e.deltaY < 0 && !zoom.inDisabled()) {
+          zoom.in();
+        }
+      }}
     >
       <For each={tileManager.getVirtualItems()}>
         {(virtualItem) => (
