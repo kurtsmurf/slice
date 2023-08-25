@@ -43,6 +43,25 @@ export const Waveform = (props: { buffer: AudioBuffer }) => (
         }
       }
     }}
+    onWheel={(e) => {
+      if (!e.ctrlKey || !scrollElement || !contentElement) return;
+      e.preventDefault();
+
+      const pointerLeftPx = e.clientX - scrollElement.clientLeft;
+      const pointerPos = (pointerLeftPx + scrollElement.scrollLeft) /
+        contentElement.clientWidth;
+
+      if (e.deltaY > 0 && !zoom.outDisabled()) {
+        zoom.out();
+      }
+      if (e.deltaY < 0 && !zoom.inDisabled()) {
+        zoom.in();
+      }
+      if (!zoom.inDisabled() || !zoom.outDisabled()) {
+        scrollElement.scrollLeft = contentElement.clientWidth * pointerPos -
+          pointerLeftPx;
+      }
+    }}
   >
     <div style={{ height: "var(--min-btn-dimension)" }} />
     <WaveformContent buffer={props.buffer} />
