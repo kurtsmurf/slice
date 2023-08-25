@@ -9,6 +9,7 @@ import { range } from "../util/range";
 import { Stick } from "./Stick";
 import { sortedIndex } from "../util/sortedIndex";
 import { Trigger } from "./Trigger";
+import { createZoom } from "../behaviors/createZoom";
 
 const TILE_WIDTH = 400;
 const TILE_HEIGHT = 100;
@@ -18,37 +19,7 @@ export let scrollElement: HTMLDivElement | undefined;
 // the content wrapper
 export let contentElement: HTMLDivElement | undefined;
 
-export const zoom = (function createZoom() {
-  const min = 1, max = Math.pow(2, 10);
-  const [samplesPerPixel, setSamplesPerPixel] = createSignal(32);
-  const factor = 2;
-
-  const zoom = (direction: "in" | "out") => {
-    if (!scrollElement) {
-      return;
-    }
-    const currentCenter = scrollElement.scrollLeft +
-      scrollElement.clientWidth / 2;
-    const nextCenter = direction === "in"
-      ? currentCenter * factor
-      : currentCenter / factor;
-
-    setSamplesPerPixel((prev) =>
-      direction === "in"
-        ? Math.max(min, prev / factor)
-        : Math.min(max, prev * factor)
-    );
-    scrollElement.scrollLeft = nextCenter - scrollElement.clientWidth / 2;
-  };
-
-  return {
-    in: () => zoom("in"),
-    out: () => zoom("out"),
-    samplesPerPixel,
-    inDisabled: () => samplesPerPixel() === min,
-    outDisabled: () => samplesPerPixel() === max,
-  };
-})();
+export const zoom = createZoom();
 
 export const Waveform = (props: { buffer: AudioBuffer }) => (
   <div
