@@ -43,7 +43,7 @@ export const Waveform = (props: { buffer: AudioBuffer }) => (
         }
       }
     }}
-    onWheel={(e) => {
+    onWheel={debounce((e) => {
       if (!e.ctrlKey || !scrollElement || !contentElement) return;
       e.preventDefault();
 
@@ -61,13 +61,29 @@ export const Waveform = (props: { buffer: AudioBuffer }) => (
         scrollElement.scrollLeft = contentElement.clientWidth * pointerPos -
           pointerLeftPx;
       }
-    }}
+    }, 100)}
   >
     <div style={{ height: "var(--min-btn-dimension)" }} />
     <WaveformContent buffer={props.buffer} />
     <WaveformSummary buffer={props.buffer} />
   </div>
 );
+
+// debounce wheel because my laptop trackpad is very sensitive
+const debounce = (func: (e: WheelEvent) => void, delay: number) => {
+  let timeout: NodeJS.Timeout | undefined;
+
+  return (e: WheelEvent) => {
+    if (timeout !== undefined) return;
+    func(e);
+    timeout = setTimeout(
+      () => {
+        timeout = undefined;
+      },
+      delay,
+    );
+  };
+};
 
 const WaveformContent = (props: { buffer: AudioBuffer }) => {
   const tileManager = createMemo(() =>
