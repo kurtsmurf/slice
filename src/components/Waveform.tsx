@@ -70,17 +70,15 @@ export const Waveform = (props: { buffer: AudioBuffer }) => (
 );
 
 const WaveformContent = (props: { buffer: AudioBuffer }) => {
-  // in TS createVirtualizer rejects function parameter
-  // but it works
-  // and it makes the virtualizer reactive to samples per pixel
-  // @ts-ignore
-  const tileManager = createVirtualizer(() => ({
-    count: range(0, props.buffer.length / zoom.samplesPerPixel(), TILE_WIDTH)
-      .length,
-    getScrollElement: () => scrollElement,
-    estimateSize: () => TILE_WIDTH,
-    horizontal: true,
-  }));
+  const tileManager = createMemo(() =>
+    createVirtualizer({
+      count: range(0, props.buffer.length / zoom.samplesPerPixel(), TILE_WIDTH)
+        .length,
+      getScrollElement: () => scrollElement,
+      estimateSize: () => TILE_WIDTH,
+      horizontal: true,
+    })
+  );
 
   const placeCursor = (e: MouseEvent) => {
     if (!contentElement) {
@@ -106,7 +104,7 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
       }}
       ondblclick={placeCursor}
     >
-      <For each={tileManager.getVirtualItems()}>
+      <For each={tileManager().getVirtualItems()}>
         {(virtualItem) => (
           <WaveformTile
             buffer={props.buffer}
