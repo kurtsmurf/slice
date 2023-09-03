@@ -10,6 +10,7 @@ import { Stick } from "./Stick";
 import { sortedIndex } from "../util/sortedIndex";
 import { Trigger } from "./Trigger";
 import { createZoom } from "../behaviors/createZoom";
+import { debounce } from "../util/debounce";
 
 const TILE_WIDTH = 400;
 const TILE_HEIGHT = 100;
@@ -21,68 +22,59 @@ export let contentElement: HTMLDivElement | undefined;
 
 export const zoom = createZoom();
 
-export const Waveform = (props: { buffer: AudioBuffer }) => (
-  <div
-    ref={scrollElement}
-    data-scroll-element
-    style={{
-      overflow: "auto",
-    }}
-    onKeyDown={(e) => {
-      // handle zoom
-      if (e.ctrlKey) {
-        if ((e.key === "+" || e.key === "=")) {
-          e.preventDefault();
-          zoom.in();
-          e.target.scrollIntoView({ inline: "center", "block": "nearest" });
+export const Waveform = (props: { buffer: AudioBuffer }) => {
+  const zoomWithWheel = debounce((e: WheelEvent) => {
+    if (!scrollElement || !contentElement) return;
+
+    const pointerLeftPx = e.clientX - scrollElement.clientLeft;
+    const pointerPos = (pointerLeftPx + scrollElement.scrollLeft) /
+      contentElement.clientWidth;
+
+    if (e.deltaY > 0 && !zoom.outDisabled()) {
+      zoom.out();
+    }
+    if (e.deltaY < 0 && !zoom.inDisabled()) {
+      zoom.in();
+    }
+    if (!zoom.inDisabled() || !zoom.outDisabled()) {
+      scrollElement.scrollLeft = contentElement.clientWidth * pointerPos -
+        pointerLeftPx;
+    }
+  }, 100);
+
+  return (
+    <div
+      ref={scrollElement}
+      data-scroll-element
+      style={{
+        overflow: "auto",
+      }}
+      onKeyDown={(e) => {
+        // handle zoom
+        if (e.ctrlKey) {
+          if ((e.key === "+" || e.key === "=")) {
+            e.preventDefault();
+            zoom.in();
+            e.target.scrollIntoView({ inline: "center", "block": "nearest" });
+          }
+          if ((e.key === "-" || e.key === "_")) {
+            e.preventDefault();
+            zoom.out();
+            e.target.scrollIntoView({ inline: "center", "block": "nearest" });
+          }
         }
-        if ((e.key === "-" || e.key === "_")) {
-          e.preventDefault();
-          zoom.out();
-          e.target.scrollIntoView({ inline: "center", "block": "nearest" });
-        }
-      }
-    }}
-    onWheel={debounce((e) => {
-      if (!e.ctrlKey || !scrollElement || !contentElement) return;
-      e.preventDefault();
-
-      const pointerLeftPx = e.clientX - scrollElement.clientLeft;
-      const pointerPos = (pointerLeftPx + scrollElement.scrollLeft) /
-        contentElement.clientWidth;
-
-      if (e.deltaY > 0 && !zoom.outDisabled()) {
-        zoom.out();
-      }
-      if (e.deltaY < 0 && !zoom.inDisabled()) {
-        zoom.in();
-      }
-      if (!zoom.inDisabled() || !zoom.outDisabled()) {
-        scrollElement.scrollLeft = contentElement.clientWidth * pointerPos -
-          pointerLeftPx;
-      }
-    }, 100)}
-  >
-    <div style={{ height: "var(--min-btn-dimension)" }} />
-    <WaveformContent buffer={props.buffer} />
-    <WaveformSummary buffer={props.buffer} />
-  </div>
-);
-
-// debounce wheel because my laptop trackpad is very sensitive
-const debounce = (func: (e: WheelEvent) => void, delay: number) => {
-  let timeout: NodeJS.Timeout | undefined;
-
-  return (e: WheelEvent) => {
-    if (timeout !== undefined) return;
-    func(e);
-    timeout = setTimeout(
-      () => {
-        timeout = undefined;
-      },
-      delay,
-    );
-  };
+      }}
+      onWheel={(e) => {
+        if (!e.ctrlKey) return;
+        e.preventDefault();
+        zoomWithWheel(e);
+      }}
+    >
+      <div style={{ height: "var(--min-btn-dimension)" }} />
+      <WaveformContent buffer={props.buffer} />
+      <WaveformSummary buffer={props.buffer} />
+    </div>
+  );
 };
 
 const WaveformContent = (props: { buffer: AudioBuffer }) => {
