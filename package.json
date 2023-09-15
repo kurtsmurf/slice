@@ -7,7 +7,8 @@
     "build": "vite build",
     "serve": "vite preview",
     "test": "npx playwright test",
-    "dep-graph": "npx madge --image=dep-graph.svg src/index.tsx && google-chrome dep-graph.svg"
+    "dep-graph": "npx madge --image=dep-graph.svg src/index.tsx && google-chrome dep-graph.svg",
+    "vis-bundle": "npx vite-bundle-visualizer"
   },
   "license": "MIT",
   "devDependencies": {
