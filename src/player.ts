@@ -10,50 +10,27 @@ export const player = (function createPlayer() {
     start: 0,
     end: 1,
   });
-  let sourceNode: AudioBufferSourceNode | undefined;
-  let gainNode: GainNode | undefined;
+  let active:
+    | { sourceNode: AudioBufferSourceNode; smoothStop: () => void }
+    | undefined;
 
   const play = (buffer: AudioBuffer, region = { start: 0, end: 1 }) => {
     setRegion(region);
     const startSeconds = buffer.duration * region.start;
-    const endSeconds = buffer.duration * region.end;
-    const durationSeconds = endSeconds - startSeconds;
 
     stop();
     setStartOffset(startSeconds);
     setStartedAt(audioContext.currentTime);
 
-    gainNode = audioContext.createGain();
-    gainNode.connect(audioContext.destination);
-    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime + ramp);
-
-    const end = audioContext.currentTime + durationSeconds;
-    gainNode.gain.setValueAtTime(1, end - ramp);
-    gainNode.gain.linearRampToValueAtTime(0, end);
-
-    const node = audioContext.createBufferSource();
-    node.buffer = buffer;
-    node.connect(gainNode);
-    node.onended = stop;
-    node.start(0, startSeconds, durationSeconds);
-
-    sourceNode = node;
+    active = attackRelease(audioContext, buffer, region, stop);
   };
 
   const stop = () => {
-    if (!sourceNode || !gainNode) {
+    if (!active) {
       return;
     }
-
-    const end = audioContext.currentTime + ramp;
-    gainNode.gain.cancelScheduledValues(audioContext.currentTime);
-    gainNode.gain.setValueAtTime(1, audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0, end);
-
-    sourceNode.onended = null;
-    sourceNode.stop(end);
-    sourceNode = undefined;
+    active.smoothStop();
+    active = undefined;
     setStartedAt(undefined);
   };
 
@@ -62,13 +39,52 @@ export const player = (function createPlayer() {
   const [progress, setProgress] = createSignal(0);
   useAnimationFrame(() => {
     const startedAt_ = startedAt();
-    if (!startedAt_ || !sourceNode?.buffer) {
+    if (!startedAt_ || !active?.sourceNode.buffer) {
       return 0;
     }
     const timeSinceStart = audioContext.currentTime - startedAt_;
     const elapsed = timeSinceStart + startOffset();
-    setProgress(elapsed / sourceNode.buffer.duration);
+    setProgress(elapsed / active.sourceNode.buffer.duration);
   });
 
   return { play, playing, region, stop, progress };
 })();
+
+export function attackRelease(
+  audioContext: AudioContext | OfflineAudioContext,
+  buffer: AudioBuffer,
+  region: { start: number; end: number },
+  onended?: () => void,
+) {
+  const ramp = 0.001;
+  const gainNode = audioContext.createGain();
+  gainNode.connect(audioContext.destination);
+  gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+  gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime + ramp);
+
+  const startSeconds = buffer.duration * region.start;
+  const endSeconds = buffer.duration * region.end;
+  const durationSeconds = endSeconds - startSeconds;
+
+  const end = audioContext.currentTime + durationSeconds;
+  gainNode.gain.setValueAtTime(1, end - ramp);
+  gainNode.gain.linearRampToValueAtTime(0, end);
+
+  const sourceNode = audioContext.createBufferSource();
+  sourceNode.buffer = buffer;
+  sourceNode.connect(gainNode);
+  if (onended) sourceNode.onended = onended;
+  sourceNode.start(0, startSeconds, durationSeconds);
+
+  const smoothStop = () => {
+    const end = audioContext.currentTime + ramp;
+    gainNode.gain.cancelScheduledValues(audioContext.currentTime);
+    gainNode.gain.setValueAtTime(1, audioContext.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0, end);
+
+    sourceNode.onended = null;
+    sourceNode.stop(end);
+  };
+
+  return { sourceNode, smoothStop };
+}
