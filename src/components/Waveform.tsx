@@ -106,7 +106,7 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
         width: `${props.buffer.length / zoom.samplesPerPixel()}px`,
         display: "flex",
         position: "relative",
-        height: props.buffer.numberOfChannels * TILE_HEIGHT + "px",
+        height: props.buffer.numberOfChannels * TILE_HEIGHT + 10 + "px",
         // @ts-ignore
         "container-type": "inline-size",
       }}
@@ -517,36 +517,100 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
 
 const WaveformTile = (
   props: { start: number; length: number; buffer: AudioBuffer },
-) => (
-  <div
-    style={{
-      display: "flex",
-      "flex-direction": "column",
-      position: "absolute",
-      top: 0,
-      left: 0,
-      transform: `translateX(${props.start}px)`,
-      width: TILE_WIDTH + "px",
-    }}
-  >
-    <For each={range(0, props.buffer.numberOfChannels)}>
-      {(channelNumber) => {
-        const data = createMemo(() =>
-          props.buffer.getChannelData(channelNumber)
-            .slice(
-              props.start * zoom.samplesPerPixel(),
-              (props.start + props.length) * zoom.samplesPerPixel(),
-            )
-        );
-        return (
-          <ChannelSegment
-            data={data()}
-            width={TILE_WIDTH}
-            height={TILE_HEIGHT}
-            numBuckets={data().length / zoom.samplesPerPixel()}
-          />
-        );
+) => {
+  const leftSeconds = props.start * zoom.samplesPerPixel() /
+    props.buffer.sampleRate;
+  const rightSeconds = (props.start + TILE_WIDTH) * zoom.samplesPerPixel() /
+    props.buffer.sampleRate;
+
+  const increment = 0.1;
+
+  const blah = Math.floor(leftSeconds / increment);
+  const bleh = Math.floor(rightSeconds / increment);
+
+  let ticks: number[] = [];
+
+  for (let i = blah; i <= bleh; i++) {
+    ticks.push(i * increment);
+  }
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        "flex-direction": "column",
+        position: "absolute",
+        top: 0,
+        left: 0,
+        transform: `translateX(${props.start}px)`,
+        width: TILE_WIDTH + "px",
       }}
-    </For>
-  </div>
-);
+    >
+      <div
+        style={{
+          height: "10px",
+        }}
+      >
+        <For each={ticks}>
+          {(tick) => (
+            <div
+              style={{
+                position: "absolute",
+                transform: `translateX(${
+                  (tick - leftSeconds) * props.buffer.sampleRate /
+                  zoom.samplesPerPixel()
+                }px)`,
+                height: "10px",
+                "box-sizing": "border-box",
+              }}
+            >
+              <div
+                style={{
+                  "border-left": "1px solid",
+                  height: "100%",
+                  position: "absolute",
+                }}
+              >
+              </div>
+              {
+                /*
+                              <Show when={tick % 1 === 0}>
+                <div
+                  style={{
+                    position: "absolute",
+                    left: "1px",
+                    background: "#fff",
+                    "font-size": "small",
+                    "box-sizing": "border-box"
+                  }}
+                >
+                  {tick}
+                </div>
+              </Show> */
+              }
+            </div>
+          )}
+        </For>
+      </div>
+      <For each={range(0, props.buffer.numberOfChannels)}>
+        {(channelNumber) => {
+          const data = createMemo(() =>
+            props.buffer.getChannelData(channelNumber)
+              .slice(
+                props.start * zoom.samplesPerPixel(),
+                (props.start + props.length) * zoom.samplesPerPixel(),
+              )
+          );
+          return (
+            <ChannelSegment
+              data={data()}
+              width={TILE_WIDTH}
+              height={TILE_HEIGHT}
+              numBuckets={data().length / zoom.samplesPerPixel()}
+            />
+          );
+        }}
+      </For>
+    </div>
+  );
+};
