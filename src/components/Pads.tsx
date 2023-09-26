@@ -59,13 +59,25 @@ const download = async (
 
   // convert audiobuffer to an arraybuffer of wav-encoded bytes
   const wav = audiobufferToWav(offlineResult);
+  const fileName = "hello.wav";
 
   // trigger download
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(
-    new Blob([wav], { type: "audio/wav" }),
-  );
-  link.setAttribute("download", "my-audio.wav"); // WRONG choose appropriate name
-  link.click();
-  URL.revokeObjectURL(link.href);
+  // @ts-ignore
+  if (navigator.share) {
+    // use Web Share API if available
+    const file = new File([wav], fileName, { type: "audio/wav" });
+    navigator.share({
+      files: [file],
+    });
+  } else {
+    // otherwise use download link
+    const url = URL.createObjectURL(
+      new Blob([wav], { type: "audio/wav" }),
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", fileName);
+    link.click();
+    URL.revokeObjectURL(url);
+  }
 };
