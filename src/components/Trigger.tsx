@@ -28,7 +28,6 @@ export const Trigger = (props: {
     >
       <span
         style={{
-          display: "inline-block",
           "font-family": "monospace",
           "font-size": "1rem",
         }}
