@@ -354,7 +354,6 @@ const Cursor = (
       <Show when={!state.editing}>
         <Stick
           ref={ref}
-          id="cursor-thumb"
           pos={dragPos()}
           width={30}
           background="hsl(39deg 100% 50% / 50%)"
@@ -366,6 +365,7 @@ const Cursor = (
       </Show>
       <div style={{ "pointer-events": "none" }}>
         <Stick
+          id="cursor"
           pos={dragPos()}
           width={2}
           background="repeating-linear-gradient(orange 0px, orange 4px, transparent 4px, transparent 8px)"

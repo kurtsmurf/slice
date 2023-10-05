@@ -23,7 +23,7 @@ export const Controls = (props: { clip: Clip }) => (
     <button
       onClick={() => {
         zoom.in();
-        document.getElementById("cursor-thumb")?.scrollIntoView({
+        document.getElementById("cursor")?.scrollIntoView({
           inline: "center",
           block: "nearest",
         });
@@ -35,7 +35,7 @@ export const Controls = (props: { clip: Clip }) => (
     <button
       onClick={() => {
         zoom.out();
-        document.getElementById("cursor-thumb")?.scrollIntoView({
+        document.getElementById("cursor")?.scrollIntoView({
           inline: "center",
           block: "nearest",
         });
