@@ -37,7 +37,7 @@ export const Pads = () => {
     >
       <For each={state.regions}>
         {(region, index) => (
-          <div style="display: grid; position: relative;">
+          <div style="display: grid; position: relative;" id={`region-${index()}`}>
             <Trigger
               region={region}
               style={{
@@ -55,10 +55,10 @@ export const Pads = () => {
                     scrollElement.clientWidth / 2;
                 }
               }}
-              text={index() + ""}
+              text={index().toString()}
             />
             <button
-              data-details
+              data-details-link
               style={{
                 position: "absolute",
                 right: 0,
@@ -93,8 +93,9 @@ const RegionDetails = (props: { region: number }) => {
             setSelectedRegion(undefined);
             // return focus to region details button
             const detailsBtn = document.querySelector(
-              `#region-row-${index} [data-details]`,
+              `#region-${index} [data-details-link]`,
             );
+            console.log(detailsBtn)
             if (detailsBtn instanceof HTMLElement) detailsBtn.focus();
           }}
         >
@@ -137,33 +138,6 @@ const BottomPanel = () => (
       <RegionDetails region={selectedRegion()!} />
     </Show>
 );
-
-const Regions = () => {
-  return (
-    <div
-      style={{
-        padding: "1rem",
-      }}
-    >
-      <For each={state.regions}>
-        {(region, index) => (
-          <div
-            id={`region-row-${index()}`}
-            style={{ display: "flex", gap: "1rem", "align-items": "center" }}
-          >
-            <span>{index()}</span>
-            <Trigger
-              region={region}
-              onTrigger={() => {
-                scrollRegionIntoView(region);
-              }}
-            />
-          </div>
-        )}
-      </For>
-    </div>
-  );
-};
 
 const scrollRegionIntoView = (region: typeof state.regions[number]) => {
   if (scrollElement && contentElement) {
