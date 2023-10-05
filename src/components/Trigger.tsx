@@ -26,16 +26,17 @@ export const Trigger = (props: {
       ondblclick={(e) => e.stopPropagation()}
       style={props.style}
     >
-      <span
-        style={{
-          "font-family": "monospace",
-          "font-size": "1rem",
-        }}
-      >
-        {active() ? <>&#9632;</> : <>&#9654;</>}
+      <span style={{ "font-size": "1rem"}}>
+        <span
+          style={{
+            "font-family": "monospace",
+          }}
+        >
+          {active() ? <>&#9632;</> : <>&#9654;</>}
+        </span>
+        <Show when={props.text}>&nbsp;</Show>
+        {props.text}
       </span>
-      <Show when={props.text}>&nbsp;</Show>
-      {props.text}
     </button>
   );
 };

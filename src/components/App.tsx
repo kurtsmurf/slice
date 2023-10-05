@@ -6,6 +6,7 @@ import { contentElement, scrollElement, Waveform } from "./Waveform";
 import { Controls } from "./Controls";
 import { Details } from "./Details";
 import { Trigger } from "./Trigger";
+import "./style.css"
 
 export const App = () => (
   <Show
@@ -26,6 +27,7 @@ export const App = () => (
     <div
       style={{
         position: "sticky",
+        "z-index": 10,
         top: 0,
         background: "white",
       }}
@@ -67,7 +69,7 @@ export const Pads = () => {
                   scrollElement.clientWidth / 2;
               }
             }}
-            text={region.start.toFixed(5)}
+            text={index() + ""}
           />
           <button
               data-details

@@ -240,7 +240,7 @@ const Slice = (
         </Show>
         <Trigger
           region={props.region}
-          text={props.region.start.toFixed(5)}
+          text={props.index.toString()}
         />
       </div>
     </>
