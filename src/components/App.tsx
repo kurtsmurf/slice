@@ -5,7 +5,6 @@ import { dispatch, state } from "../store";
 import { contentElement, scrollElement, Waveform } from "./Waveform";
 import { Controls } from "./Controls";
 import { Details } from "./Details";
-import { Pads } from "./Pads";
 import { Trigger } from "./Trigger";
 
 export const App = () => (
@@ -37,6 +36,66 @@ export const App = () => (
     <BottomPanel />
   </Show>
 );
+
+
+export const Pads = () => {
+  return (
+    <div
+      style={{
+        display: "grid",
+        "grid-template-columns": "repeat( auto-fit, minmax(100px, 1fr) )",
+        "grid-auto-rows": "100px",
+      }}
+    >
+      <For each={state.regions}>
+        {(region, index) => (
+          <div style="display: grid; position: relative;">
+                      <Trigger
+            region={region}
+            style={{
+              height: "100%",
+              width: "100%",
+              display: "flex",
+              "align-items": "end",
+              "padding": "0.5rem",
+              "z-index": 0
+            }}
+            onTrigger={() => {
+              if (scrollElement && contentElement) {
+                scrollElement.scrollLeft =
+                  region.start * contentElement.clientWidth -
+                  scrollElement.clientWidth / 2;
+              }
+            }}
+            text={region.start.toFixed(5)}
+          />
+          <button
+              data-details
+              style={{
+                position: "absolute",
+                right: 0,
+                background: "#0003",
+                border: "none",
+              }}
+              onClick={() => {
+                setSelectedRegion(index());
+                const focusTarget = document.querySelector(
+                  "#region-details button",
+                );
+                if (focusTarget instanceof HTMLElement) focusTarget.focus();
+              }}
+            >
+              ...
+            </button>
+
+
+          </div>
+        )}
+      </For>
+    </div>
+  );
+};
+
 
 const RegionDetails = (props: { region: number }) => {
   return (
@@ -90,7 +149,7 @@ const [selectedRegion, setSelectedRegion] = createSignal<number | undefined>(
 
 const BottomPanel = () => (
   <>
-    <Show when={selectedRegion() !== undefined} fallback={Regions}>
+    <Show when={selectedRegion() !== undefined} fallback={Pads}>
       <RegionDetails region={selectedRegion()!} />
     </Show>
   </>
@@ -116,18 +175,6 @@ const Regions = () => {
                 scrollRegionIntoView(region);
               }}
             />
-            <button
-              data-details
-              onClick={() => {
-                setSelectedRegion(index());
-                const focusTarget = document.querySelector(
-                  "#region-details button",
-                );
-                if (focusTarget instanceof HTMLElement) focusTarget.focus();
-              }}
-            >
-              ...
-            </button>
           </div>
         )}
       </For>
