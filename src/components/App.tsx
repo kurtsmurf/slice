@@ -6,7 +6,7 @@ import { contentElement, scrollElement, Waveform } from "./Waveform";
 import { Controls } from "./Controls";
 import { Details } from "./Details";
 import { Trigger } from "./Trigger";
-import "./style.css"
+import "./style.css";
 
 export const App = () => (
   <Show
@@ -39,7 +39,6 @@ export const App = () => (
   </Show>
 );
 
-
 export const Pads = () => {
   return (
     <div
@@ -52,26 +51,26 @@ export const Pads = () => {
       <For each={state.regions}>
         {(region, index) => (
           <div style="display: grid; position: relative;">
-                      <Trigger
-            region={region}
-            style={{
-              height: "100%",
-              width: "100%",
-              display: "flex",
-              "align-items": "end",
-              "padding": "0.5rem",
-              "z-index": 0
-            }}
-            onTrigger={() => {
-              if (scrollElement && contentElement) {
-                scrollElement.scrollLeft =
-                  region.start * contentElement.clientWidth -
-                  scrollElement.clientWidth / 2;
-              }
-            }}
-            text={index() + ""}
-          />
-          <button
+            <Trigger
+              region={region}
+              style={{
+                height: "100%",
+                width: "100%",
+                display: "flex",
+                "align-items": "end",
+                "padding": "0.5rem",
+                "z-index": 0,
+              }}
+              onTrigger={() => {
+                if (scrollElement && contentElement) {
+                  scrollElement.scrollLeft =
+                    region.start * contentElement.clientWidth -
+                    scrollElement.clientWidth / 2;
+                }
+              }}
+              text={index() + ""}
+            />
+            <button
               data-details
               style={{
                 position: "absolute",
@@ -89,15 +88,12 @@ export const Pads = () => {
             >
               ...
             </button>
-
-
           </div>
         )}
       </For>
     </div>
   );
 };
-
 
 const RegionDetails = (props: { region: number }) => {
   return (

@@ -26,7 +26,7 @@ export const Trigger = (props: {
       ondblclick={(e) => e.stopPropagation()}
       style={props.style}
     >
-      <span style={{ "font-size": "1rem"}}>
+      <span style={{ "font-size": "1rem" }}>
         <span
           style={{
             "font-family": "monospace",
