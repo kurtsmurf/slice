@@ -13,25 +13,12 @@ export const App = () => (
     when={state.clip}
     fallback={<AudioInput onChange={dispatch.setClip} />}
   >
-    <button
-      onClick={() => {
-        if (confirm("Are you sure?")) {
-          dispatch.reset();
-          player.stop();
-        }
-      }}
-    >
-      clear
-    </button>
-    <Details clip={state.clip!} />
     <div
-      style={{
-        position: "sticky",
-        "z-index": 10,
-        top: 0,
-        background: "white",
-      }}
-    >
+      class="fixed-top"
+  >
+
+      <Details clip={state.clip!} />
+
       <Controls clip={state.clip!} />
       <Waveform buffer={state.clip!.buffer} />
     </div>
@@ -146,11 +133,9 @@ const [selectedRegion, setSelectedRegion] = createSignal<number | undefined>(
 );
 
 const BottomPanel = () => (
-  <>
     <Show when={selectedRegion() !== undefined} fallback={Pads}>
       <RegionDetails region={selectedRegion()!} />
     </Show>
-  </>
 );
 
 const Regions = () => {

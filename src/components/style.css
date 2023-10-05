@@ -1,1 +1,10 @@
 .root { position: relative; }
+
+@media (min-height: 600px) {
+.fixed-top {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: white;
+    }
+}

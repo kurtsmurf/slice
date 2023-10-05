@@ -3,7 +3,7 @@ import { dispatch, state } from "../store";
 import { zoom } from "./Waveform";
 
 export const Controls = (props: { clip: Clip }) => (
-  <div>
+  <div style={{display: "flex", "justify-content": "end"}}>
     <button
       onClick={() => {
         if (state.deleting) dispatch.stopDeleting();
