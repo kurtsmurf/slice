@@ -4,7 +4,7 @@
         overflow: auto;
     }
 }
-html, body, #root {
+html, body, #root, #bottom-panel, #region-details {
     height: 100%;
 }
 #root {

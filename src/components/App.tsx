@@ -80,31 +80,47 @@ export const Pads = () => {
   );
 };
 
-const RegionDetails = (props: { region: number }) => {
+const RegionDetails = (props: { index: number }) => {
   return (
     <>
-      <div id="region-details">
-        {props.region}
-        <button
-          onClick={() => {
-            const index = props.region;
-            setSelectedRegion(undefined);
-            // return focus to region details button
-            const detailsBtn = document.querySelector(
-              `#region-${index} [data-details-link]`,
-            );
-            if (detailsBtn instanceof HTMLElement) detailsBtn.focus();
+      <div
+        id="region-details"
+        style={{
+          display: "flex",
+          "flex-direction": "column",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            "justify-content": "space-between",
+            "align-items": "center",
           }}
+        
         >
-          back
-        </button>
-        <Trigger region={state.regions[props.region]} />
-      </div>
-      <div>
+          <button
+            onClick={() => {
+              const index = props.index;
+              setSelectedRegion(undefined);
+              // return focus to region details button
+              const detailsBtn = document.querySelector(
+                `#region-${index} [data-details-link]`,
+              );
+              if (detailsBtn instanceof HTMLElement) detailsBtn.focus();
+            }}
+          >
+            back
+          </button>
+          <h2 style={{ "margin-inline": "1rem"}}>{props.index}</h2>
+        </div>
+        <div style={{ "flex-grow": 1, display: "grid", "place-content": "center"}}>
+          <Trigger region={state.regions[props.index]} />
+        </div>
+        <div style="margin-top: auto;">
         <button
-          disabled={props.region === 0}
+          disabled={props.index === 0}
           onClick={() => {
-            const prev = props.region - 1;
+            const prev = props.index - 1;
             setSelectedRegion(prev);
             scrollRegionIntoView(state.regions[prev]);
           }}
@@ -112,15 +128,17 @@ const RegionDetails = (props: { region: number }) => {
           prev
         </button>
         <button
-          disabled={props.region === state.regions.length - 1}
+          disabled={props.index === state.regions.length - 1}
           onClick={() => {
-            const next = props.region + 1;
+            const next = props.index + 1;
             setSelectedRegion(next);
             scrollRegionIntoView(state.regions[next]);
           }}
         >
           next
         </button>
+      </div>
+
       </div>
     </>
   );
@@ -133,7 +151,7 @@ const [selectedRegion, setSelectedRegion] = createSignal<number | undefined>(
 const BottomPanel = () => (
     <div id="bottom-panel">
       <Show when={selectedRegion() !== undefined} fallback={Pads}>
-        <RegionDetails region={selectedRegion()!} />
+        <RegionDetails index={selectedRegion()!} />
       </Show>
     </div>
 );
