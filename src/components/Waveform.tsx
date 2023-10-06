@@ -121,6 +121,7 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
           />
         )}
       </For>
+      <ActiveRegion />
       <For each={state.regions}>
         {(region, index) => (
           <Slice
@@ -135,6 +136,24 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
     </div>
   );
 };
+
+const ActiveRegion = () => {
+  const region = createMemo(() => state.regions[state.selectedRegion !== undefined ? state.selectedRegion : -1])
+  return (
+    <Show when={state.selectedRegion !== undefined}>
+          <div
+      style={{
+        position: "absolute",
+        height: (state.clip?.buffer.numberOfChannels || 0) * TILE_HEIGHT + "px",
+        width: (region().end - region().start) * 100 + "cqi",
+        left: region().start * 100 + "cqi",
+        background: "#15a3",
+      }}
+    ></div>
+
+    </Show>
+  )
+}
 
 const Slice = (
   props: JSX.HTMLAttributes<HTMLDivElement> & {
