@@ -34,6 +34,7 @@ export const Pads = () => {
         "grid-template-columns": "repeat( auto-fit, minmax(100px, 1fr) )",
         "grid-auto-rows": "100px",
       }}
+      id="pads"
     >
       <For each={state.regions}>
         {(region, index) => (
@@ -95,7 +96,6 @@ const RegionDetails = (props: { region: number }) => {
             const detailsBtn = document.querySelector(
               `#region-${index} [data-details-link]`,
             );
-            console.log(detailsBtn)
             if (detailsBtn instanceof HTMLElement) detailsBtn.focus();
           }}
         >
