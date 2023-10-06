@@ -8,6 +8,8 @@ import { Details } from "./Details";
 import { Trigger } from "./Trigger";
 import "./style.css";
 
+
+
 export const App = () => (
   <Show
     when={state.clip}
@@ -64,7 +66,7 @@ export const Pads = () => {
                 border: "none",
               }}
               onClick={() => {
-                setSelectedRegion(index());
+                dispatch.selectRegion(index());
                 const focusTarget = document.querySelector(
                   "#region-details button",
                 );
@@ -100,7 +102,7 @@ const RegionDetails = (props: { index: number }) => {
           <button
             onClick={() => {
               const index = props.index;
-              setSelectedRegion(undefined);
+              dispatch.selectRegion(undefined);
               // return focus to region details button
               const detailsBtn = document.querySelector(
                 `#region-${index} [data-details-link]`,
@@ -117,7 +119,7 @@ const RegionDetails = (props: { index: number }) => {
           disabled={props.index === 0}
           onClick={() => {
             const prev = props.index - 1;
-            setSelectedRegion(prev);
+            dispatch.selectRegion(prev);
             scrollRegionIntoView(state.regions[prev]);
           }}
         >
@@ -128,7 +130,7 @@ const RegionDetails = (props: { index: number }) => {
           disabled={props.index === state.regions.length - 1}
           onClick={() => {
             const next = props.index + 1;
-            setSelectedRegion(next);
+            dispatch.selectRegion(next);
             scrollRegionIntoView(state.regions[next]);
           }}
         >
@@ -144,14 +146,10 @@ const RegionDetails = (props: { index: number }) => {
   );
 };
 
-const [selectedRegion, setSelectedRegion] = createSignal<number | undefined>(
-  undefined,
-);
-
 const BottomPanel = () => (
     <div id="bottom-panel">
-      <Show when={selectedRegion() !== undefined} fallback={Pads}>
-        <RegionDetails index={selectedRegion()!} />
+      <Show when={state.selectedRegion !== undefined} fallback={Pads}>
+        <RegionDetails index={state.selectedRegion!} />
       </Show>
     </div>
 );

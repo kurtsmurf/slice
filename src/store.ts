@@ -9,6 +9,7 @@ type State = {
   editing: boolean;
   clip: Clip | undefined;
   regions: { start: number; end: number }[];
+  selectedRegion: number | undefined;
 };
 
 // frozen to prevent mutation on store update
@@ -19,6 +20,7 @@ const defaultState: State = Object.freeze({
   cursorControlsVisible: false,
   clip: undefined,
   regions: [{ start: 0, end: 1 }],
+  selectedRegion: undefined,
 });
 
 const [store, setStore] = createStore<State>(defaultState);
@@ -59,6 +61,7 @@ export const dispatch = {
       ...prev.slice(index + 1),
     ]);
   },
+  selectRegion: (index: number | undefined) => setStore("selectedRegion", index)
 };
 
 // @ts-ignore
