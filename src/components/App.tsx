@@ -93,7 +93,6 @@ const RegionDetails = (props: { index: number }) => {
         <div
           style={{
             display: "flex",
-            "justify-content": "space-between",
             "align-items": "center",
           }}
         
@@ -111,13 +110,10 @@ const RegionDetails = (props: { index: number }) => {
           >
             back
           </button>
-          <h2 style={{ "margin-inline": "1rem"}}>{props.index}</h2>
-        </div>
-        <div style={{ "flex-grow": 1, display: "grid", "place-content": "center"}}>
-          <Trigger region={state.regions[props.index]} />
-        </div>
-        <div style="margin-top: auto;">
+          <h2 style={{ "margin-inline": "1rem", "margin-inline-start": "auto"}}>{props.index}</h2>
+          <div style="margin-top: auto;">
         <button
+          style={{ "font-size": "1rem"}}
           disabled={props.index === 0}
           onClick={() => {
             const prev = props.index - 1;
@@ -125,9 +121,10 @@ const RegionDetails = (props: { index: number }) => {
             scrollRegionIntoView(state.regions[prev]);
           }}
         >
-          prev
+          &#8249;
         </button>
         <button
+          style={{ "font-size": "1rem"}}
           disabled={props.index === state.regions.length - 1}
           onClick={() => {
             const next = props.index + 1;
@@ -135,10 +132,13 @@ const RegionDetails = (props: { index: number }) => {
             scrollRegionIntoView(state.regions[next]);
           }}
         >
-          next
+          &#8250;
         </button>
       </div>
-
+        </div>
+        <div style={{ "flex-grow": 1, display: "grid", "place-content": "center"}}>
+          <Trigger region={state.regions[props.index]} />
+        </div>
       </div>
     </>
   );
