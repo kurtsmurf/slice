@@ -16,9 +16,7 @@ export const App = () => (
     <div
       class="fixed-top"
   >
-
       <Details clip={state.clip!} />
-
       <Controls clip={state.clip!} />
       <Waveform buffer={state.clip!.buffer} />
     </div>
@@ -34,7 +32,6 @@ export const Pads = () => {
         "grid-template-columns": "repeat( auto-fit, minmax(100px, 1fr) )",
         "grid-auto-rows": "100px",
       }}
-      id="pads"
     >
       <For each={state.regions}>
         {(region, index) => (
@@ -134,9 +131,11 @@ const [selectedRegion, setSelectedRegion] = createSignal<number | undefined>(
 );
 
 const BottomPanel = () => (
-    <Show when={selectedRegion() !== undefined} fallback={Pads}>
-      <RegionDetails region={selectedRegion()!} />
-    </Show>
+    <div id="bottom-panel">
+      <Show when={selectedRegion() !== undefined} fallback={Pads}>
+        <RegionDetails region={selectedRegion()!} />
+      </Show>
+    </div>
 );
 
 const scrollRegionIntoView = (region: typeof state.regions[number]) => {

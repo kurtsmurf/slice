@@ -278,7 +278,7 @@ const createKeyboardMovementHandler = (move: (deltaCqi: number) => void) => {
           e.target.getBoundingClientRect().right >
             scrollElement.getBoundingClientRect().right
         ) {
-          e.target.scrollIntoView({ inline: "start", "block": "nearest" });
+          e.target.scrollIntoView({ inline: "center", "block": "nearest" });
         }
       }
       if (e.key === "ArrowLeft") {
@@ -287,7 +287,7 @@ const createKeyboardMovementHandler = (move: (deltaCqi: number) => void) => {
           e.target.getBoundingClientRect().left <
             scrollElement.getBoundingClientRect().left
         ) {
-          e.target.scrollIntoView({ inline: "end", "block": "nearest" });
+          e.target.scrollIntoView({ inline: "center", "block": "nearest" });
         }
       }
 
