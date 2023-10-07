@@ -61,6 +61,11 @@ export const dispatch = {
       // omit region
       ...prev.slice(index + 1),
     ]);
+    if (state.selectedRegion !== undefined) {
+      if (index <= state.selectedRegion) {
+        setStore("selectedRegion", prev => prev && prev - 1)
+      }
+    }
   },
   selectRegion: (index: number | undefined) => setStore("selectedRegion", index)
 };
