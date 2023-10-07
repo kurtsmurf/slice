@@ -147,8 +147,7 @@ const ActiveRegion = () => {
         height: (state.clip?.buffer.numberOfChannels || 0) * TILE_HEIGHT + "px",
         width: (region().end - region().start) * 100 + "cqi",
         left: region().start * 100 + "cqi",
-        background: "orange",
-        opacity: 0.25,
+        background: "hsl(39deg 100% 50% / 25%)",
       }}
     ></div>
 
@@ -226,7 +225,7 @@ const Slice = (
         width={2}
         background="black"
         style={{
-          "box-shadow": "1px 0px 0px #fff, -1px 0px 0px #fff",
+          "box-shadow": `1px 0px 0px ${state.selectedRegion === props.index ? "hsl(39deg 100% 80%)" : "white"}, -1px 0px 0px ${state.selectedRegion === props.index - 1 ? "hsl(39deg 100% 80%)" : "white"}`,
         }}
       >
       </Stick>
