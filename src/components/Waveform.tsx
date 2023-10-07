@@ -544,6 +544,7 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
         )}
       </For>
       <PositionIndicator />
+      <ActiveRegion />
       <Stick
         pos={state.cursor}
         width={2}
