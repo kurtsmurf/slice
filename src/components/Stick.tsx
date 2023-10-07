@@ -14,7 +14,6 @@ export const Stick = (
     <div
       {...htmlAttrs}
       style={{
-        ...props.style,
         position: "absolute",
         top: 0,
         left: `${props.width / -2}px`,
@@ -22,6 +21,7 @@ export const Stick = (
         width: `${props.width}px`,
         height: "100%",
         background: props.background,
+        ...props.style,
       }}
     >
     </div>

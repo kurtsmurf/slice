@@ -475,7 +475,8 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
       <div
         style={{
           position: "absolute",
-          height: "50px",
+          bottom: 0,
+          height: "40px",
           width: `min(100cqi, max(${width()}cqi, 2px))`,
           left: left() + "cqi",
           background: "#8888",
@@ -522,10 +523,12 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
           <ChannelSegment
             data={props.buffer.getChannelData(channelNumber)}
             width={800}
-            height={50}
+            height={25}
             numBuckets={800}
             style={{
               position: "absolute",
+              bottom: 0,
+              height: "40px"
             }}
           />
         )}
@@ -536,7 +539,7 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
             pos={start}
             background="black"
             style={{
-              "box-shadow": "1px 0px 0px #fff, -1px 0px 0px #fff",
+              height: "10px"
             }}
             width={2}
           >
@@ -549,6 +552,11 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
         pos={state.cursor}
         width={2}
         background="repeating-linear-gradient(orange 0px, orange 4px, transparent 4px, transparent 8px)"
+        style={{
+          height: "40px",
+          top: "unset",
+          bottom: 0,
+        }}
       >
       </Stick>
       <Playhead />
