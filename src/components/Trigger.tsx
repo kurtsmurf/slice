@@ -26,10 +26,11 @@ export const Trigger = (props: {
       ondblclick={(e) => e.stopPropagation()}
       style={props.style}
     >
-      <span style={{ "font-size": "1rem" }}>
+      <span>
         <span
           style={{
             "font-family": "monospace",
+            "font-size": "1rem",
           }}
         >
           {active() ? <>&#9632;</> : <>&#9654;</>}

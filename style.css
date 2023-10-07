@@ -3,6 +3,7 @@
 }
 html {
   background: white;
+  font-family: system-ui;
 }
 body {
   /* prevents selection of waveform elements */
