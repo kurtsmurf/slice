@@ -53,7 +53,7 @@ export const Pads = () => {
                     scrollElement.clientWidth / 2;
                 }
               }}
-              text={index().toString()}
+              text={(index() + 1).toString()}
             />
             <button
               data-details-link
@@ -109,7 +109,7 @@ const RegionDetails = (props: { index: number }) => {
           >
             back
           </button>
-          <h2 style={{ "margin-inline": "1rem", "margin-inline-start": "auto"}}>{props.index}</h2>
+          <h2 style={{ "margin-inline": "1rem", "margin-inline-start": "auto"}}>{props.index + 1}</h2>
         </div>
         <div style={{ "flex-grow": 1, display: "grid", "place-content": "center"}}>
           <Trigger region={state.regions[props.index]} />
