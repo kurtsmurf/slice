@@ -67,6 +67,7 @@ export const Pads = () => {
                   "#region-details button",
                 );
                 if (focusTarget instanceof HTMLElement) focusTarget.focus();
+                scrollRegionIntoView(state.regions[index()]);
               }}
             >
               ...
