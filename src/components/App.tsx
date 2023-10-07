@@ -43,10 +43,8 @@ export const Pads = () => {
               style={{
                 height: "100%",
                 width: "100%",
-                display: "flex",
-                "align-items": "end",
-                "padding": "0.5rem",
                 "z-index": 0,
+                "text-align": "start",
               }}
               onTrigger={() => {
                 if (scrollElement && contentElement) {
@@ -62,9 +60,7 @@ export const Pads = () => {
               style={{
                 position: "absolute",
                 right: 0,
-                background: "#0003",
-                border: "none",
-              }}
+                    }}
               onClick={() => {
                 dispatch.selectRegion(index());
                 const focusTarget = document.querySelector(
