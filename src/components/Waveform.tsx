@@ -140,7 +140,7 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
 const ActiveRegion = () => {
   const region = createMemo(() => state.regions[state.selectedRegion !== undefined ? state.selectedRegion : -1])
   return (
-    <Show when={state.selectedRegion !== undefined}>
+    <Show when={region()}>
           <div
       style={{
         position: "absolute",
