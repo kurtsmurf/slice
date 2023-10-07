@@ -147,7 +147,8 @@ const ActiveRegion = () => {
         height: (state.clip?.buffer.numberOfChannels || 0) * TILE_HEIGHT + "px",
         width: (region().end - region().start) * 100 + "cqi",
         left: region().start * 100 + "cqi",
-        background: "#15a3",
+        background: "orange",
+        opacity: 0.25,
       }}
     ></div>
 
@@ -220,11 +221,21 @@ const Slice = (
 
   return (
     <>
+      <Stick
+        pos={dragPos()}
+        width={2}
+        background="black"
+        style={{
+          "box-shadow": "1px 0px 0px #fff, -1px 0px 0px #fff",
+        }}
+      >
+      </Stick>
+
       <Show when={state.editing}>
         <Stick
           pos={dragPos()}
           width={30}
-          background="hsl(300deg 100% 25% / 50%)"
+          background="hsl(0deg 0% 25% / 30%)"
           onPointerDown={drag.start}
           tabIndex={0}
           onkeydown={onKeyDown}
@@ -232,13 +243,6 @@ const Slice = (
         >
         </Stick>
       </Show>
-      <Stick
-        pos={dragPos()}
-        width={2}
-        background="hsl(300deg 100% 25% / 75%)"
-        onPointerDown={state.editing ? drag.start : undefined}
-      >
-      </Stick>
 
       <div
         style={{
@@ -375,7 +379,18 @@ const Cursor = (
 
   return (
     <>
+      <div style={{ "pointer-events": "none" }}>
+        <Stick
+          id="cursor"
+          pos={dragPos()}
+          width={2}
+          background="repeating-linear-gradient(orange 0px, orange 4px, transparent 4px, transparent 8px)"
+        >
+        </Stick>
+      </div>
+
       <Show when={!state.editing}>
+        
         <Stick
           ref={ref}
           pos={dragPos()}
@@ -387,15 +402,6 @@ const Cursor = (
         >
         </Stick>
       </Show>
-      <div style={{ "pointer-events": "none" }}>
-        <Stick
-          id="cursor"
-          pos={dragPos()}
-          width={2}
-          background="repeating-linear-gradient(orange 0px, orange 4px, transparent 4px, transparent 8px)"
-        >
-        </Stick>
-      </div>
       <Show
         when={state.cursorControlsVisible}
       >
@@ -524,7 +530,10 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
         {({ start }) => (
           <Stick
             pos={start}
-            background="hsl(300deg 100% 25% / 75%)"
+            background="black"
+            style={{
+              "box-shadow": "1px 0px 0px #fff, -1px 0px 0px #fff",
+            }}
             width={2}
           >
           </Stick>

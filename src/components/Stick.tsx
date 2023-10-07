@@ -5,6 +5,7 @@ export const Stick = (
     pos: number;
     width: number;
     background: string;
+    style?: JSX.CSSProperties;
   },
 ) => {
   const [, htmlAttrs] = splitProps(props, ["pos"]);
@@ -13,6 +14,7 @@ export const Stick = (
     <div
       {...htmlAttrs}
       style={{
+        ...props.style,
         position: "absolute",
         top: 0,
         left: `${props.width / -2}px`,
