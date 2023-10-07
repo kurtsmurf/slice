@@ -411,9 +411,12 @@ const Cursor = (
         >
           <button
             onClick={() => {
-              dispatch.slice(state.cursor);
+              const index = dispatch.slice(state.cursor);
               dispatch.hideCursorControls();
               ref?.focus();
+              if (state.selectedRegion !== undefined) {
+                dispatch.selectRegion(index)
+              }
             }}
           >
             slice

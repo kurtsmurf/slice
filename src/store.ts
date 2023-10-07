@@ -48,6 +48,7 @@ export const dispatch = {
       { start: pos, end: prev[index]?.start || 1 },
       ...prev.slice(index),
     ]);
+    return index;
   },
   healSlice: (index: number) => {
     setStore("regions", (prev) => [
