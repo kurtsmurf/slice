@@ -113,7 +113,11 @@ const RegionDetails = (props: { index: number }) => {
             back
           </button>
           <h2 style={{ "margin-inline": "1rem", "margin-inline-start": "auto"}}>{props.index}</h2>
-          <div style="margin-top: auto;">
+        </div>
+        <div style={{ "flex-grow": 1, display: "grid", "place-content": "center"}}>
+          <Trigger region={state.regions[props.index]} />
+        </div>
+        <div style={{display: "flex", "justify-content": "center"}}>
         <button
           style={{ "font-size": "1rem"}}
           disabled={props.index === 0}
@@ -137,10 +141,6 @@ const RegionDetails = (props: { index: number }) => {
           &#8250;
         </button>
       </div>
-        </div>
-        <div style={{ "flex-grow": 1, display: "grid", "place-content": "center"}}>
-          <Trigger region={state.regions[props.index]} />
-        </div>
       </div>
     </>
   );
