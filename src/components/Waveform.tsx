@@ -255,6 +255,11 @@ const Slice = (
           <button
             onClick={() => {
               dispatch.healSlice(props.index);
+              if (state.selectedRegion !== undefined) {
+                if (props.index <= state.selectedRegion) {
+                  dispatch.selectRegion(state.selectedRegion - 1)
+                }
+              }
             }}
           >
             delete
