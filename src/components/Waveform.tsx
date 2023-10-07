@@ -260,6 +260,11 @@ const Slice = (
         <Trigger
           region={props.region}
           text={props.index.toString()}
+          onTrigger={() => {
+            if (state.selectedRegion !== undefined) {
+              dispatch.selectRegion(props.index)
+            }
+          }}
         />
       </div>
     </>
