@@ -121,7 +121,6 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
           />
         )}
       </For>
-      <ActiveRegion />
       <For each={state.regions}>
         {(region, index) => (
           <Slice
@@ -131,6 +130,7 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
           />
         )}
       </For>
+      <ActiveRegion />
       <Cursor />
       <Playhead />
     </div>
@@ -225,7 +225,7 @@ const Slice = (
         width={2}
         background="black"
         style={{
-          "box-shadow": `1px 0px 0px ${state.selectedRegion === props.index ? "hsl(39deg 100% 80%)" : "white"}, -1px 0px 0px ${state.selectedRegion === props.index - 1 ? "hsl(39deg 100% 80%)" : "white"}`,
+          "box-shadow": `1px 0px 0px white, -1px 0px 0px white`,
         }}
       >
       </Stick>
