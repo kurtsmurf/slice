@@ -476,7 +476,7 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
         style={{
           position: "absolute",
           bottom: 0,
-          height: "40px",
+          height: "50px",
           width: `min(100cqi, max(${width()}cqi, 2px))`,
           left: left() + "cqi",
           background: "#8888",
@@ -533,6 +533,18 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
           />
         )}
       </For>
+      <PositionIndicator />
+      <Stick
+        pos={state.cursor}
+        width={2}
+        background="repeating-linear-gradient(orange 0px, orange 2px, transparent 2px, transparent 4px)"
+        style={{
+          height: "50px",
+          top: "unset",
+          bottom: 0,
+        }}
+      >
+      </Stick>
       <For each={state.regions}>
         {({ start }) => (
           <Stick
@@ -546,19 +558,7 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
           </Stick>
         )}
       </For>
-      <PositionIndicator />
       <ActiveRegion />
-      <Stick
-        pos={state.cursor}
-        width={2}
-        background="repeating-linear-gradient(orange 0px, orange 4px, transparent 4px, transparent 8px)"
-        style={{
-          height: "40px",
-          top: "unset",
-          bottom: 0,
-        }}
-      >
-      </Stick>
       <Playhead />
     </div>
   );
