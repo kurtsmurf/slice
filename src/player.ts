@@ -109,13 +109,11 @@ export const download = async (
   const wav = audiobufferToWav(offlineResult);
 
   // use hash digest as file name
-  // const hashBuffer = await crypto.subtle.digest("SHA-256", wav);
-  // const hashHex = Array.from(new Uint8Array(hashBuffer))
-  //   .map((byte) => byte.toString(16).padStart(2, "0"))
-  //   .join("");
-  // const fileName = hashHex + ".wav";
-
-  const fileName = "blah.wav"
+  const hashBuffer = await crypto.subtle.digest("SHA-256", wav);
+  const hashHex = Array.from(new Uint8Array(hashBuffer))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+  const fileName = hashHex + ".wav";
 
   // trigger download
   // @ts-ignore
