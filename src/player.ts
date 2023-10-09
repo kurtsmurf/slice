@@ -1,6 +1,7 @@
 import { createSignal } from "solid-js";
 import { audioContext } from "./audioContext";
 import { useAnimationFrame } from "./behaviors/useAnimationFrame";
+import audiobufferToWav from "audiobuffer-to-wav";
 
 export const player = (function createPlayer() {
   const ramp = 0.001;
@@ -10,50 +11,27 @@ export const player = (function createPlayer() {
     start: 0,
     end: 1,
   });
-  let sourceNode: AudioBufferSourceNode | undefined;
-  let gainNode: GainNode | undefined;
+  let active:
+    | { sourceNode: AudioBufferSourceNode; smoothStop: () => void }
+    | undefined;
 
   const play = (buffer: AudioBuffer, region = { start: 0, end: 1 }) => {
     setRegion(region);
     const startSeconds = buffer.duration * region.start;
-    const endSeconds = buffer.duration * region.end;
-    const durationSeconds = endSeconds - startSeconds;
 
     stop();
     setStartOffset(startSeconds);
     setStartedAt(audioContext.currentTime);
 
-    gainNode = audioContext.createGain();
-    gainNode.connect(audioContext.destination);
-    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime + ramp);
-
-    const end = audioContext.currentTime + durationSeconds;
-    gainNode.gain.setValueAtTime(1, end - ramp);
-    gainNode.gain.linearRampToValueAtTime(0, end);
-
-    const node = audioContext.createBufferSource();
-    node.buffer = buffer;
-    node.connect(gainNode);
-    node.onended = stop;
-    node.start(0, startSeconds, durationSeconds);
-
-    sourceNode = node;
+    active = attackRelease(audioContext, buffer, region, stop);
   };
 
   const stop = () => {
-    if (!sourceNode || !gainNode) {
+    if (!active) {
       return;
     }
-
-    const end = audioContext.currentTime + ramp;
-    gainNode.gain.cancelScheduledValues(audioContext.currentTime);
-    gainNode.gain.setValueAtTime(1, audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0, end);
-
-    sourceNode.onended = null;
-    sourceNode.stop(end);
-    sourceNode = undefined;
+    active.smoothStop();
+    active = undefined;
     setStartedAt(undefined);
   };
 
@@ -62,13 +40,103 @@ export const player = (function createPlayer() {
   const [progress, setProgress] = createSignal(0);
   useAnimationFrame(() => {
     const startedAt_ = startedAt();
-    if (!startedAt_ || !sourceNode?.buffer) {
+    if (!startedAt_ || !active?.sourceNode.buffer) {
       return 0;
     }
     const timeSinceStart = audioContext.currentTime - startedAt_;
     const elapsed = timeSinceStart + startOffset();
-    setProgress(elapsed / sourceNode.buffer.duration);
+    setProgress(elapsed / active.sourceNode.buffer.duration);
   });
 
   return { play, playing, region, stop, progress };
 })();
+
+const attackRelease = (
+  audioContext: AudioContext | OfflineAudioContext,
+  buffer: AudioBuffer,
+  region: { start: number; end: number },
+  onended?: () => void,
+) => {
+  const ramp = 0.001;
+  const gainNode = audioContext.createGain();
+  gainNode.connect(audioContext.destination);
+  gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+  gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime + ramp);
+
+  const startSeconds = buffer.duration * region.start;
+  const endSeconds = buffer.duration * region.end;
+  const durationSeconds = endSeconds - startSeconds;
+
+  const end = audioContext.currentTime + durationSeconds;
+  gainNode.gain.setValueAtTime(1, end - ramp);
+  gainNode.gain.linearRampToValueAtTime(0, end);
+
+  const sourceNode = audioContext.createBufferSource();
+  sourceNode.buffer = buffer;
+  sourceNode.connect(gainNode);
+  if (onended) sourceNode.onended = onended;
+  sourceNode.start(0, startSeconds, durationSeconds);
+
+  const smoothStop = () => {
+    const end = audioContext.currentTime + ramp;
+    gainNode.gain.cancelScheduledValues(audioContext.currentTime);
+    gainNode.gain.setValueAtTime(1, audioContext.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0, end);
+
+    sourceNode.onended = null;
+    sourceNode.stop(end);
+  };
+
+  return { sourceNode, smoothStop };
+}
+
+export const download = async (
+  buffer: AudioBuffer,
+  region: { start: number; end: number },
+) => {
+  // render audiobuffer of region
+  const offlineAudioContext = new OfflineAudioContext(
+    buffer.numberOfChannels,
+    buffer.duration * buffer.sampleRate *
+      (region.end - region.start),
+    buffer.sampleRate,
+  );
+  attackRelease(offlineAudioContext, buffer, region);
+  const offlineResult = await offlineAudioContext
+    .startRendering();
+
+  // convert audiobuffer to an arraybuffer of wav-encoded bytes
+  const wav = audiobufferToWav(offlineResult);
+
+  // use hash digest as file name
+  // const hashBuffer = await crypto.subtle.digest("SHA-256", wav);
+  // const hashHex = Array.from(new Uint8Array(hashBuffer))
+  //   .map((byte) => byte.toString(16).padStart(2, "0"))
+  //   .join("");
+  // const fileName = hashHex + ".wav";
+
+  const fileName = "blah.wav"
+
+  // trigger download
+  // @ts-ignore
+  if (navigator.share) {
+    // use Web Share API if available
+    const file = new File([wav], fileName, { type: "audio/wav" });
+    navigator.share({
+      files: [file],
+    });
+  } else {
+    // otherwise use download link
+    const url = URL.createObjectURL(
+      new Blob([wav], { type: "audio/wav" }),
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", fileName);
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+};
+
+// @ts-ignore
+window.download = download

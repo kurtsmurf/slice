@@ -1,6 +1,6 @@
 import { AudioInput } from "./AudioInput";
 import { createSignal, For, Show } from "solid-js";
-import { player } from "../player";
+import { download, player } from "../player";
 import { dispatch, state } from "../store";
 import { contentElement, scrollElement, Waveform } from "./Waveform";
 import { Controls } from "./Controls";
@@ -109,10 +109,23 @@ const RegionDetails = (props: { index: number }) => {
           >
             back
           </button>
-          <h2 style={{ "margin-inline": "1rem", "margin-inline-start": "auto"}}>{props.index + 1}</h2>
+          <h2 style={{"margin-inline": "1rem", "margin-inline-start": "auto"}}>{props.index + 1}</h2>
         </div>
-        <div style={{ "flex-grow": 1, display: "grid", "place-content": "center"}}>
+        <div style={{
+          "flex-grow": 1,
+          display: "grid",
+          "place-content": "center",
+          gap: "1rem",
+          "grid-auto-flow": "column",
+        }}>
           <Trigger region={state.regions[props.index]} />
+          <button onClick={() => {
+            const buffer = state.clip?.buffer;
+            const region = state.regions[props.index]
+            if (buffer && region) {
+              download(buffer, region)
+            }
+          }}>{ !!navigator.share ? "share" : "download" }</button>
         </div>
         <div style={{display: "flex", "justify-content": "center"}}>
         <button
