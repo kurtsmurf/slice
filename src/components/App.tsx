@@ -8,16 +8,12 @@ import { Details } from "./Details";
 import { Trigger } from "./Trigger";
 import "./style.css";
 
-
-
 export const App = () => (
   <Show
     when={state.clip}
     fallback={<AudioInput onChange={dispatch.setClip} />}
   >
-    <div
-      class="fixed-top"
-  >
+    <div class="fixed-top">
       <Details clip={state.clip!} />
       <Controls clip={state.clip!} />
       <Waveform buffer={state.clip!.buffer} />
@@ -37,7 +33,10 @@ export const Pads = () => {
     >
       <For each={state.regions}>
         {(region, index) => (
-          <div style="display: grid; position: relative;" id={`region-${index()}`}>
+          <div
+            style="display: grid; position: relative;"
+            id={`region-${index()}`}
+          >
             <Trigger
               region={region}
               style={{
@@ -60,7 +59,7 @@ export const Pads = () => {
               style={{
                 position: "absolute",
                 right: 0,
-                    }}
+              }}
               onClick={() => {
                 dispatch.selectRegion(index());
                 const focusTarget = document.querySelector(
@@ -94,7 +93,6 @@ const RegionDetails = (props: { index: number }) => {
             display: "flex",
             "align-items": "center",
           }}
-        
         >
           <button
             onClick={() => {
@@ -109,59 +107,69 @@ const RegionDetails = (props: { index: number }) => {
           >
             back
           </button>
-          <h2 style={{"margin-inline": "1rem", "margin-inline-start": "auto"}}>{props.index + 1}</h2>
+          <h2
+            style={{ "margin-inline": "1rem", "margin-inline-start": "auto" }}
+          >
+            {props.index + 1}
+          </h2>
         </div>
-        <div style={{
-          "flex-grow": 1,
-          display: "grid",
-          "place-content": "center",
-          gap: "1rem",
-          "grid-auto-flow": "column",
-        }}>
+        <div
+          style={{
+            "flex-grow": 1,
+            display: "grid",
+            "place-content": "center",
+            gap: "1rem",
+            "grid-auto-flow": "column",
+          }}
+        >
           <Trigger region={state.regions[props.index]} />
-          <button onClick={() => {
-            const buffer = state.clip?.buffer;
-            const region = state.regions[props.index]
-            if (buffer && region) {
-              download(buffer, region)
-            }
-          }}>{ !!navigator.share ? "share" : "download" }</button>
+          <button
+            onClick={() => {
+              const buffer = state.clip?.buffer;
+              const region = state.regions[props.index];
+              if (buffer && region) {
+                download(buffer, region);
+              }
+            }}
+          >
+            {!!navigator.share ? "share" : "download"}
+          </button>
         </div>
-        <div style={{display: "flex", "justify-content": "center"}}>
-        <button
-          style={{ "font-size": "1rem"}}
-          disabled={props.index === 0}
-          onClick={() => {
-            const prev = props.index - 1;
-            dispatch.selectRegion(prev);
-            scrollRegionIntoView(state.regions[prev]);
-          }}
-        >
-          &#8249;
-        </button>
-        <button
-          style={{ "font-size": "1rem"}}
-          disabled={props.index === state.regions.length - 1}
-          onClick={() => {
-            const next = props.index + 1;
-            dispatch.selectRegion(next);
-            scrollRegionIntoView(state.regions[next]);
-          }}
-        >
-          &#8250;
-        </button>
-      </div>
+        <div style={{ display: "flex", "justify-content": "center" }}>
+          <button
+            style={{ "font-size": "1rem" }}
+            disabled={props.index === 0}
+            onClick={() => {
+              const prev = props.index - 1;
+              dispatch.selectRegion(prev);
+              scrollRegionIntoView(state.regions[prev]);
+            }}
+          >
+            &#8249;
+          </button>
+          <button
+            style={{ "font-size": "1rem" }}
+            disabled={props.index === state.regions.length - 1}
+            onClick={() => {
+              const next = props.index + 1;
+              dispatch.selectRegion(next);
+              scrollRegionIntoView(state.regions[next]);
+            }}
+          >
+            &#8250;
+          </button>
+        </div>
       </div>
     </>
   );
 };
 
 const BottomPanel = () => (
-    <div id="bottom-panel">
-      <Show when={state.selectedRegion !== undefined} fallback={Pads}>
-        <RegionDetails index={state.selectedRegion!} />
-      </Show>
-    </div>
+  <div id="bottom-panel">
+    <Show when={state.selectedRegion !== undefined} fallback={Pads}>
+      <RegionDetails index={state.selectedRegion!} />
+    </Show>
+  </div>
 );
 
 const scrollRegionIntoView = (region: typeof state.regions[number]) => {

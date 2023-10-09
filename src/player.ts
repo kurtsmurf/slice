@@ -88,7 +88,7 @@ const attackRelease = (
   };
 
   return { sourceNode, smoothStop };
-}
+};
 
 export const download = async (
   buffer: AudioBuffer,
@@ -137,4 +137,4 @@ export const download = async (
 };
 
 // @ts-ignore
-window.download = download
+window.download = download;

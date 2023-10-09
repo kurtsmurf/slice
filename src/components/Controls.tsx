@@ -3,19 +3,21 @@ import { dispatch, state } from "../store";
 import { zoom } from "./Waveform";
 
 export const Controls = (props: { clip: Clip }) => (
-  <div style={{display: "flex", "justify-content": "end"}}>
+  <div style={{ display: "flex", "justify-content": "end" }}>
     <button
       onClick={() => {
-        if (state.deleting) dispatch.stopDeleting();
-        else dispatch.startDeleting();
+        if (state.deleting) {
+          dispatch.stopDeleting();
+        } else dispatch.startDeleting();
       }}
     >
       {state.deleting ? "done deleting" : "delete"}
     </button>
     <button
       onClick={() => {
-        if (state.editing) dispatch.stopEditing();
-        else dispatch.startEditing();
+        if (state.editing) {
+          dispatch.stopEditing();
+        } else dispatch.startEditing();
       }}
     >
       {state.editing ? "done editing" : "edit"}

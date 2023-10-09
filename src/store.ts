@@ -62,7 +62,8 @@ export const dispatch = {
       ...prev.slice(index + 1),
     ]);
   },
-  selectRegion: (index: number | undefined) => setStore("selectedRegion", index)
+  selectRegion: (index: number | undefined) =>
+    setStore("selectedRegion", index),
 };
 
 // @ts-ignore

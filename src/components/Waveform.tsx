@@ -138,22 +138,26 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
 };
 
 const ActiveRegion = () => {
-  const region = createMemo(() => state.regions[state.selectedRegion !== undefined ? state.selectedRegion : -1])
+  const region = createMemo(() =>
+    state
+      .regions[state.selectedRegion !== undefined ? state.selectedRegion : -1]
+  );
   return (
     <Show when={region()}>
-          <div
-      style={{
-        position: "absolute",
-        height: (state.clip?.buffer.numberOfChannels || 0) * TILE_HEIGHT + "px",
-        width: (region().end - region().start) * 100 + "cqi",
-        left: region().start * 100 + "cqi",
-        background: "hsl(39deg 100% 50% / 25%)",
-      }}
-    ></div>
-
+      <div
+        style={{
+          position: "absolute",
+          height: (state.clip?.buffer.numberOfChannels || 0) * TILE_HEIGHT +
+            "px",
+          width: (region().end - region().start) * 100 + "cqi",
+          left: region().start * 100 + "cqi",
+          background: "hsl(39deg 100% 50% / 25%)",
+        }}
+      >
+      </div>
     </Show>
-  )
-}
+  );
+};
 
 const Slice = (
   props: JSX.HTMLAttributes<HTMLDivElement> & {
@@ -257,7 +261,7 @@ const Slice = (
               dispatch.healSlice(props.index);
               if (state.selectedRegion !== undefined) {
                 if (props.index <= state.selectedRegion) {
-                  dispatch.selectRegion(state.selectedRegion - 1)
+                  dispatch.selectRegion(state.selectedRegion - 1);
                 }
               }
             }}
@@ -270,7 +274,7 @@ const Slice = (
           text={(props.index + 1).toString()}
           onTrigger={() => {
             if (state.selectedRegion !== undefined) {
-              dispatch.selectRegion(props.index)
+              dispatch.selectRegion(props.index);
             }
           }}
         />
@@ -394,7 +398,6 @@ const Cursor = (
       </div>
 
       <Show when={!state.editing}>
-        
         <Stick
           ref={ref}
           pos={dragPos()}
@@ -425,7 +428,7 @@ const Cursor = (
               dispatch.hideCursorControls();
               ref?.focus();
               if (state.selectedRegion !== undefined) {
-                dispatch.selectRegion(index)
+                dispatch.selectRegion(index);
               }
             }}
           >
@@ -528,7 +531,7 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
             style={{
               position: "absolute",
               bottom: 0,
-              height: "40px"
+              height: "40px",
             }}
           />
         )}
@@ -551,7 +554,7 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
             pos={start}
             background="black"
             style={{
-              height: "10px"
+              height: "10px",
             }}
             width={2}
           >
