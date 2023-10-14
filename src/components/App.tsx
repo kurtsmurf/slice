@@ -79,6 +79,22 @@ export const Pads = () => {
 };
 
 const RegionDetails = (props: { index: number }) => {
+  const next = () => {
+    const next = props.index + 1;
+    if (next < state.regions.length) {
+      dispatch.selectRegion(next);
+      scrollRegionIntoView(state.regions[next]);
+    }
+  };
+
+  const prev = () => {
+    const prev = props.index - 1;
+    if (prev > -1) {
+      dispatch.selectRegion(prev);
+      scrollRegionIntoView(state.regions[prev]);
+    }
+  };
+
   return (
     <>
       <div
@@ -126,13 +142,23 @@ const RegionDetails = (props: { index: number }) => {
           </button>
         </div>
         <div
-          id="region-details-content"
+          id="region-details-playback"
           style={{
             "flex-grow": 1,
             display: "grid",
             "place-content": "center",
             gap: "1rem",
             "grid-auto-flow": "column",
+          }}
+          onkeydown={(e) => {
+            if (e.key === "ArrowRight") {
+              e.preventDefault();
+              next();
+            }
+            if (e.key === "ArrowLeft") {
+              e.preventDefault();
+              prev();
+            }
           }}
         >
           <Trigger region={state.regions[props.index]} />
@@ -152,22 +178,14 @@ const RegionDetails = (props: { index: number }) => {
           <button
             style={{ "font-size": "1rem" }}
             disabled={props.index === 0}
-            onClick={() => {
-              const prev = props.index - 1;
-              dispatch.selectRegion(prev);
-              scrollRegionIntoView(state.regions[prev]);
-            }}
+            onClick={prev}
           >
             &#8249;
           </button>
           <button
             style={{ "font-size": "1rem" }}
             disabled={props.index === state.regions.length - 1}
-            onClick={() => {
-              const next = props.index + 1;
-              dispatch.selectRegion(next);
-              scrollRegionIntoView(state.regions[next]);
-            }}
+            onClick={next}
           >
             &#8250;
           </button>
