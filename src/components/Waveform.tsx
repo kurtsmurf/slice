@@ -152,6 +152,7 @@ const ActiveRegion = () => {
           width: (region().end - region().start) * 100 + "cqi",
           left: region().start * 100 + "cqi",
           background: "hsl(39deg 100% 50% / 25%)",
+          "pointer-events": "none",
         }}
       >
       </div>
