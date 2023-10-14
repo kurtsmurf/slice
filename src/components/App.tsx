@@ -89,6 +89,7 @@ const RegionDetails = (props: { index: number }) => {
         }}
       >
         <div
+          id="region-details-header"
           style={{
             display: "flex",
             "align-items": "center",
@@ -112,17 +113,6 @@ const RegionDetails = (props: { index: number }) => {
           >
             {props.index + 1}
           </h2>
-        </div>
-        <div
-          style={{
-            "flex-grow": 1,
-            display: "grid",
-            "place-content": "center",
-            gap: "1rem",
-            "grid-auto-flow": "column",
-          }}
-        >
-          <Trigger region={state.regions[props.index]} />
           <button
             onClick={() => {
               const buffer = state.clip?.buffer;
@@ -135,7 +125,30 @@ const RegionDetails = (props: { index: number }) => {
             {!!navigator.share ? "share" : "download"}
           </button>
         </div>
-        <div style={{ display: "flex", "justify-content": "center" }}>
+        <div
+          id="region-details-content"
+          style={{
+            "flex-grow": 1,
+            display: "grid",
+            "place-content": "center",
+            gap: "1rem",
+            "grid-auto-flow": "column",
+          }}
+        >
+          <Trigger region={state.regions[props.index]} />
+          <button
+            onClick={() => {
+              if (!state.clip) return;
+              player.play(state.clip.buffer, state.regions[props.index]);
+            }}
+          >
+            spam
+          </button>
+        </div>
+        <div
+          id="region-details-footer"
+          style={{ display: "flex", "justify-content": "center" }}
+        >
           <button
             style={{ "font-size": "1rem" }}
             disabled={props.index === 0}
