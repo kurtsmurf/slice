@@ -4,7 +4,13 @@ import { Clip } from "../types";
 import { formatOf } from "../util/formatOf";
 
 export const Details = (props: { clip: Clip }) => (
-  <div style={{ display: "flex", gap: "1rem", "align-items": "center" }}>
+  <div
+    style={{
+      display: "flex",
+      "align-items": "center",
+      "word-break": "break-word",
+    }}
+  >
     <button
       onClick={() => {
         if (confirm("Are you sure?")) {
@@ -15,13 +21,23 @@ export const Details = (props: { clip: Clip }) => (
     >
       clear
     </button>
-    <p style={{ "margin-inline-start": "auto" }}>{props.clip.name}</p>
-    <p>
-      {((props.clip.buffer.length) /
-        (props.clip.buffer.sampleRate)).toFixed(2)}s
-    </p>
-    <p style={{ "padding-inline-end": "1rem" }}>
-      {formatOf(props.clip.buffer)}
-    </p>
+    <div
+      style={{
+        display: "flex",
+        "flex-wrap": "wrap",
+        gap: "1ch",
+        "padding": "1ch",
+        "margin-inline-start": "auto",
+      }}
+    >
+      <p>{props.clip.name}</p>
+      <p>
+        {((props.clip.buffer.length) /
+          (props.clip.buffer.sampleRate)).toFixed(2)}s
+      </p>
+      <p>
+        {formatOf(props.clip.buffer)}
+      </p>
+    </div>
   </div>
 );
