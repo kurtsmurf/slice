@@ -489,7 +489,7 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
         style={{
           position: "absolute",
           bottom: 0,
-          height: "50px",
+          height: "39px",
           width: `min(100cqi, max(${width()}cqi, 2px))`,
           left: left() + "cqi",
           background: "#8888",
@@ -562,7 +562,7 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
             style={{
               position: "absolute",
               bottom: 0,
-              height: "40px",
+              height: "39px",
             }}
           />
         )}
