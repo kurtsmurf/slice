@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test("loads clip", async ({ page }, testInfo) => {
-  await page.goto("localhost:3000");
+  await page.goto("https://localhost:3000");
   await page.evaluate(initializePage);
   // click center of summary element to jump to center of waveform
   await page.locator("[data-summary-element]").click();
