@@ -19,6 +19,7 @@ import { sortedIndex } from "../util/sortedIndex";
 import { Trigger } from "./Trigger";
 import { createZoom } from "../behaviors/createZoom";
 import { debounce } from "../util/debounce";
+import dbnc from "lodash.debounce";
 
 const TILE_WIDTH = 400;
 const TILE_HEIGHT = 100;
@@ -521,9 +522,13 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
   // @ts-ignore
   window.setWidth = setWidth;
 
-  const resizeObserver = new ResizeObserver(() => {
-    if (root) setWidth(root.clientWidth);
-  });
+  const resizeObserver = new ResizeObserver(dbnc(
+    () => {
+      if (root) setWidth(root.clientWidth);
+    },
+    300,
+    { trailing: true },
+  ));
 
   onMount(() => {
     if (root) resizeObserver.observe(root);
