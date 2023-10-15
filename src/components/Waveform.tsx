@@ -18,8 +18,8 @@ import { Stick } from "./Stick";
 import { sortedIndex } from "../util/sortedIndex";
 import { Trigger } from "./Trigger";
 import { createZoom } from "../behaviors/createZoom";
-import { debounce } from "../util/debounce";
-import dbnc from "lodash.debounce";
+import { debounce as myDebounce } from "../util/debounce";
+import debounce from "lodash.debounce";
 
 const TILE_WIDTH = 400;
 const TILE_HEIGHT = 100;
@@ -32,7 +32,7 @@ export let contentElement: HTMLDivElement | undefined;
 export const zoom = createZoom();
 
 export const Waveform = (props: { buffer: AudioBuffer }) => {
-  const zoomWithWheel = debounce((e: WheelEvent) => {
+  const zoomWithWheel = myDebounce((e: WheelEvent) => {
     if (!scrollElement || !contentElement) return;
 
     const pointerLeftPx = e.clientX - scrollElement.clientLeft;
@@ -522,7 +522,7 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
   // @ts-ignore
   window.setWidth = setWidth;
 
-  const resizeObserver = new ResizeObserver(dbnc(
+  const resizeObserver = new ResizeObserver(debounce(
     () => {
       if (root) setWidth(root.clientWidth);
     },
