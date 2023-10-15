@@ -1,4 +1,12 @@
-import { createMemo, createSignal, For, JSX, onMount, Show } from "solid-js";
+import {
+  createMemo,
+  createSignal,
+  For,
+  JSX,
+  onCleanup,
+  onMount,
+  Show,
+} from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
 import { player } from "../player";
 import { dispatch, state } from "../store";
@@ -508,6 +516,23 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
     onDrag: updateScrollPosition,
   });
 
+  const [width, setWidth] = createSignal(800);
+
+  // @ts-ignore
+  window.setWidth = setWidth;
+
+  const resizeObserver = new ResizeObserver(() => {
+    if (root) setWidth(root.clientWidth);
+  });
+
+  onMount(() => {
+    if (root) resizeObserver.observe(root);
+  });
+
+  onCleanup(() => {
+    if (root) resizeObserver.unobserve(root);
+  });
+
   return (
     <div
       ref={root}
@@ -526,9 +551,9 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
         {(channelNumber) => (
           <ChannelSegment
             data={props.buffer.getChannelData(channelNumber)}
-            width={800}
+            width={width()}
             height={25}
-            numBuckets={800}
+            numBuckets={width()}
             style={{
               position: "absolute",
               bottom: 0,
