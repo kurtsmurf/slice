@@ -2,11 +2,12 @@ import { sortedIndex } from "./util/sortedIndex";
 import { Clip } from "./types";
 import { createStore } from "solid-js/store";
 
+type Mode = "delete" | "edit" | "slice";
+
 type State = {
   cursor: number;
   cursorControlsVisible: boolean;
-  deleting: boolean;
-  editing: boolean;
+  mode: Mode;
   clip: Clip | undefined;
   regions: { start: number; end: number }[];
   selectedRegion: number | undefined;
@@ -15,8 +16,7 @@ type State = {
 // frozen to prevent mutation on store update
 const defaultState: State = Object.freeze({
   cursor: 0,
-  deleting: false,
-  editing: false,
+  mode: "slice",
   cursorControlsVisible: false,
   clip: undefined,
   regions: [{ start: 0, end: 1 }],
@@ -32,10 +32,7 @@ export const dispatch = {
   setCursor: (pos: number) => setStore("cursor", Math.max(0, Math.min(pos, 1))),
   showCursorControls: () => setStore("cursorControlsVisible", true),
   hideCursorControls: () => setStore("cursorControlsVisible", false),
-  startEditing: () => setStore("editing", true),
-  stopEditing: () => setStore("editing", false),
-  startDeleting: () => setStore("deleting", true),
-  stopDeleting: () => setStore("deleting", false),
+  setMode: (mode: Mode) => setStore("mode", mode),
   slice: (pos: number) => {
     const index = sortedIndex(store.regions.map((r) => r.start), pos);
     if (store.regions[index]?.start === pos) return;

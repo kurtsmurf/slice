@@ -244,7 +244,7 @@ const Slice = (
       >
       </Stick>
 
-      <Show when={state.editing}>
+      <Show when={state.mode === "edit"}>
         <Stick
           pos={dragPos()}
           width={30}
@@ -265,7 +265,7 @@ const Slice = (
           top: "calc(-1 * var(--min-btn-dimension))",
         }}
       >
-        <Show when={state.deleting}>
+        <Show when={state.mode === "delete"}>
           <button
             onClick={() => {
               dispatch.healSlice(props.index);
@@ -407,7 +407,7 @@ const Cursor = (
         </Stick>
       </div>
 
-      <Show when={!state.editing}>
+      <Show when={state.mode === "slice"}>
         <Stick
           ref={ref}
           pos={dragPos()}
@@ -432,18 +432,20 @@ const Cursor = (
           ondblclick={(e) => e.stopPropagation()}
           onKeyDown={onKeyDown}
         >
-          <button
-            onClick={() => {
-              const index = dispatch.slice(state.cursor);
-              dispatch.hideCursorControls();
-              ref?.focus();
-              if (state.selectedRegion !== undefined) {
-                dispatch.selectRegion(index);
-              }
-            }}
-          >
-            slice
-          </button>
+          <Show when={state.mode === "slice"}>
+            <button
+              onClick={() => {
+                const index = dispatch.slice(state.cursor);
+                dispatch.hideCursorControls();
+                ref?.focus();
+                if (state.selectedRegion !== undefined) {
+                  dispatch.selectRegion(index);
+                }
+              }}
+            >
+              slice
+            </button>
+          </Show>
           <Trigger
             region={{ start: state.cursor, end: end() }}
           />
@@ -633,3 +635,4 @@ const WaveformTile = (
     </For>
   </div>
 );
+state.mode === "edit";

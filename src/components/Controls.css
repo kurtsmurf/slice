@@ -1,0 +1,19 @@
+.controls {
+  display: flex;
+  justify-content: end;
+}
+.controls fieldset {
+  display: flex;
+  gap: 1ch;
+  border: none;
+  padding: 0;
+  margin-inline: 1ch;
+}
+.controls div {
+  display: flex;
+  gap: 0.5ch;
+  align-items: center;
+}
+.controls legend {
+  display: none;
+}
