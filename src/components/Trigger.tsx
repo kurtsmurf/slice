@@ -1,12 +1,13 @@
-import { createMemo, JSX, Show } from "solid-js";
+import { createMemo, JSX, Show, splitProps } from "solid-js";
 import { player } from "../player";
 import { state } from "../store";
 
 export const Trigger = (props: {
   region: { start: number; end: number };
-  style?: JSX.CSSProperties;
   text?: string;
   onTrigger?: () => void;
+  onFocus?: () => void;
+  style?: JSX.CSSProperties;
 }) => {
   const active = createMemo(() =>
     player.playing() &&
@@ -15,6 +16,7 @@ export const Trigger = (props: {
 
   return (
     <button
+      onFocus={props.onFocus}
       onClick={() => {
         if (active()) {
           player.stop();

@@ -2,7 +2,12 @@ import { AudioInput } from "./AudioInput";
 import { createSignal, For, Show } from "solid-js";
 import { download, player } from "../player";
 import { dispatch, state } from "../store";
-import { contentElement, scrollElement, Waveform } from "./Waveform";
+import {
+  contentElement,
+  scrollElement,
+  setZoomCenter,
+  Waveform,
+} from "./Waveform";
 import { Controls } from "./Controls";
 import { Details } from "./Details";
 import { Trigger } from "./Trigger";
@@ -15,7 +20,7 @@ export const App = () => (
   >
     <div class="fixed-top">
       <Details clip={state.clip!} />
-      <Controls clip={state.clip!} />
+      <Controls />
       <Waveform buffer={state.clip!.buffer} />
     </div>
     <BottomPanel />
@@ -46,6 +51,7 @@ export const Pads = () => {
                 "text-align": "start",
               }}
               onTrigger={() => {
+                setZoomCenter(region.start);
                 if (scrollElement && contentElement) {
                   scrollElement.scrollLeft =
                     region.start * contentElement.clientWidth -
@@ -62,6 +68,7 @@ export const Pads = () => {
               }}
               onClick={() => {
                 dispatch.selectRegion(index());
+                setZoomCenter(state.regions[index()].start);
                 const focusTarget = document.querySelector(
                   "#region-details button",
                 );
@@ -83,6 +90,7 @@ const RegionDetails = (props: { index: number }) => {
     const next = props.index + 1;
     if (next < state.regions.length) {
       dispatch.selectRegion(next);
+      setZoomCenter(state.regions[next].start);
       scrollRegionIntoView(state.regions[next]);
     }
   };
@@ -91,6 +99,7 @@ const RegionDetails = (props: { index: number }) => {
     const prev = props.index - 1;
     if (prev > -1) {
       dispatch.selectRegion(prev);
+      setZoomCenter(state.regions[prev].start);
       scrollRegionIntoView(state.regions[prev]);
     }
   };

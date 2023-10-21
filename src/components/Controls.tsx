@@ -52,7 +52,7 @@ export const Controls = () => (
     <button
       onClick={() => {
         zoom.in();
-        document.getElementById("cursor")?.scrollIntoView({
+        document.getElementById("zoom-dot")?.scrollIntoView({
           inline: "center",
           block: "nearest",
         });
@@ -64,7 +64,7 @@ export const Controls = () => (
     <button
       onClick={() => {
         zoom.out();
-        document.getElementById("cursor")?.scrollIntoView({
+        document.getElementById("zoom-dot")?.scrollIntoView({
           inline: "center",
           block: "nearest",
         });

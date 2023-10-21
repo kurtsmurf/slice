@@ -79,12 +79,14 @@ export const Waveform = (props: { buffer: AudioBuffer }) => {
         zoomWithWheel(e);
       }}
     >
-      <div style={{ height: "var(--min-btn-dimension)" }} />
+      <div style={{ height: "calc(var(--min-btn-dimension) + 20px)" }} />
       <WaveformContent buffer={props.buffer} />
       <WaveformSummary buffer={props.buffer} />
     </div>
   );
 };
+
+export const [zoomCenter, setZoomCenter] = createSignal(0);
 
 const WaveformContent = (props: { buffer: AudioBuffer }) => {
   const tileManager = createMemo(() =>
@@ -119,8 +121,27 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
         // @ts-ignore
         "container-type": "inline-size",
       }}
-      ondblclick={placeCursor}
+      ondblclick={(e) => {
+        placeCursor(e);
+        setZoomCenter(state.cursor);
+      }}
     >
+      <svg
+        id="zoom-dot"
+        viewBox="0 0 2 2"
+        width="1ch"
+        style={{
+          transform: `translateX(${zoomCenter() * 100}cqi)`,
+          position: "absolute",
+          left: "-0.5ch",
+          opacity: 0.8,
+          top: "calc(var(--min-btn-dimension) * -1 - 15px)",
+        }}
+      >
+        <circle cx="1" cy="1" r="1" />
+        {/* <polygon points="0,0 1,2 2,0" fill="black" /> */}
+      </svg>
+
       <For each={tileManager().getVirtualItems()}>
         {(virtualItem) => (
           <WaveformTile
@@ -183,6 +204,7 @@ const Slice = (
     onFinished: () => {
       dispatch.healSlice(props.index);
       dispatch.slice(dragPos());
+      setZoomCenter(dragPos());
       document.getElementById(`slice-${dragPos()}`)?.focus();
       scrollElement?.removeEventListener("touchmove", preventDefault);
     },
@@ -229,6 +251,7 @@ const Slice = (
 
     dispatch.healSlice(props.index);
     dispatch.slice(next);
+    setZoomCenter(next);
     document.getElementById(`slice-${next}`)?.focus();
   });
 
@@ -249,7 +272,10 @@ const Slice = (
           pos={dragPos()}
           width={30}
           background="hsl(0deg 0% 25% / 30%)"
-          onPointerDown={drag.start}
+          onPointerDown={(e) => {
+            drag.start(e);
+          }}
+          onFocus={() => setZoomCenter(dragPos())}
           tabIndex={0}
           onkeydown={onKeyDown}
           id={`slice-${props.region.start}`}
@@ -282,7 +308,9 @@ const Slice = (
         <Trigger
           region={props.region}
           text={(props.index + 1).toString()}
+          onFocus={() => setZoomCenter(dragPos())}
           onTrigger={() => {
+            setZoomCenter(props.region.start);
             if (state.selectedRegion !== undefined) {
               dispatch.selectRegion(props.index);
             }
@@ -372,6 +400,7 @@ const Cursor = (
     onFinished: () => {
       dispatch.setCursor(dragPos());
       scrollElement?.removeEventListener("touchmove", preventDefault);
+      setZoomCenter(state.cursor);
     },
   });
 
@@ -391,6 +420,7 @@ const Cursor = (
   const onKeyDown = createKeyboardMovementHandler((delta) => {
     dispatch.showCursorControls();
     dispatch.setCursor(state.cursor + delta);
+    setZoomCenter(state.cursor);
   });
 
   let ref: HTMLDivElement | undefined;
@@ -415,6 +445,7 @@ const Cursor = (
           background="hsl(39deg 100% 50% / 50%)"
           onPointerDown={drag.start}
           onKeyDown={onKeyDown}
+          onFocus={() => setZoomCenter(dragPos())}
           tabIndex={0}
         >
         </Stick>
@@ -438,6 +469,7 @@ const Cursor = (
                 const index = dispatch.slice(state.cursor);
                 dispatch.hideCursorControls();
                 ref?.focus();
+                setZoomCenter(state.cursor);
                 if (state.selectedRegion !== undefined) {
                   dispatch.selectRegion(index);
                 }
@@ -448,6 +480,7 @@ const Cursor = (
           </Show>
           <Trigger
             region={{ start: state.cursor, end: end() }}
+            onTrigger={() => setZoomCenter(state.cursor)}
           />
         </div>
       </Show>
