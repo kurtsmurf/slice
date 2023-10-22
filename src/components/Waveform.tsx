@@ -78,6 +78,16 @@ export const Waveform = (props: { buffer: AudioBuffer }) => {
         e.preventDefault();
         zoomWithWheel(e);
       }}
+      onkeypress={(e) => {
+        switch (e.key) {
+          case "s":
+            return dispatch.setMode("slice");
+          case "e":
+            return dispatch.setMode("edit");
+          case "d":
+            return dispatch.setMode("delete");
+        }
+      }}
     >
       <div style={{ height: "calc(var(--min-btn-dimension) + 20px)" }} />
       <WaveformContent buffer={props.buffer} />
