@@ -189,14 +189,14 @@ const RegionDetails = (props: { index: number }) => {
             disabled={props.index === 0}
             onClick={prev}
           >
-            &#8249;
+            {"‹"}
           </button>
           <button
             style={{ "font-size": "1rem" }}
             disabled={props.index === state.regions.length - 1}
             onClick={next}
           >
-            &#8250;
+            {"›"}
           </button>
         </div>
       </div>
