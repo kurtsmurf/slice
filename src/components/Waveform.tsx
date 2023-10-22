@@ -290,6 +290,7 @@ const Slice = (
           display: "flex",
           top: "calc(-1 * var(--min-btn-dimension))",
         }}
+        onFocusIn={() => setZoomCenter(dragPos())}
       >
         <Show when={state.mode === "delete"}>
           <button
@@ -308,7 +309,6 @@ const Slice = (
         <Trigger
           region={props.region}
           text={(props.index + 1).toString()}
-          onFocus={() => setZoomCenter(dragPos())}
           onTrigger={() => {
             setZoomCenter(props.region.start);
             if (state.selectedRegion !== undefined) {
@@ -462,6 +462,7 @@ const Cursor = (
           }}
           ondblclick={(e) => e.stopPropagation()}
           onKeyDown={onKeyDown}
+          onFocusIn={() => setZoomCenter(state.cursor)}
         >
           <Show when={state.mode === "slice"}>
             <button

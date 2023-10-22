@@ -6,7 +6,6 @@ export const Trigger = (props: {
   region: { start: number; end: number };
   text?: string;
   onTrigger?: () => void;
-  onFocus?: () => void;
   style?: JSX.CSSProperties;
 }) => {
   const active = createMemo(() =>
@@ -16,7 +15,6 @@ export const Trigger = (props: {
 
   return (
     <button
-      onFocus={props.onFocus}
       onClick={() => {
         if (active()) {
           player.stop();
