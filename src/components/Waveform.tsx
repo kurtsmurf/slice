@@ -277,6 +277,18 @@ const Slice = (
       >
       </Stick>
 
+      <div
+        class="hitbox"
+        data-index={props.index}
+        style={{
+          position: "absolute",
+          transform: `translateX(${props.region.start * 100}cqi)`,
+          width: `${(props.region.end - props.region.start) * 100}cqi`,
+          height: "100%",
+        }}
+      >
+      </div>
+
       <Show when={state.mode === "edit"}>
         <Stick
           pos={dragPos()}
@@ -491,7 +503,19 @@ const Cursor = (
           </Show>
           <Trigger
             region={{ start: state.cursor, end: end() }}
-            onTrigger={() => setZoomCenter(state.cursor)}
+            onTrigger={() => {
+              setZoomCenter(state.cursor);
+              const cursor = document.getElementById("cursor");
+              if (!cursor) return;
+              const hitbox = document.elementsFromPoint(
+                cursor.getBoundingClientRect().x,
+                cursor.getBoundingClientRect().y,
+              ).find((el) => el.classList.contains("hitbox"));
+              if (!hitbox || !(hitbox instanceof HTMLElement)) return;
+              const index = parseInt(hitbox.dataset.index || "");
+              const regionUnderCursor = state.regions[index];
+              console.log(regionUnderCursor);
+            }}
           />
         </div>
       </Show>
