@@ -1,4 +1,3 @@
-import { sortedIndex } from "./util/sortedIndex";
 import { Clip } from "./types";
 import { createStore } from "solid-js/store";
 
@@ -43,20 +42,6 @@ export const dispatch = {
       ...prev.slice(index + 1),
     ]);
   },
-  slice: (pos: number) => {
-    const index = sortedIndex(store.regions.map((r) => r.start), pos);
-    if (store.regions[index]?.start === pos) return;
-    setStore("regions", (prev) => [
-      ...prev.slice(0, index).map((v, i) =>
-        // update right bound of new region left neighbor
-        i === index - 1 ? { start: v.start, end: pos } : v
-      ),
-      // insert region
-      { start: pos, end: prev[index]?.start || 1 },
-      ...prev.slice(index),
-    ]);
-    return index;
-  },
   healSlice: (index: number) => {
     setStore("regions", (prev) => [
       ...prev.slice(0, index).map((v, i) =>
@@ -68,6 +53,21 @@ export const dispatch = {
       // omit region
       ...prev.slice(index + 1),
     ]);
+  },
+  moveSlice: (index: number, pos: number) => {
+    const region = store.regions[index];
+    if (pos <= region.start || pos >= region.end) return;
+    setStore("regions", (prev) =>
+      prev.map((region, i) => {
+        switch (i) {
+          case index - 1:
+            return { ...region, end: pos };
+          case index:
+            return { ...region, start: pos };
+          default:
+            return region;
+        }
+      }));
   },
   selectRegion: (index: number | undefined) =>
     setStore("selectedRegion", index),

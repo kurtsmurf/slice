@@ -211,8 +211,7 @@ const Slice = (
       scrollElement?.addEventListener("touchmove", preventDefault);
     },
     onFinished: () => {
-      dispatch.healSlice(props.index);
-      dispatch.slice(dragPos());
+      dispatch.moveSlice(props.index, dragPos());
       setZoomCenter(dragPos());
       document.getElementById(`slice-${dragPos()}`)?.focus();
       scrollElement?.removeEventListener("touchmove", preventDefault);
@@ -258,8 +257,7 @@ const Slice = (
       Math.min(bounds.right, props.region.start + delta),
     );
 
-    dispatch.healSlice(props.index);
-    dispatch.slice(next);
+    dispatch.moveSlice(props.index, next);
     setZoomCenter(next);
     document.getElementById(`slice-${next}`)?.focus();
   });
