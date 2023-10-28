@@ -69,7 +69,8 @@ export const dispatch = {
   },
   moveSlice: (index: number, pos: number) => {
     const region = store.regions[index];
-    if (pos <= region.start || pos >= region.end) return;
+    const leftBound = store.regions[index - 1].start || 0;
+    if (pos <= leftBound || pos >= region.end) return;
     setStore("regions", (prev) =>
       prev.map((region, i) => {
         switch (i) {

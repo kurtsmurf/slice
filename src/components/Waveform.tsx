@@ -213,7 +213,6 @@ const Slice = (
     onFinished: () => {
       dispatch.moveSlice(props.index, dragPos());
       setZoomCenter(dragPos());
-      document.getElementById(`slice-${dragPos()}`)?.focus();
       scrollElement?.removeEventListener("touchmove", preventDefault);
     },
   });
