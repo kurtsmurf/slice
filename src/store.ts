@@ -33,6 +33,16 @@ export const dispatch = {
   showCursorControls: () => setStore("cursorControlsVisible", true),
   hideCursorControls: () => setStore("cursorControlsVisible", false),
   setMode: (mode: Mode) => setStore("mode", mode),
+  sliceRegion: (index: number, pos: number) => {
+    const region = store.regions[index];
+    if (pos <= region.start || pos >= region.end) return;
+    setStore("regions", (prev) => [
+      ...prev.slice(0, index),
+      { start: region.start, end: pos },
+      { start: pos, end: region.end },
+      ...prev.slice(index + 1),
+    ]);
+  },
   slice: (pos: number) => {
     const index = sortedIndex(store.regions.map((r) => r.start), pos);
     if (store.regions[index]?.start === pos) return;

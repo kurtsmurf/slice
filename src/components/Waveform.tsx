@@ -441,11 +441,23 @@ const Cursor = (
 
   let ref: HTMLDivElement | undefined;
 
-  const [region, setRegion] = createSignal({ start: 0, end: 1 });
+  const [region, setRegion] = createSignal(0);
   const active = createMemo(() =>
     player.playing() &&
     JSON.stringify(player.region()) === JSON.stringify(region())
   );
+
+  const syncRegion = () => {
+    const cursor = document.getElementById("cursor");
+    if (!cursor) return;
+    const hitbox = document.elementsFromPoint(
+      cursor.getBoundingClientRect().x,
+      cursor.getBoundingClientRect().y,
+    ).find((el) => el.classList.contains("hitbox"));
+    if (!hitbox || !(hitbox instanceof HTMLElement)) return;
+    const index = parseInt(hitbox.dataset.index || "");
+    setRegion(index);
+  };
 
   return (
     <>
@@ -489,12 +501,13 @@ const Cursor = (
           <Show when={state.mode === "slice"}>
             <button
               onClick={() => {
-                const index = dispatch.slice(state.cursor);
+                syncRegion();
+                dispatch.sliceRegion(region(), state.cursor);
                 dispatch.hideCursorControls();
                 ref?.focus();
                 setZoomCenter(state.cursor);
                 if (state.selectedRegion !== undefined) {
-                  dispatch.selectRegion(index);
+                  dispatch.selectRegion(region() + 1);
                 }
               }}
             >
@@ -507,20 +520,12 @@ const Cursor = (
                 player.stop();
               } else {
                 setZoomCenter(state.cursor);
-                const cursor = document.getElementById("cursor");
-                if (!cursor) return;
-                const hitbox = document.elementsFromPoint(
-                  cursor.getBoundingClientRect().x,
-                  cursor.getBoundingClientRect().y,
-                ).find((el) => el.classList.contains("hitbox"));
-                if (!hitbox || !(hitbox instanceof HTMLElement)) return;
-                const index = parseInt(hitbox.dataset.index || "");
-                setRegion({
-                  start: state.cursor,
-                  end: state.regions[index].end || 1,
-                });
+                syncRegion();
 
-                player.play(state.clip!.buffer, region());
+                player.play(state.clip!.buffer, {
+                  start: state.cursor,
+                  end: state.regions[region()].end,
+                });
               }
             }}
           >
