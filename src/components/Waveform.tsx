@@ -15,7 +15,6 @@ import { useAnimationFrame } from "../behaviors/useAnimationFrame";
 import { createDrag } from "../behaviors/createDrag";
 import { range } from "../util/range";
 import { Stick } from "./Stick";
-import { sortedIndex } from "../util/sortedIndex";
 import { Trigger } from "./Trigger";
 import { createZoom } from "../behaviors/createZoom";
 import { debounce as myDebounce } from "../util/debounce";
@@ -434,11 +433,6 @@ const Cursor = (
     return state.cursor;
   };
 
-  const end = createMemo(() =>
-    state.regions[sortedIndex(state.regions.map((r) => r.start), state.cursor)]
-      ?.start || 1
-  );
-
   const onKeyDown = createKeyboardMovementHandler((delta) => {
     dispatch.showCursorControls();
     dispatch.setCursor(state.cursor + delta);
@@ -446,6 +440,12 @@ const Cursor = (
   });
 
   let ref: HTMLDivElement | undefined;
+
+  const [region, setRegion] = createSignal({ start: 0, end: 1 });
+  const active = createMemo(() =>
+    player.playing() &&
+    JSON.stringify(player.region()) === JSON.stringify(region())
+  );
 
   return (
     <>
@@ -501,22 +501,31 @@ const Cursor = (
               slice
             </button>
           </Show>
-          <Trigger
-            region={{ start: state.cursor, end: end() }}
-            onTrigger={() => {
-              setZoomCenter(state.cursor);
-              const cursor = document.getElementById("cursor");
-              if (!cursor) return;
-              const hitbox = document.elementsFromPoint(
-                cursor.getBoundingClientRect().x,
-                cursor.getBoundingClientRect().y,
-              ).find((el) => el.classList.contains("hitbox"));
-              if (!hitbox || !(hitbox instanceof HTMLElement)) return;
-              const index = parseInt(hitbox.dataset.index || "");
-              const regionUnderCursor = state.regions[index];
-              console.log(regionUnderCursor);
+          <button
+            onClick={() => {
+              if (active()) {
+                player.stop();
+              } else {
+                setZoomCenter(state.cursor);
+                const cursor = document.getElementById("cursor");
+                if (!cursor) return;
+                const hitbox = document.elementsFromPoint(
+                  cursor.getBoundingClientRect().x,
+                  cursor.getBoundingClientRect().y,
+                ).find((el) => el.classList.contains("hitbox"));
+                if (!hitbox || !(hitbox instanceof HTMLElement)) return;
+                const index = parseInt(hitbox.dataset.index || "");
+                setRegion({
+                  start: state.cursor,
+                  end: state.regions[index].end || 1,
+                });
+
+                player.play(state.clip!.buffer, region());
+              }
             }}
-          />
+          >
+            {active() ? <>&#9632;</> : <>&#9654;</>}
+          </button>
         </div>
       </Show>
     </>
