@@ -1,5 +1,6 @@
 import { Clip } from "./types";
 import { createStore } from "solid-js/store";
+import { range } from "./util/range";
 
 type Mode = "delete" | "edit" | "slice";
 
@@ -32,13 +33,25 @@ export const dispatch = {
   showCursorControls: () => setStore("cursorControlsVisible", true),
   hideCursorControls: () => setStore("cursorControlsVisible", false),
   setMode: (mode: Mode) => setStore("mode", mode),
-  sliceRegion: (index: number, pos: number) => {
+  slice: (index: number, pos: number) => {
     const region = store.regions[index];
     if (pos <= region.start || pos >= region.end) return;
     setStore("regions", (prev) => [
       ...prev.slice(0, index),
       { start: region.start, end: pos },
       { start: pos, end: region.end },
+      ...prev.slice(index + 1),
+    ]);
+  },
+  segmentRegion: (index: number, pieces: number) => {
+    const region = store.regions[index];
+    const segmentLength = (region.end - region.start) / pieces;
+    setStore("regions", (prev) => [
+      ...prev.slice(0, index),
+      ...range(0, pieces).map((n) => ({
+        start: region.start + segmentLength * n,
+        end: region.start + segmentLength * (n + 1),
+      })),
       ...prev.slice(index + 1),
     ]);
   },

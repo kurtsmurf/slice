@@ -442,7 +442,10 @@ const Cursor = (
   const [region, setRegion] = createSignal(0);
   const active = createMemo(() =>
     player.playing() &&
-    JSON.stringify(player.region()) === JSON.stringify(region())
+    JSON.stringify(player.region()) === JSON.stringify({
+        start: state.cursor,
+        end: state.regions[region()].end,
+      })
   );
 
   const syncRegion = () => {
@@ -500,7 +503,7 @@ const Cursor = (
             <button
               onClick={() => {
                 syncRegion();
-                dispatch.sliceRegion(region(), state.cursor);
+                dispatch.slice(region(), state.cursor);
                 dispatch.hideCursorControls();
                 ref?.focus();
                 setZoomCenter(state.cursor);
@@ -525,6 +528,10 @@ const Cursor = (
                   end: state.regions[region()].end,
                 });
               }
+            }}
+            style={{
+              "font-family": "monospace",
+              "font-size": "1rem",
             }}
           >
             {active() ? <>&#9632;</> : <>&#9654;</>}
