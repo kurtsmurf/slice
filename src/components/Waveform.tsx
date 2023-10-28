@@ -286,7 +286,7 @@ const Slice = (
       >
       </div>
 
-      <Show when={state.mode === "edit"}>
+      <Show when={state.mode === "edit" && props.index > 0}>
         <Stick
           pos={dragPos()}
           width={30}
@@ -311,7 +311,7 @@ const Slice = (
         }}
         onFocusIn={() => setZoomCenter(dragPos())}
       >
-        <Show when={state.mode === "delete"}>
+        <Show when={state.mode === "delete" && props.index > 0}>
           <button
             onClick={() => {
               dispatch.healSlice(props.index);
