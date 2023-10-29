@@ -71,17 +71,8 @@ export const dispatch = {
     const region = store.regions[index];
     const leftBound = store.regions[index - 1].start || 0;
     if (pos <= leftBound || pos >= region.end) return;
-    setStore("regions", (prev) =>
-      prev.map((region, i) => {
-        switch (i) {
-          case index - 1:
-            return { ...region, end: pos };
-          case index:
-            return { ...region, start: pos };
-          default:
-            return region;
-        }
-      }));
+    setStore("regions", index - 1, (prev) => ({ start: prev.start, end: pos }));
+    setStore("regions", index, (prev) => ({ start: pos, end: prev.end }));
   },
   selectRegion: (index: number | undefined) =>
     setStore("selectedRegion", index),
