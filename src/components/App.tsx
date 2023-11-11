@@ -1,5 +1,5 @@
 import { AudioInput } from "./AudioInput";
-import { createSignal, For, Show } from "solid-js";
+import { createEffect, createSignal, For, Show } from "solid-js";
 import { download, player } from "../player";
 import { dispatch, state } from "../store";
 import {
@@ -206,33 +206,33 @@ const RegionDetails = (props: { index: number }) => {
 };
 
 const SegmentRegionForm = (props: { index: number }) => {
-  const [numSegments, setNumSegments] = createSignal(4)
-
+  let input: HTMLInputElement | undefined;
   return (
     <form
-      onSubmit={e => {
+      onSubmit={(e) => {
         e.preventDefault();
-        dispatch.segmentRegion(props.index, numSegments())
+        if (e.currentTarget.checkValidity() && input) {
+          dispatch.segmentRegion(props.index, parseInt(input.value));
+        }
       }}
     >
       <label>
         Number of segments
         <input
+          ref={input}
           type="number"
           name="number of segments"
           min={2}
-          value={numSegments()}
-          onChange={e => {
-            setNumSegments(parseInt(e.currentTarget.value));
-          }}
+          max={256}
+          required
         />
       </label>
       <button type="submit">
         segment region
       </button>
     </form>
-  )
-}
+  );
+};
 
 const BottomPanel = () => (
   <div id="bottom-panel">
