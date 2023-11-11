@@ -180,6 +180,7 @@ const RegionDetails = (props: { index: number }) => {
             spam
           </button>
         </div>
+        <SegmentRegionForm index={props.index} />
         <div
           id="region-details-footer"
           style={{ display: "flex", "justify-content": "center" }}
@@ -203,6 +204,35 @@ const RegionDetails = (props: { index: number }) => {
     </>
   );
 };
+
+const SegmentRegionForm = (props: { index: number }) => {
+  const [numSegments, setNumSegments] = createSignal(4)
+
+  return (
+    <form
+      onSubmit={e => {
+        e.preventDefault();
+        dispatch.segmentRegion(props.index, numSegments())
+      }}
+    >
+      <label>
+        Number of segments
+        <input
+          type="number"
+          name="number of segments"
+          min={2}
+          value={numSegments()}
+          onChange={e => {
+            setNumSegments(parseInt(e.currentTarget.value));
+          }}
+        />
+      </label>
+      <button type="submit">
+        segment region
+      </button>
+    </form>
+  )
+}
 
 const BottomPanel = () => (
   <div id="bottom-panel">

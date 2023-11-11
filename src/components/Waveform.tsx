@@ -721,4 +721,3 @@ const WaveformTile = (
     </For>
   </div>
 );
-state.mode === "edit";
