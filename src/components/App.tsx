@@ -255,7 +255,7 @@ const SegmentRegionForm = (props: { index: number }) => {
         <legend>segment region</legend>
 
         <label for="number of pieces">
-          Number of pieces
+          pieces:
         </label>
         <input
           ref={input}
@@ -264,6 +264,10 @@ const SegmentRegionForm = (props: { index: number }) => {
           min={2}
           max={max()}
           required
+          pattern="[0-9]*"
+          style={{
+            "font-size": "16px",
+          }}
         />
 
         <button type="submit">
