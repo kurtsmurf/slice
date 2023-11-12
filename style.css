@@ -42,9 +42,14 @@ button {
   right: -0.75rem
 }
 
-#region-details-body fieldset {
+fieldset {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   border-radius: 4px;
   gap: 1ch;
+}
+
+input {
+  font-size: 16px;
 }

@@ -12,13 +12,55 @@ import { Controls } from "./Controls";
 import { Details } from "./Details";
 import { Trigger } from "./Trigger";
 import "./style.css";
+import { audioContext } from "../audioContext";
+
+const LoadAudio = () => {
+  let input: HTMLInputElement | undefined;
+
+  return (
+    <fieldset
+      style={{
+        "margin-inline": "1rem",
+      }}
+    >
+      <legend>import audio</legend>
+      <AudioInput onChange={dispatch.setClip} />
+      <form
+        style={{
+          display: "flex",
+          gap: "1ch",
+          "align-items": "center",
+          "flex-wrap": "wrap",
+        }}
+        onSubmit={async (e) => {
+          e.preventDefault();
+          if (e.currentTarget.checkValidity() && input) {
+            const url = input.value;
+            const response = await fetch(url);
+            const buffer = await audioContext.decodeAudioData(
+              await response.arrayBuffer(),
+            );
+            const name = url.slice(url.lastIndexOf("/") + 1);
+            dispatch.setClip({ name, buffer });
+          }
+        }}
+      >
+        <button type="submit">from url</button>
+        <label for="url">
+          url:
+        </label>
+        <input ref={input} type="url" name="url" required />
+      </form>
+    </fieldset>
+  );
+};
 
 export const App = () => (
   <Show
     when={state.clip}
-    fallback={<AudioInput onChange={dispatch.setClip} />}
+    fallback={<LoadAudio />}
   >
-    <div class="fixed-top">
+    <div>
       <Details clip={state.clip!} />
       <Controls />
       <Waveform buffer={state.clip!.buffer} />
@@ -265,9 +307,6 @@ const SegmentRegionForm = (props: { index: number }) => {
           max={max()}
           required
           pattern="[0-9]*"
-          style={{
-            "font-size": "16px",
-          }}
         />
 
         <button type="submit">

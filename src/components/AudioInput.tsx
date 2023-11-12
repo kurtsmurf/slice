@@ -11,7 +11,7 @@ export const AudioInput = (props: Props) => {
       <button
         onClick={() => input?.click()}
       >
-        load audio
+        from file
       </button>
       <input
         ref={input}
