@@ -1,5 +1,5 @@
 import { AudioInput } from "./AudioInput";
-import { createEffect, createSignal, For, Show } from "solid-js";
+import { createEffect, createMemo, createSignal, For, Show } from "solid-js";
 import { download, player, share } from "../player";
 import { dispatch, state } from "../store";
 import {
@@ -228,6 +228,20 @@ const RegionDetails = (props: { index: number }) => {
 
 const SegmentRegionForm = (props: { index: number }) => {
   let input: HTMLInputElement | undefined;
+
+  if (!state.clip) return;
+
+  const region = () => state.regions[props.index];
+
+  const duration = () => {
+    if (!state.clip) return 0;
+    return (region().end - region().start) * state.clip.buffer.duration;
+  };
+
+  const max = () => {
+    return Math.min(Math.floor(duration() / 0.01), 256);
+  };
+
   return (
     <form
       onSubmit={(e) => {
@@ -237,7 +251,7 @@ const SegmentRegionForm = (props: { index: number }) => {
         }
       }}
     >
-      <fieldset>
+      <fieldset disabled={max() < 2}>
         <legend>segment region</legend>
 
         <label for="number of pieces">
@@ -248,7 +262,7 @@ const SegmentRegionForm = (props: { index: number }) => {
           type="number"
           name="number of pieces"
           min={2}
-          max={256}
+          max={max()}
           required
         />
 
