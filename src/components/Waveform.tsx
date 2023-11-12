@@ -668,9 +668,9 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
       >
       </Stick>
       <For each={state.regions}>
-        {({ start }) => (
+        {(region) => (
           <Stick
-            pos={start}
+            pos={region.start}
             background="black"
             style={{
               height: "10px",
