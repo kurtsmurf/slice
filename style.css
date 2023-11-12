@@ -41,3 +41,10 @@ button {
   position: absolute;
   right: -0.75rem
 }
+
+#region-details-body fieldset {
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  gap: 1ch;
+}

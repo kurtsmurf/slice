@@ -1,6 +1,6 @@
 import { AudioInput } from "./AudioInput";
 import { createEffect, createSignal, For, Show } from "solid-js";
-import { download, player } from "../player";
+import { download, player, share } from "../player";
 import { dispatch, state } from "../store";
 import {
   contentElement,
@@ -111,6 +111,7 @@ const RegionDetails = (props: { index: number }) => {
         style={{
           display: "flex",
           "flex-direction": "column",
+          gap: "1rem",
         }}
       >
         <div
@@ -138,67 +139,87 @@ const RegionDetails = (props: { index: number }) => {
           >
             {props.index + 1}
           </h2>
-          <button
-            onClick={() => {
-              const buffer = state.clip?.buffer;
-              const region = state.regions[props.index];
-              if (buffer && region) {
-                download(buffer, region);
+          <div
+            id="region-details-footer"
+            style={{ display: "flex", "justify-content": "center" }}
+          >
+            <button
+              style={{ "font-size": "1rem" }}
+              disabled={props.index === 0}
+              onClick={prev}
+            >
+              {"‹"}
+            </button>
+            <button
+              style={{ "font-size": "1rem" }}
+              disabled={props.index === state.regions.length - 1}
+              onClick={next}
+            >
+              {"›"}
+            </button>
+          </div>
+        </div>
+        <div
+          id="region-details-body"
+          style={{
+            display: "flex",
+            "flex-wrap": "wrap",
+            gap: "1rem",
+            "margin-inline": "1rem",
+          }}
+        >
+          <fieldset
+            id="region-details-playback"
+            onkeydown={(e) => {
+              if (e.key === "ArrowRight") {
+                e.preventDefault();
+                next();
+              }
+              if (e.key === "ArrowLeft") {
+                e.preventDefault();
+                prev();
               }
             }}
           >
-            {!!navigator.share ? "share" : "download"}
-          </button>
-        </div>
-        <div
-          id="region-details-playback"
-          style={{
-            "flex-grow": 1,
-            display: "grid",
-            "place-content": "center",
-            gap: "1rem",
-            "grid-auto-flow": "column",
-          }}
-          onkeydown={(e) => {
-            if (e.key === "ArrowRight") {
-              e.preventDefault();
-              next();
-            }
-            if (e.key === "ArrowLeft") {
-              e.preventDefault();
-              prev();
-            }
-          }}
-        >
-          <Trigger region={state.regions[props.index]} />
-          <button
-            onClick={() => {
-              if (!state.clip) return;
-              player.play(state.clip.buffer, state.regions[props.index]);
-            }}
-          >
-            spam
-          </button>
-        </div>
-        <SegmentRegionForm index={props.index} />
-        <div
-          id="region-details-footer"
-          style={{ display: "flex", "justify-content": "center" }}
-        >
-          <button
-            style={{ "font-size": "1rem" }}
-            disabled={props.index === 0}
-            onClick={prev}
-          >
-            {"‹"}
-          </button>
-          <button
-            style={{ "font-size": "1rem" }}
-            disabled={props.index === state.regions.length - 1}
-            onClick={next}
-          >
-            {"›"}
-          </button>
+            <legend>playback</legend>
+            <Trigger region={state.regions[props.index]} />
+            <button
+              onClick={() => {
+                if (!state.clip) return;
+                player.play(state.clip.buffer, state.regions[props.index]);
+              }}
+            >
+              spam
+            </button>
+          </fieldset>
+          <fieldset>
+            <legend>export</legend>
+            <button
+              onClick={() => {
+                const buffer = state.clip?.buffer;
+                const region = state.regions[props.index];
+                if (buffer && region) {
+                  download(buffer, region);
+                }
+              }}
+            >
+              download
+            </button>
+            <Show when={!!navigator.share}>
+              <button
+                onClick={() => {
+                  const buffer = state.clip?.buffer;
+                  const region = state.regions[props.index];
+                  if (buffer && region) {
+                    share(buffer, region);
+                  }
+                }}
+              >
+                share
+              </button>
+            </Show>
+          </fieldset>
+          <SegmentRegionForm index={props.index} />
         </div>
       </div>
     </>
@@ -216,20 +237,25 @@ const SegmentRegionForm = (props: { index: number }) => {
         }
       }}
     >
-      <label>
-        Number of segments
+      <fieldset>
+        <legend>segment region</legend>
+
+        <label for="number of pieces">
+          Number of pieces
+        </label>
         <input
           ref={input}
           type="number"
-          name="number of segments"
+          name="number of pieces"
           min={2}
           max={256}
           required
         />
-      </label>
-      <button type="submit">
-        segment region
-      </button>
+
+        <button type="submit">
+          chop
+        </button>
+      </fieldset>
     </form>
   );
 };

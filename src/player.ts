@@ -94,6 +94,32 @@ export const download = async (
   buffer: AudioBuffer,
   region: { start: number; end: number },
 ) => {
+  const { wav, fileName } = await print(buffer, region);
+  const url = URL.createObjectURL(
+    new Blob([wav], { type: "audio/wav" }),
+  );
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", fileName);
+  link.click();
+  URL.revokeObjectURL(url);
+};
+
+export const share = async (
+  buffer: AudioBuffer,
+  region: { start: number; end: number },
+) => {
+  const { wav, fileName } = await print(buffer, region);
+  const file = new File([wav], fileName, { type: "audio/wav" });
+  navigator.share({
+    files: [file],
+  });
+};
+
+const print = async (
+  buffer: AudioBuffer,
+  region: { start: number; end: number },
+) => {
   // render audiobuffer of region
   const offlineAudioContext = new OfflineAudioContext(
     buffer.numberOfChannels,
@@ -115,25 +141,7 @@ export const download = async (
     .join("");
   const fileName = hashHex + ".wav";
 
-  // trigger download
-  // @ts-ignore
-  if (navigator.share) {
-    // use Web Share API if available
-    const file = new File([wav], fileName, { type: "audio/wav" });
-    navigator.share({
-      files: [file],
-    });
-  } else {
-    // otherwise use download link
-    const url = URL.createObjectURL(
-      new Blob([wav], { type: "audio/wav" }),
-    );
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", fileName);
-    link.click();
-    URL.revokeObjectURL(url);
-  }
+  return { wav, fileName };
 };
 
 // @ts-ignore
