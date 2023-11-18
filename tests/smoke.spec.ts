@@ -8,7 +8,7 @@ test("loads clip", async ({ page }, testInfo) => {
   // double click waveform to place cursor
   await page.locator("[data-content-element]").dblclick();
   // slice at cursor
-  await page.getByRole("button", { name: /slice/i}).click();
+  await page.getByRole("button", { name: /slice/i }).click();
   // perform visual diff
   await expect(page).toHaveScreenshot();
   // attach screenshot to result

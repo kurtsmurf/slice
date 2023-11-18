@@ -3,8 +3,9 @@ import { audioContext } from "./audioContext";
 import { useAnimationFrame } from "./behaviors/useAnimationFrame";
 import audiobufferToWav from "audiobuffer-to-wav";
 
-export const player = (function createPlayer() {
-  const ramp = 0.001;
+export const player = createPlayer(audioContext);
+
+function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
   const [startedAt, setStartedAt] = createSignal<number | undefined>(undefined);
   const [startOffset, setStartOffset] = createSignal<number>(0);
   const [region, setRegion] = createSignal<{ start: number; end: number }>({
@@ -49,7 +50,10 @@ export const player = (function createPlayer() {
   });
 
   return { play, playing, region, stop, progress };
-})();
+}
+
+// @ts-ignore
+window.createPlayer = createPlayer;
 
 const attackRelease = (
   audioContext: AudioContext | OfflineAudioContext,
