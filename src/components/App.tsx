@@ -1,6 +1,7 @@
 import { AudioInput } from "./AudioInput";
 import { createEffect, createMemo, createSignal, For, Show } from "solid-js";
-import { download, player, share } from "../player";
+import { player } from "../player";
+import { download, share } from "../export";
 import { dispatch, state } from "../store";
 import {
   contentElement,
