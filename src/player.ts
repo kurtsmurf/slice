@@ -9,7 +9,6 @@ type NodeAssembly = { sourceNode: AudioBufferSourceNode; gainNode: GainNode };
 
 function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
   const [startedAt, setStartedAt] = createSignal<number | undefined>(undefined);
-  const [startOffset, setStartOffset] = createSignal<number>(0);
   const [region, setRegion] = createSignal<{ start: number; end: number }>({
     start: 0,
     end: 1,
@@ -19,13 +18,9 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
     | undefined;
 
   const play = (buffer: AudioBuffer, region = { start: 0, end: 1 }) => {
-    setRegion(region);
-    const startSeconds = buffer.duration * region.start;
-
     stop();
-    setStartOffset(startSeconds);
+    setRegion(region);
     setStartedAt(audioContext.currentTime);
-
     active = attackRelease(audioContext, buffer, region, stop);
   };
 
@@ -43,29 +38,28 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
   const [progress, setProgress] = createSignal(0);
   useAnimationFrame(() => {
     const startedAt_ = startedAt();
-    if (!startedAt_ || !active?.sourceNode.buffer) {
-      return 0;
-    }
+    if (!startedAt_ || !active?.sourceNode.buffer) return;
     const timeSinceStart = audioContext.currentTime - startedAt_;
-    const elapsed = timeSinceStart + startOffset();
+    const startOffset = active.sourceNode.buffer.duration * region().start;
+    const elapsed = timeSinceStart + startOffset;
     setProgress(elapsed / active.sourceNode.buffer.duration);
   });
 
   return { play, playing, region, stop, progress };
 }
 
-const smoothStop = (blah: NodeAssembly, ramp = 0.001) => {
-  const end = audioContext.currentTime + ramp;
-  blah.gainNode.gain.cancelScheduledValues(audioContext.currentTime);
-  blah.gainNode.gain.setValueAtTime(1, audioContext.currentTime);
-  blah.gainNode.gain.linearRampToValueAtTime(0, end);
-
-  blah.sourceNode.onended = null;
-  blah.sourceNode.stop(end);
-};
-
 // @ts-ignore
 window.createPlayer = createPlayer;
+
+const smoothStop = (assembly: NodeAssembly, ramp = 0.001) => {
+  const end = audioContext.currentTime + ramp;
+  assembly.gainNode.gain.cancelScheduledValues(audioContext.currentTime);
+  assembly.gainNode.gain.setValueAtTime(1, audioContext.currentTime);
+  assembly.gainNode.gain.linearRampToValueAtTime(0, end);
+
+  assembly.sourceNode.onended = null;
+  assembly.sourceNode.stop(end);
+};
 
 const attackRelease = (
   audioContext: AudioContext | OfflineAudioContext,
