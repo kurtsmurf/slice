@@ -5,6 +5,8 @@ import audiobufferToWav from "audiobuffer-to-wav";
 
 export const player = createPlayer(audioContext);
 
+type NodeAssembly = { sourceNode: AudioBufferSourceNode; gainNode: GainNode };
+
 function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
   const [startedAt, setStartedAt] = createSignal<number | undefined>(undefined);
   const [startOffset, setStartOffset] = createSignal<number>(0);
@@ -13,7 +15,7 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
     end: 1,
   });
   let active:
-    | { sourceNode: AudioBufferSourceNode; smoothStop: () => void }
+    | NodeAssembly
     | undefined;
 
   const play = (buffer: AudioBuffer, region = { start: 0, end: 1 }) => {
@@ -31,7 +33,7 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
     if (!active) {
       return;
     }
-    active.smoothStop();
+    smoothStop(active);
     active = undefined;
     setStartedAt(undefined);
   };
@@ -52,6 +54,16 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
   return { play, playing, region, stop, progress };
 }
 
+const smoothStop = (blah: NodeAssembly, ramp = 0.001) => {
+  const end = audioContext.currentTime + ramp;
+  blah.gainNode.gain.cancelScheduledValues(audioContext.currentTime);
+  blah.gainNode.gain.setValueAtTime(1, audioContext.currentTime);
+  blah.gainNode.gain.linearRampToValueAtTime(0, end);
+
+  blah.sourceNode.onended = null;
+  blah.sourceNode.stop(end);
+};
+
 // @ts-ignore
 window.createPlayer = createPlayer;
 
@@ -60,7 +72,7 @@ const attackRelease = (
   buffer: AudioBuffer,
   region: { start: number; end: number },
   onended?: () => void,
-) => {
+): NodeAssembly => {
   const ramp = 0.001;
   const gainNode = audioContext.createGain();
   gainNode.connect(audioContext.destination);
@@ -81,17 +93,7 @@ const attackRelease = (
   if (onended) sourceNode.onended = onended;
   sourceNode.start(0, startSeconds, durationSeconds);
 
-  const smoothStop = () => {
-    const end = audioContext.currentTime + ramp;
-    gainNode.gain.cancelScheduledValues(audioContext.currentTime);
-    gainNode.gain.setValueAtTime(1, audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0, end);
-
-    sourceNode.onended = null;
-    sourceNode.stop(end);
-  };
-
-  return { sourceNode, smoothStop };
+  return { sourceNode, gainNode };
 };
 
 export const print = async (
