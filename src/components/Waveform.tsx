@@ -184,10 +184,10 @@ const ActiveRegion = () => {
   return (
     <Show when={region()}>
       <div
+        data-active-region
         style={{
           position: "absolute",
-          height: (state.clip?.buffer.numberOfChannels || 0) * TILE_HEIGHT +
-            "px",
+          height: "100%",
           width: (region().end - region().start) * 100 + "cqi",
           left: region().start * 100 + "cqi",
           background: "hsl(39deg 100% 50% / 25%)",
