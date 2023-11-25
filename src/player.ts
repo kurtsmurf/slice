@@ -21,7 +21,7 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
     stop();
     setRegion(region);
     setStartedAt(audioContext.currentTime);
-    active = attackRelease(audioContext, buffer, region, stop);
+    active = schedulePlayback(audioContext, buffer, region, stop);
   };
 
   const stop = () => {
@@ -61,31 +61,35 @@ const smoothStop = (assembly: NodeAssembly, ramp = 0.001) => {
   assembly.sourceNode.stop(end);
 };
 
-const attackRelease = (
+const schedulePlayback = (
   audioContext: AudioContext | OfflineAudioContext,
   buffer: AudioBuffer,
   region: { start: number; end: number },
   onended?: () => void,
 ): NodeAssembly => {
   const ramp = 0.001;
+  const now = audioContext.currentTime;
+  const bufferStartOffset = buffer.duration * region.start;
+  const bufferEndOffset = buffer.duration * region.end;
+  const duration = bufferEndOffset - bufferStartOffset;
+  const end = now + duration;
+
   const gainNode = audioContext.createGain();
   gainNode.connect(audioContext.destination);
-  gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-  gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime + ramp);
-
-  const startSeconds = buffer.duration * region.start;
-  const endSeconds = buffer.duration * region.end;
-  const durationSeconds = endSeconds - startSeconds;
-
-  const end = audioContext.currentTime + durationSeconds;
-  gainNode.gain.setValueAtTime(1, end - ramp);
-  gainNode.gain.linearRampToValueAtTime(0, end);
 
   const sourceNode = audioContext.createBufferSource();
   sourceNode.buffer = buffer;
   sourceNode.connect(gainNode);
   if (onended) sourceNode.onended = onended;
-  sourceNode.start(0, startSeconds, durationSeconds);
+
+  // schedule gain envelope
+  gainNode.gain.setValueAtTime(0, now);
+  gainNode.gain.linearRampToValueAtTime(1, now + ramp);
+  gainNode.gain.setValueAtTime(1, end - ramp);
+  gainNode.gain.linearRampToValueAtTime(0, end);
+
+  // schedule buffer region playback
+  sourceNode.start(now, bufferStartOffset, duration);
 
   return { sourceNode, gainNode };
 };
@@ -101,7 +105,7 @@ export const print = async (
       (region.end - region.start),
     buffer.sampleRate,
   );
-  attackRelease(offlineAudioContext, buffer, region);
+  schedulePlayback(offlineAudioContext, buffer, region);
   const offlineResult = await offlineAudioContext
     .startRendering();
 
