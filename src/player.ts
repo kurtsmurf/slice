@@ -87,32 +87,46 @@ const schedulePlayback = (
 
   // scheduleEnvelope(gainNode, { start: now, end: now + duration, ramp: 0.001})
 
+  const nodeAssembly = { sourceNode, gainNode, startedAt: now, };
+
+  startEnvelopeScheduler(
+    nodeAssembly, region, now
+  )
+
   sourceNode.start(now, bufferStartOffset);
 
-  return { sourceNode, gainNode, startedAt: now, };
+  return nodeAssembly;
 };
 
 // @ts-ignore
 window.schedulePlayback = schedulePlayback;
 
-// const loopScheduleEnvelope = (nodeAssembly: NodeAssembly) => {
-//   const [last, setLast] = createSignal(audioContext.currentTime);
-
-//   const interval = setInterval(() => {
-//     const horizon = audioContext.currentTime + 1000
-//     while (last() < horizon) {
-//       const duration = nodeAssembly.sourceNode.buffer?.duration || 1;
-//       const next = Math.floor(last() +  duration/ duration);
-//       console.log(next);
-//       setLast(next);
-//     }
-//   }, 200)
-
-//   return () => clearInterval(interval)
-// }
 
 // // @ts-ignore
 // window.loopScheduleEnvelop = loopScheduleEnvelope
+
+
+const startEnvelopeScheduler = (
+  nodeAssembly: NodeAssembly,
+  region: { start: number, end: number },
+  when: number,
+) => {
+
+  if (!nodeAssembly.sourceNode.buffer?.duration) return
+  const regionDuration = (region.end - region.start) * nodeAssembly.sourceNode.buffer.duration
+
+  for (let i = 0; i < 8; i++) {
+    scheduleEnvelope(
+      nodeAssembly.gainNode,
+      {
+        start: when + i * regionDuration,
+        end: when + (i + 1) * regionDuration,
+        ramp: 0.001,
+      }
+    )
+  }
+
+} 
 
 const scheduleEnvelope = (
   gainNode: GainNode,
@@ -122,10 +136,12 @@ const scheduleEnvelope = (
     ramp: number,
   }
 ) => {
+
   gainNode.gain.setValueAtTime(0, envelope.start);
   gainNode.gain.linearRampToValueAtTime(1, envelope.start + envelope.ramp);
   gainNode.gain.setValueAtTime(1, envelope.end - envelope.ramp);
   gainNode.gain.linearRampToValueAtTime(0, envelope.end);
+  
 }
 
 export const print = async (
