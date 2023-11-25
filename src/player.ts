@@ -67,12 +67,10 @@ const schedulePlayback = (
   region: { start: number; end: number },
   onended?: () => void,
 ): NodeAssembly => {
-  const ramp = 0.001;
   const now = audioContext.currentTime;
   const bufferStartOffset = buffer.duration * region.start;
   const bufferEndOffset = buffer.duration * region.end;
   const duration = bufferEndOffset - bufferStartOffset;
-  const end = now + duration;
 
   const gainNode = audioContext.createGain();
   gainNode.connect(audioContext.destination);
@@ -82,17 +80,26 @@ const schedulePlayback = (
   sourceNode.connect(gainNode);
   if (onended) sourceNode.onended = onended;
 
-  // schedule gain envelope
-  gainNode.gain.setValueAtTime(0, now);
-  gainNode.gain.linearRampToValueAtTime(1, now + ramp);
-  gainNode.gain.setValueAtTime(1, end - ramp);
-  gainNode.gain.linearRampToValueAtTime(0, end);
+  scheduleEnvelope(gainNode, { start: now, end: now + duration, ramp: 0.001})
 
-  // schedule buffer region playback
   sourceNode.start(now, bufferStartOffset, duration);
 
   return { sourceNode, gainNode };
 };
+
+const scheduleEnvelope = (
+  gainNode: GainNode,
+  envelope: {
+    start: number,
+    end: number,
+    ramp: number,
+  }
+) => {
+  gainNode.gain.setValueAtTime(0, envelope.start);
+  gainNode.gain.linearRampToValueAtTime(1, envelope.start + envelope.ramp);
+  gainNode.gain.setValueAtTime(1, envelope.end - envelope.ramp);
+  gainNode.gain.linearRampToValueAtTime(0, envelope.end);
+}
 
 export const print = async (
   buffer: AudioBuffer,
