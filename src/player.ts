@@ -5,7 +5,7 @@ import audiobufferToWav from "audiobuffer-to-wav";
 
 export const player = createPlayer(audioContext);
 
-type NodeAssembly = { sourceNode: AudioBufferSourceNode; gainNode: GainNode };
+type NodeAssembly = { sourceNode: AudioBufferSourceNode; gainNode: GainNode; startedAt: number; };
 
 function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
   const [startedAt, setStartedAt] = createSignal<number | undefined>(undefined);
@@ -39,9 +39,11 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
   useAnimationFrame(() => {
     const startedAt_ = startedAt();
     if (!startedAt_ || !active?.sourceNode.buffer) return;
+    const regionDuration = (region().end - region().start) * active.sourceNode.buffer.duration
     const timeSinceStart = audioContext.currentTime - startedAt_;
+    const loopTime = timeSinceStart % regionDuration;
     const startOffset = active.sourceNode.buffer.duration * region().start;
-    const elapsed = timeSinceStart + startOffset;
+    const elapsed = loopTime + startOffset;
     setProgress(elapsed / active.sourceNode.buffer.duration);
   });
 
@@ -77,15 +79,40 @@ const schedulePlayback = (
 
   const sourceNode = audioContext.createBufferSource();
   sourceNode.buffer = buffer;
+  sourceNode.loop = true;
+  sourceNode.loopStart = bufferStartOffset;
+  sourceNode.loopEnd = bufferEndOffset;
   sourceNode.connect(gainNode);
-  if (onended) sourceNode.onended = onended;
+  // if (onended) sourceNode.onended = onended;
 
-  scheduleEnvelope(gainNode, { start: now, end: now + duration, ramp: 0.001})
+  // scheduleEnvelope(gainNode, { start: now, end: now + duration, ramp: 0.001})
 
-  sourceNode.start(now, bufferStartOffset, duration);
+  sourceNode.start(now, bufferStartOffset);
 
-  return { sourceNode, gainNode };
+  return { sourceNode, gainNode, startedAt: now, };
 };
+
+// @ts-ignore
+window.schedulePlayback = schedulePlayback;
+
+// const loopScheduleEnvelope = (nodeAssembly: NodeAssembly) => {
+//   const [last, setLast] = createSignal(audioContext.currentTime);
+
+//   const interval = setInterval(() => {
+//     const horizon = audioContext.currentTime + 1000
+//     while (last() < horizon) {
+//       const duration = nodeAssembly.sourceNode.buffer?.duration || 1;
+//       const next = Math.floor(last() +  duration/ duration);
+//       console.log(next);
+//       setLast(next);
+//     }
+//   }, 200)
+
+//   return () => clearInterval(interval)
+// }
+
+// // @ts-ignore
+// window.loopScheduleEnvelop = loopScheduleEnvelope
 
 const scheduleEnvelope = (
   gainNode: GainNode,
