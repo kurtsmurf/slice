@@ -21,7 +21,7 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
     stop();
     setRegion(region);
     setStartedAt(audioContext.currentTime);
-    active = schedulePlayback(audioContext, buffer, region, stop);
+    active = attackRelease(audioContext, buffer, region, stop);
   };
 
   const stop = () => {
@@ -61,47 +61,33 @@ const smoothStop = (assembly: NodeAssembly, ramp = 0.001) => {
   assembly.sourceNode.stop(end);
 };
 
-const schedulePlayback = (
+const attackRelease = (
   audioContext: AudioContext | OfflineAudioContext,
   buffer: AudioBuffer,
   region: { start: number; end: number },
   onended?: () => void,
 ): NodeAssembly => {
+  const ramp = 0.001;
   const gainNode = audioContext.createGain();
   gainNode.connect(audioContext.destination);
+  gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+  gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime + ramp);
 
-  const envelope = {
-    startSeconds: buffer.duration * region.start,
-    endSeconds: buffer.duration * region.end,
-    rampSeconds: 0.001,
-  };
+  const startSeconds = buffer.duration * region.start;
+  const endSeconds = buffer.duration * region.end;
+  const durationSeconds = endSeconds - startSeconds;
 
-  scheduleEnvelope(gainNode, envelope);
+  const end = audioContext.currentTime + durationSeconds;
+  gainNode.gain.setValueAtTime(1, end - ramp);
+  gainNode.gain.linearRampToValueAtTime(0, end);
 
   const sourceNode = audioContext.createBufferSource();
   sourceNode.buffer = buffer;
   sourceNode.connect(gainNode);
   if (onended) sourceNode.onended = onended;
-  sourceNode.start(
-    0,
-    envelope.startSeconds,
-    envelope.endSeconds - envelope.startSeconds,
-  );
+  sourceNode.start(0, startSeconds, durationSeconds);
 
   return { sourceNode, gainNode };
-};
-
-const scheduleEnvelope = (
-  gainNode: GainNode,
-  envelope: { startSeconds: number; endSeconds: number; rampSeconds: number },
-) => {
-  gainNode.gain.setValueAtTime(0, envelope.startSeconds);
-  gainNode.gain.linearRampToValueAtTime(
-    1,
-    envelope.startSeconds + envelope.rampSeconds,
-  );
-  gainNode.gain.setValueAtTime(1, envelope.endSeconds - envelope.rampSeconds);
-  gainNode.gain.linearRampToValueAtTime(0, envelope.endSeconds);
 };
 
 export const print = async (
@@ -115,7 +101,7 @@ export const print = async (
       (region.end - region.start),
     buffer.sampleRate,
   );
-  schedulePlayback(offlineAudioContext, buffer, region);
+  attackRelease(offlineAudioContext, buffer, region);
   const offlineResult = await offlineAudioContext
     .startRendering();
 
