@@ -5,7 +5,11 @@ import audiobufferToWav from "audiobuffer-to-wav";
 
 export const player = createPlayer(audioContext);
 
-type NodeAssembly = { sourceNode: AudioBufferSourceNode; gainNode: GainNode; startedAt: number; };
+type NodeAssembly = {
+  sourceNode: AudioBufferSourceNode;
+  gainNode: GainNode;
+  startedAt: number;
+};
 
 function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
   const [startedAt, setStartedAt] = createSignal<number | undefined>(undefined);
@@ -39,7 +43,8 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
   useAnimationFrame(() => {
     const startedAt_ = startedAt();
     if (!startedAt_ || !active?.sourceNode.buffer) return;
-    const regionDuration = (region().end - region().start) * active.sourceNode.buffer.duration
+    const regionDuration = (region().end - region().start) *
+      active.sourceNode.buffer.duration;
     const timeSinceStart = audioContext.currentTime - startedAt_;
     const loopTime = timeSinceStart % regionDuration;
     const startOffset = active.sourceNode.buffer.duration * region().start;
@@ -87,11 +92,13 @@ const schedulePlayback = (
 
   // scheduleEnvelope(gainNode, { start: now, end: now + duration, ramp: 0.001})
 
-  const nodeAssembly = { sourceNode, gainNode, startedAt: now, };
+  const nodeAssembly = { sourceNode, gainNode, startedAt: now };
 
   startEnvelopeScheduler(
-    nodeAssembly, region, now
-  )
+    nodeAssembly,
+    region,
+    now,
+  );
 
   sourceNode.start(now, bufferStartOffset);
 
@@ -101,19 +108,17 @@ const schedulePlayback = (
 // @ts-ignore
 window.schedulePlayback = schedulePlayback;
 
-
 // // @ts-ignore
 // window.loopScheduleEnvelop = loopScheduleEnvelope
 
-
 const startEnvelopeScheduler = (
   nodeAssembly: NodeAssembly,
-  region: { start: number, end: number },
+  region: { start: number; end: number },
   when: number,
 ) => {
-
-  if (!nodeAssembly.sourceNode.buffer?.duration) return
-  const regionDuration = (region.end - region.start) * nodeAssembly.sourceNode.buffer.duration
+  if (!nodeAssembly.sourceNode.buffer?.duration) return;
+  const regionDuration = (region.end - region.start) *
+    nodeAssembly.sourceNode.buffer.duration;
 
   for (let i = 0; i < 8; i++) {
     scheduleEnvelope(
@@ -122,27 +127,24 @@ const startEnvelopeScheduler = (
         start: when + i * regionDuration,
         end: when + (i + 1) * regionDuration,
         ramp: 0.001,
-      }
-    )
+      },
+    );
   }
-
-} 
+};
 
 const scheduleEnvelope = (
   gainNode: GainNode,
   envelope: {
-    start: number,
-    end: number,
-    ramp: number,
-  }
+    start: number;
+    end: number;
+    ramp: number;
+  },
 ) => {
-
   gainNode.gain.setValueAtTime(0, envelope.start);
   gainNode.gain.linearRampToValueAtTime(1, envelope.start + envelope.ramp);
   gainNode.gain.setValueAtTime(1, envelope.end - envelope.ramp);
   gainNode.gain.linearRampToValueAtTime(0, envelope.end);
-  
-}
+};
 
 export const print = async (
   buffer: AudioBuffer,
