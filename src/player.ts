@@ -1,4 +1,4 @@
-import { createSignal } from "solid-js";
+import { createEffect, createSignal } from "solid-js";
 import { audioContext } from "./audioContext";
 import { useAnimationFrame } from "./behaviors/useAnimationFrame";
 import audiobufferToWav from "audiobuffer-to-wav";
@@ -19,6 +19,7 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
   let active:
     | { nodeAssembly: NodeAssembly; gainEnvelopeScheduler: NodeJS.Timer }
     | undefined;
+  const [loop, setLoop] = createSignal(false);
 
   const play = (buffer: AudioBuffer, region = { start: 0, end: 1 }) => {
     stop();
@@ -53,7 +54,7 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
     setProgress(elapsed / active.nodeAssembly.sourceNode.buffer.duration);
   });
 
-  return { play, playing, region, stop, progress };
+  return { play, playing, region, stop, progress, loop, setLoop };
 }
 
 // @ts-ignore

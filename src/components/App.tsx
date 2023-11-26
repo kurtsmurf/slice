@@ -234,6 +234,16 @@ const RegionDetails = (props: { index: number }) => {
             >
               spam
             </button>
+            <label for="loop">loop</label>
+            <input
+              type="checkbox"
+              name="loop"
+              disabled={player.playing()}
+              onChange={(e) => {
+                // @ts-ignore
+                player.setLoop(e.target.checked);
+              }}
+            />
           </fieldset>
           <fieldset>
             <legend>export</legend>
