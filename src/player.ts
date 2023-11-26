@@ -8,7 +8,6 @@ export const player = createPlayer(audioContext);
 type NodeAssembly = {
   sourceNode: AudioBufferSourceNode;
   gainNode: GainNode;
-  startedAt: number;
 };
 
 function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
@@ -79,7 +78,6 @@ const schedulePlayback = (
   const now = audioContext.currentTime;
   const bufferStartOffset = buffer.duration * region.start;
   const bufferEndOffset = buffer.duration * region.end;
-  const duration = bufferEndOffset - bufferStartOffset;
 
   const gainNode = audioContext.createGain();
   gainNode.connect(audioContext.destination);
@@ -91,7 +89,7 @@ const schedulePlayback = (
   sourceNode.loopEnd = bufferEndOffset;
   sourceNode.connect(gainNode);
 
-  const nodeAssembly = { sourceNode, gainNode, startedAt: now };
+  const nodeAssembly = { sourceNode, gainNode };
 
   const gainEnvelopeScheduler = startEnvelopeScheduler(
     nodeAssembly,
