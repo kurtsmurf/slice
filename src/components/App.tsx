@@ -47,10 +47,10 @@ const LoadAudio = () => {
         }}
       >
         <button type="submit">from url</button>
-        <label for="url">
+        <label for="url-input">
           url:
         </label>
-        <input ref={input} type="url" name="url" required />
+        <input ref={input} type="url" id="url-input" name="url" required />
       </form>
     </fieldset>
   );
@@ -234,9 +234,10 @@ const RegionDetails = (props: { index: number }) => {
             >
               spam
             </button>
-            <label for="loop">loop</label>
+            <label for="loop-toggle">loop</label>
             <input
               type="checkbox"
+              id="loop-toggle"
               name="loop"
               checked={player.loop()}
               disabled={player.playing()}
@@ -308,13 +309,14 @@ const SegmentRegionForm = (props: { index: number }) => {
       <fieldset disabled={max() < 2}>
         <legend>segment region</legend>
 
-        <label for="number of pieces">
+        <label for="number-of-pieces-input">
           pieces:
         </label>
         <input
           ref={input}
           type="number"
           name="number of pieces"
+          id="number-of-pieces-input"
           min={2}
           max={max()}
           required
