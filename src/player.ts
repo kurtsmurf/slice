@@ -17,7 +17,7 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
     end: 1,
   });
   let active:
-    | { nodeAssembly: NodeAssembly; gainEnvelopeScheduler: NodeJS.Timer }
+    | { nodeAssembly: NodeAssembly; gainEnvelopeScheduler?: NodeJS.Timer }
     | undefined;
   const [loop, setLoop] = createSignal(false);
 
@@ -25,7 +25,18 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
     stop();
     setRegion(region);
     setStartedAt(audioContext.currentTime);
-    active = schedulePlayback(audioContext, buffer, region, stop);
+    if (loop()) {
+      active = schedulePlaybackLoop(audioContext, buffer, region);
+    } else {
+      active = {
+        nodeAssembly: schedulePlaybackSingle(
+          audioContext,
+          buffer,
+          region,
+          stop,
+        ),
+      };
+    }
   };
 
   const stop = () => {
@@ -70,11 +81,36 @@ const smoothStop = (assembly: NodeAssembly, ramp = 0.001) => {
   assembly.sourceNode.stop(end);
 };
 
-const schedulePlayback = (
+const schedulePlaybackSingle = (
   audioContext: AudioContext | OfflineAudioContext,
   buffer: AudioBuffer,
   region: { start: number; end: number },
   onended?: () => void,
+): NodeAssembly => {
+  const now = audioContext.currentTime;
+  const bufferStartOffset = buffer.duration * region.start;
+  const bufferEndOffset = buffer.duration * region.end;
+  const duration = bufferEndOffset - bufferStartOffset;
+
+  const gainNode = audioContext.createGain();
+  gainNode.connect(audioContext.destination);
+
+  const sourceNode = audioContext.createBufferSource();
+  sourceNode.buffer = buffer;
+  sourceNode.connect(gainNode);
+  if (onended) sourceNode.onended = onended;
+
+  scheduleEnvelope(gainNode, { start: now, end: now + duration, ramp: 0.001 });
+
+  sourceNode.start(now, bufferStartOffset, duration);
+
+  return { sourceNode, gainNode };
+};
+
+const schedulePlaybackLoop = (
+  audioContext: AudioContext | OfflineAudioContext,
+  buffer: AudioBuffer,
+  region: { start: number; end: number },
 ) => {
   const now = audioContext.currentTime;
   const bufferStartOffset = buffer.duration * region.start;
@@ -102,9 +138,6 @@ const schedulePlayback = (
 
   return { nodeAssembly, gainEnvelopeScheduler };
 };
-
-// @ts-ignore
-window.schedulePlayback = schedulePlayback;
 
 const startEnvelopeScheduler = (
   nodeAssembly: NodeAssembly,
@@ -168,7 +201,7 @@ export const print = async (
       (region.end - region.start),
     buffer.sampleRate,
   );
-  schedulePlayback(offlineAudioContext, buffer, region);
+  schedulePlaybackLoop(offlineAudioContext, buffer, region);
   const offlineResult = await offlineAudioContext
     .startRendering();
 

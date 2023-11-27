@@ -238,6 +238,7 @@ const RegionDetails = (props: { index: number }) => {
             <input
               type="checkbox"
               name="loop"
+              checked={player.loop()}
               disabled={player.playing()}
               onChange={(e) => {
                 // @ts-ignore
