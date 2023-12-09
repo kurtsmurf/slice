@@ -286,11 +286,10 @@ const SegmentRegionForm = (props: { index: number }) => {
 
   if (!state.clip) return;
 
-  const region = () => state.regions[props.index];
-
   const duration = () => {
-    if (!state.clip) return 0;
-    return (region().end - region().start) * state.clip.buffer.duration;
+    const region = state.regions[props.index];
+    if (!state.clip || !region) return 0;
+    return (region.end - region.start) * state.clip.buffer.duration;
   };
 
   const max = () => {
