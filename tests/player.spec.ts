@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("player", async ({ page }, testInfo) => {
+test.only("player", async ({ page }, testInfo) => {
   await page.goto("https://localhost:3000");
   // load player output
   await page.evaluate(renderAudio);
@@ -9,6 +9,7 @@ test("player", async ({ page }, testInfo) => {
   for (let i = 0; i < 10 && await zoomInBtn.isEnabled(); i++) {
     await page.getByRole("button", { name: "zoom in" }).click();
   }
+  await page.pause();
   // perform visual diff
   await expect(page).toHaveScreenshot();
   // attach screenshot to result
@@ -33,12 +34,13 @@ const renderAudio = async () => {
   const region = { start: 0, end: 1 };
   const offlineAudioContext = new OfflineAudioContext(
     inputBuffer.numberOfChannels,
-    inputBuffer.duration * inputBuffer.sampleRate * (region.end - region.start),
+    inputBuffer.duration * inputBuffer.sampleRate * (region.end - region.start) * 4,
     inputBuffer.sampleRate,
   );
 
   // @ts-ignore
   const player = window.createPlayer(offlineAudioContext);
+  player.setLoop(true)
 
   // schedule playback
   player.play(inputBuffer, region);

@@ -127,17 +127,49 @@ const schedulePlaybackLoop = (
   sourceNode.connect(gainNode);
 
   const nodeAssembly = { sourceNode, gainNode };
+  let gainEnvelopeScheduler;
 
-  const gainEnvelopeScheduler = startEnvelopeScheduler(
-    nodeAssembly,
-    region,
-    now,
-  );
+  if (audioContext instanceof OfflineAudioContext) {
+    scheduleAll(
+      nodeAssembly,
+      region,
+      now,
+      audioContext.length / audioContext.sampleRate
+    )
+  } else {
+    gainEnvelopeScheduler = startEnvelopeScheduler(
+      nodeAssembly,
+      region,
+      now,
+    );
+  
+  }
 
   sourceNode.start(now, bufferStartOffset);
 
   return { nodeAssembly, gainEnvelopeScheduler };
 };
+
+const scheduleAll = (
+  nodeAssembly: NodeAssembly,
+  region: { start: number; end: number },
+  when: number,
+  duration: number,
+) => {
+  const regionDuration = (region.end - region.start) *
+    (nodeAssembly.sourceNode.buffer?.duration || 1);
+
+  for (let i = 0; i * regionDuration < duration; i++) {
+    scheduleEnvelope(
+      nodeAssembly.gainNode,
+      {
+        start: when + i * regionDuration,
+        end: when + (i + 1) * regionDuration,
+        ramp: 0.1,
+      },
+    );
+  }
+}
 
 const startEnvelopeScheduler = (
   nodeAssembly: NodeAssembly,
@@ -201,7 +233,7 @@ export const print = async (
       (region.end - region.start),
     buffer.sampleRate,
   );
-  schedulePlaybackLoop(offlineAudioContext, buffer, region);
+  schedulePlaybackSingle(offlineAudioContext, buffer, region);
   const offlineResult = await offlineAudioContext
     .startRendering();
 
