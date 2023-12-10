@@ -1,6 +1,6 @@
 import { createMemo, JSX, Show, splitProps } from "solid-js";
 import { player } from "../player";
-import { state } from "../store";
+import { same, state } from "../store";
 
 export const Trigger = (props: {
   region: { start: number; end: number };
@@ -10,7 +10,7 @@ export const Trigger = (props: {
 }) => {
   const active = createMemo(() =>
     player.playing() &&
-    JSON.stringify(player.region()) === JSON.stringify(props.region)
+    same(player.region(), props.region)
   );
 
   return (

@@ -9,7 +9,7 @@ import {
 } from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
 import { player } from "../player";
-import { dispatch, state } from "../store";
+import { dispatch, same, state } from "../store";
 import { ChannelSegment } from "./ChannelSegment";
 import { useAnimationFrame } from "../behaviors/useAnimationFrame";
 import { createDrag } from "../behaviors/createDrag";
@@ -441,10 +441,13 @@ const Cursor = (
   const [region, setRegion] = createSignal(0);
   const active = createMemo(() =>
     player.playing() &&
-    JSON.stringify(player.region()) === JSON.stringify({
+    same(
+      player.region(),
+      {
         start: state.cursor,
         end: state.regions[region()].end,
-      })
+      },
+    )
   );
 
   const syncRegion = () => {

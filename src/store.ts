@@ -1,15 +1,18 @@
 import { Clip } from "./types";
 import { createStore } from "solid-js/store";
 import { range } from "./util/range";
+import { player } from "./player";
 
 type Mode = "delete" | "edit" | "slice";
+
+type Region = { start: number; end: number };
 
 type State = {
   cursor: number;
   cursorControlsVisible: boolean;
   mode: Mode;
   clip: Clip | undefined;
-  regions: { start: number; end: number }[];
+  regions: Region[];
   selectedRegion: number | undefined;
 };
 
@@ -36,6 +39,7 @@ export const dispatch = {
   slice: (index: number, pos: number) => {
     const region = store.regions[index];
     if (pos <= region.start || pos >= region.end) return;
+    if (same(player.region(), region)) player.stop();
     setStore("regions", (prev) => [
       ...prev.slice(0, index),
       { start: region.start, end: pos },
@@ -46,6 +50,7 @@ export const dispatch = {
   segmentRegion: (index: number, pieces: number) => {
     const region = store.regions[index];
     const segmentLength = (region.end - region.start) / pieces;
+    if (same(player.region(), region)) player.stop();
     setStore("regions", (prev) => [
       ...prev.slice(0, index),
       ...range(0, pieces).map((n) => ({
@@ -56,6 +61,13 @@ export const dispatch = {
     ]);
   },
   healSlice: (index: number) => {
+    if (
+      same(player.region(), store.regions[index]) ||
+      same(player.region(), store.regions[index - 1])
+    ) {
+      player.stop();
+    }
+
     setStore("regions", (prev) => [
       ...prev.slice(0, index).map((v, i) =>
         // update right bound of removed region left neighbor
@@ -71,6 +83,12 @@ export const dispatch = {
     const region = store.regions[index];
     const leftBound = store.regions[index - 1].start || 0;
     if (pos <= leftBound || pos >= region.end) return;
+    if (
+      same(player.region(), store.regions[index]) ||
+      same(player.region(), store.regions[index - 1])
+    ) {
+      player.stop();
+    }
     setStore("regions", index - 1, (prev) => ({ start: prev.start, end: pos }));
     setStore("regions", index, (prev) => ({ start: pos, end: prev.end }));
   },
@@ -82,3 +100,6 @@ export const dispatch = {
 window.state = state;
 // @ts-ignore
 window.dispatch = dispatch;
+
+export const same = (a: Region, b: Region) =>
+  a.start === b.start && a.end === b.end;
