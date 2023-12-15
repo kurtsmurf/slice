@@ -30,7 +30,7 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
     setRegion(region);
     setStartedAt(audioContext.currentTime);
     if (loop()) {
-      active = schedulePlaybackLoop(audioContext, buffer, region);
+      active = schedulePlaybackLoop(audioContext, buffer, region, speed());
     } else {
       active = {
         nodeAssembly: schedulePlaybackSingle(
@@ -72,7 +72,17 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
     setProgress(elapsed / active.nodeAssembly.sourceNode.buffer.duration);
   });
 
-  return { play, playing, region, stop, progress, loop, setLoop, setSpeed };
+  return {
+    play,
+    playing,
+    region,
+    stop,
+    progress,
+    loop,
+    setLoop,
+    speed,
+    setSpeed,
+  };
 }
 
 // @ts-ignore
@@ -123,6 +133,7 @@ const schedulePlaybackLoop = (
   audioContext: AudioContext | OfflineAudioContext,
   buffer: AudioBuffer,
   region: { start: number; end: number },
+  speed: number,
 ) => {
   const now = audioContext.currentTime;
   const bufferStartOffset = buffer.duration * region.start;
@@ -136,6 +147,7 @@ const schedulePlaybackLoop = (
   sourceNode.loop = true;
   sourceNode.loopStart = bufferStartOffset;
   sourceNode.loopEnd = bufferEndOffset;
+  sourceNode.playbackRate.value = speed;
   sourceNode.connect(gainNode);
 
   const nodeAssembly = { sourceNode, gainNode };
@@ -144,6 +156,7 @@ const schedulePlaybackLoop = (
     nodeAssembly,
     region,
     now,
+    speed,
   );
 
   sourceNode.start(now, bufferStartOffset);
@@ -155,9 +168,10 @@ const startEnvelopeScheduler = (
   nodeAssembly: NodeAssembly,
   region: { start: number; end: number },
   when: number,
+  speed: number,
 ) => {
   const regionDuration = (region.end - region.start) *
-    (nodeAssembly.sourceNode.buffer?.duration || 1);
+    (nodeAssembly.sourceNode.buffer?.duration || 1) / speed;
 
   let lastIterationScheduled = -1;
 
@@ -205,15 +219,16 @@ const scheduleEnvelope = (
 export const print = async (
   buffer: AudioBuffer,
   region: { start: number; end: number },
+  speed: number,
 ) => {
   // render audiobuffer of region
   const offlineAudioContext = new OfflineAudioContext(
     buffer.numberOfChannels,
     buffer.duration * buffer.sampleRate *
-      (region.end - region.start),
+      (region.end - region.start) / speed,
     buffer.sampleRate,
   );
-  schedulePlaybackLoop(offlineAudioContext, buffer, region);
+  schedulePlaybackSingle(offlineAudioContext, buffer, region, speed);
   const offlineResult = await offlineAudioContext
     .startRendering();
 

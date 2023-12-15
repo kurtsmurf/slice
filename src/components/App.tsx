@@ -254,7 +254,7 @@ const RegionDetails = (props: { index: number }) => {
                 const buffer = state.clip?.buffer;
                 const region = state.regions[props.index];
                 if (buffer && region) {
-                  download(buffer, region);
+                  download(buffer, region, player.speed());
                 }
               }}
             >
@@ -266,7 +266,7 @@ const RegionDetails = (props: { index: number }) => {
                   const buffer = state.clip?.buffer;
                   const region = state.regions[props.index];
                   if (buffer && region) {
-                    share(buffer, region);
+                    share(buffer, region, player.speed());
                   }
                 }}
               >
