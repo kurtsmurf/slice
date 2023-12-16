@@ -23,7 +23,12 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
     | { nodeAssembly: NodeAssembly; gainEnvelopeScheduler?: NodeJS.Timer }
     | undefined;
   const [loop, setLoop] = createSignal(false);
-  const [speed, setSpeed] = createSignal(1);
+  const [offsetSemis, setOffsetSemis] = createSignal(0);
+  const [offsetCents, setOffsetCents] = createSignal(0);
+  const speed = () => {
+    const totalCents = offsetCents() + (100 * offsetSemis());
+    return Math.pow(2, totalCents / 1200);
+  };
 
   const play = (buffer: AudioBuffer, region = { start: 0, end: 1 }) => {
     stop();
@@ -80,8 +85,11 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
     progress,
     loop,
     setLoop,
+    offsetSemis,
+    setOffsetSemis,
+    offsetCents,
+    setOffsetCents,
     speed,
-    setSpeed,
   };
 }
 
