@@ -282,45 +282,34 @@ const RegionDetails = (props: { index: number }) => {
   );
 };
 
-const SpeedInput = () => {
-  const onChange = () => {
-    if (player.playing()) {
-      player.stop();
-      if (state.clip?.buffer) player.play(state.clip.buffer, player.region());
-    }
-  };
-
-  return (
-    <>
-      <label for="speed-semitones">semis</label>
-      <input
-        value={player.offsetSemis()}
-        type="range"
-        name="speed-semitones"
-        id="speed-semitones"
-        min={-12}
-        max={12}
-        onInput={(e) => {
-          player.setOffsetSemis(parseFloat(e.currentTarget.value));
-          onChange();
-        }}
-      />
-      <label for="speed-cents">cents</label>
-      <input
-        value={player.offsetCents()}
-        type="range"
-        name="speed-cents"
-        id="speed-cents"
-        min={-50}
-        max={50}
-        onInput={(e) => {
-          player.setOffsetCents(parseFloat(e.currentTarget.value));
-          onChange();
-        }}
-      />
-    </>
-  );
-};
+const SpeedInput = () => (
+  <>
+    <label for="speed-semitones">semis</label>
+    <input
+      value={player.offsetSemis()}
+      type="range"
+      name="speed-semitones"
+      id="speed-semitones"
+      min={-12}
+      max={12}
+      onInput={(e) => {
+        player.setOffsetSemis(parseFloat(e.currentTarget.value));
+      }}
+    />
+    <label for="speed-cents">cents</label>
+    <input
+      value={player.offsetCents()}
+      type="range"
+      name="speed-cents"
+      id="speed-cents"
+      min={-50}
+      max={50}
+      onInput={(e) => {
+        player.setOffsetCents(parseFloat(e.currentTarget.value));
+      }}
+    />
+  </>
+);
 
 const SegmentRegionForm = (props: { index: number }) => {
   let input: HTMLInputElement | undefined;

@@ -1,4 +1,4 @@
-import { createSignal } from "solid-js";
+import { createEffect, createSignal } from "solid-js";
 import { audioContext } from "./audioContext";
 import { useAnimationFrame } from "./behaviors/useAnimationFrame";
 import audiobufferToWav from "audiobuffer-to-wav";
@@ -29,6 +29,20 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
     const totalCents = offsetCents() + (100 * offsetSemis());
     return Math.pow(2, totalCents / 1200);
   };
+
+  createEffect(() => {
+    // when speed updates
+    speed();
+
+    const currentBuffer = active?.nodeAssembly.sourceNode.buffer;
+
+    // if playing
+    if (currentBuffer) {
+      // restart player
+      player.stop();
+      currentBuffer && player.play(currentBuffer, player.region());
+    }
+  });
 
   const play = (buffer: AudioBuffer, region = { start: 0, end: 1 }) => {
     stop();
