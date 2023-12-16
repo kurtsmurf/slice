@@ -289,35 +289,38 @@ const SpeedInput = () => {
   const onChange = () => {
     const totalCents = offsetCents() + (100 * offsetSemis());
     player.setSpeed(Math.pow(2, totalCents / 1200));
+
+    if (player.playing()) {
+      player.stop();
+      if (state.clip?.buffer) player.play(state.clip.buffer, player.region());
+    }
   };
 
   return (
     <>
       <label for="speed-semitones">semis</label>
       <input
-        type="number"
+        type="range"
         name="speed-semitones"
         id="speed-semitones"
         min={-12}
         max={12}
-        onChange={(e) => {
+        onInput={(e) => {
           setOffsetSemis(parseFloat(e.currentTarget.value));
           onChange();
         }}
-        disabled={player.playing()}
       />
       <label for="speed-cents">cents</label>
       <input
-        type="number"
+        type="range"
         name="speed-cents"
         id="speed-cents"
         min={-50}
         max={50}
-        onChange={(e) => {
+        onInput={(e) => {
           setOffsetCents(parseFloat(e.currentTarget.value));
           onChange();
         }}
-        disabled={player.playing()}
       />
     </>
   );
