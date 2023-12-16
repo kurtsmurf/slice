@@ -1,4 +1,4 @@
-import { createEffect, createSignal } from "solid-js";
+import { createSignal } from "solid-js";
 import { audioContext } from "./audioContext";
 import { useAnimationFrame } from "./behaviors/useAnimationFrame";
 import audiobufferToWav from "audiobuffer-to-wav";

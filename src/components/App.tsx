@@ -283,13 +283,12 @@ const RegionDetails = (props: { index: number }) => {
 };
 
 const SpeedInput = () => {
-  const [semis, setSemis] = createSignal(0);
-  const [cents, setCents] = createSignal(0);
-
-  const speed = () => semis() + cents();
+  const [offsetSemis, setOffsetSemis] = createSignal(0);
+  const [offsetCents, setOffsetCents] = createSignal(0);
 
   const onChange = () => {
-    player.setSpeed(speed());
+    const totalCents = offsetCents() + (100 * offsetSemis());
+    player.setSpeed(Math.pow(2, totalCents / 1200));
   };
 
   return (
@@ -299,11 +298,10 @@ const SpeedInput = () => {
         type="number"
         name="speed-semitones"
         id="speed-semitones"
-        min={-24}
-        max={24}
-        step={1}
+        min={-12}
+        max={12}
         onChange={(e) => {
-          setSemis(Math.pow(2, parseFloat(e.currentTarget.value) / 12));
+          setOffsetSemis(parseFloat(e.currentTarget.value));
           onChange();
         }}
         disabled={player.playing()}
@@ -315,9 +313,8 @@ const SpeedInput = () => {
         id="speed-cents"
         min={-50}
         max={50}
-        step={1}
         onChange={(e) => {
-          setCents(Math.pow(2, parseFloat(e.currentTarget.value) / 1200));
+          setOffsetCents(parseFloat(e.currentTarget.value));
           onChange();
         }}
         disabled={player.playing()}
