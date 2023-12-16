@@ -246,6 +246,7 @@ const RegionDetails = (props: { index: number }) => {
                 player.setLoop(e.target.checked);
               }}
             />
+            <SpeedInput />
           </fieldset>
           <fieldset>
             <legend>export</legend>
@@ -277,6 +278,50 @@ const RegionDetails = (props: { index: number }) => {
           <SegmentRegionForm index={props.index} />
         </div>
       </div>
+    </>
+  );
+};
+
+const SpeedInput = () => {
+  const [semis, setSemis] = createSignal(0);
+  const [cents, setCents] = createSignal(0);
+
+  const speed = () => semis() + cents();
+
+  const onChange = () => {
+    player.setSpeed(speed());
+  };
+
+  return (
+    <>
+      <label for="speed-semitones">semis</label>
+      <input
+        type="number"
+        name="speed-semitones"
+        id="speed-semitones"
+        min={-24}
+        max={24}
+        step={1}
+        onChange={(e) => {
+          setSemis(Math.pow(2, parseFloat(e.currentTarget.value) / 12));
+          onChange();
+        }}
+        disabled={player.playing()}
+      />
+      <label for="speed-cents">cents</label>
+      <input
+        type="number"
+        name="speed-cents"
+        id="speed-cents"
+        min={-50}
+        max={50}
+        step={1}
+        onChange={(e) => {
+          setCents(Math.pow(2, parseFloat(e.currentTarget.value) / 1200));
+          onChange();
+        }}
+        disabled={player.playing()}
+      />
     </>
   );
 };
