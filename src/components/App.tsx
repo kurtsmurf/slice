@@ -67,6 +67,89 @@ export const App = () => (
       <Waveform buffer={state.clip!.buffer} />
     </div>
     <BottomPanel />
+    <dialog
+      id="settings-dialog"
+    >
+      <div>
+        <button
+          onClick={() => {
+            const dialog = document.getElementById("settings-dialog");
+            if (dialog instanceof HTMLDialogElement) dialog.close();
+          }}
+          style={{
+            "align-self": "flex-start"
+          }}
+        >
+          X
+        </button>
+        <div>
+          <label for="loop-toggle">loop</label>
+          <input
+            type="checkbox"
+            id="loop-toggle"
+            name="loop"
+            checked={player.loop()}
+            disabled={player.playing()}
+            onChange={(e) => {
+              // @ts-ignore
+              player.setLoop(e.target.checked);
+            }}
+          />
+        </div>
+        <fieldset>
+          <legend>speed/pitch</legend>
+
+          <div>
+            <div
+              style={{
+                display: "flex",
+                
+              }}
+            >
+              <label for="speed-semitones">semis</label>
+              <p>
+                <span style={{ "font-family": "monospace"}}>
+                  {player.pitchOffsetSemis() >= 0 ? "+" : "-"}
+                </span>
+                {Math.abs(player.pitchOffsetSemis())}
+              </p>
+            </div>
+            <input
+              value={player.pitchOffsetSemis()}
+              type="range"
+              name="speed-semitones"
+              id="speed-semitones"
+              min={-12}
+              max={12}
+              onInput={(e) => {
+                player.setPitchOffsetSemis(parseFloat(e.currentTarget.value));
+              }}
+            />
+          </div>
+          <div>
+            <label for="speed-cents">cents</label>
+            <p>
+              <span style={{ "font-family": "monospace"}}>
+                {player.pitchOffsetCents() >= 0 ? "+" : "-"}
+              </span>
+              {Math.abs(player.pitchOffsetCents())}
+            </p>
+            <input
+              value={player.pitchOffsetCents()}
+              type="range"
+              name="speed-cents"
+              id="speed-cents"
+              min={-50}
+              max={50}
+              onInput={(e) => {
+                player.setPitchOffsetCents(parseFloat(e.currentTarget.value));
+              }}
+            />
+          </div>
+        </fieldset>
+
+      </div>
+    </dialog>
   </Show>
 );
 
@@ -234,19 +317,6 @@ const RegionDetails = (props: { index: number }) => {
             >
               spam
             </button>
-            <label for="loop-toggle">loop</label>
-            <input
-              type="checkbox"
-              id="loop-toggle"
-              name="loop"
-              checked={player.loop()}
-              disabled={player.playing()}
-              onChange={(e) => {
-                // @ts-ignore
-                player.setLoop(e.target.checked);
-              }}
-            />
-            <SpeedInput />
           </fieldset>
           <fieldset>
             <legend>export</legend>
@@ -282,34 +352,6 @@ const RegionDetails = (props: { index: number }) => {
   );
 };
 
-const SpeedInput = () => (
-  <>
-    <label for="speed-semitones">semis</label>
-    <input
-      value={player.offsetSemis()}
-      type="range"
-      name="speed-semitones"
-      id="speed-semitones"
-      min={-12}
-      max={12}
-      onInput={(e) => {
-        player.setOffsetSemis(parseFloat(e.currentTarget.value));
-      }}
-    />
-    <label for="speed-cents">cents</label>
-    <input
-      value={player.offsetCents()}
-      type="range"
-      name="speed-cents"
-      id="speed-cents"
-      min={-50}
-      max={50}
-      onInput={(e) => {
-        player.setOffsetCents(parseFloat(e.currentTarget.value));
-      }}
-    />
-  </>
-);
 
 const SegmentRegionForm = (props: { index: number }) => {
   let input: HTMLInputElement | undefined;

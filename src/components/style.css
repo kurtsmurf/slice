@@ -12,3 +12,12 @@ html, body, #root, #bottom-panel, #region-details {
     display: flex;
     flex-direction: column;
 }
+
+#settings-dialog > div {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+
+

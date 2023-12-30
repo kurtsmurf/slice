@@ -23,10 +23,10 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
     | { nodeAssembly: NodeAssembly; gainEnvelopeScheduler?: NodeJS.Timer }
     | undefined;
   const [loop, setLoop] = createSignal(false);
-  const [offsetSemis, setOffsetSemis] = createSignal(0);
-  const [offsetCents, setOffsetCents] = createSignal(0);
+  const [pitchOffsetSemis, setPitchOffsetSemis] = createSignal(0);
+  const [pitchOffsetCents, setPitchOffsetCents] = createSignal(0);
   const speed = () => {
-    const totalCents = offsetCents() + (100 * offsetSemis());
+    const totalCents = pitchOffsetCents() + (100 * pitchOffsetSemis());
     return Math.pow(2, totalCents / 1200);
   };
 
@@ -40,11 +40,25 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
     if (currentBuffer) {
       // restart player
       player.stop();
-      currentBuffer && player.play(currentBuffer, player.region());
+      player.play(currentBuffer, player.region());
+
+      // restart where you left off
+      // player.play(currentBuffer, player.region(), offset);
+
+      // Variable "offset" is where to start playback
+      // In units progress 0-1 
+      // If no offset is provided, then region.start is used
+      // Example:
+      // if buffer.duration is 1s
+      // and region is { start: 0.5, end: 0.7}
+      // and offset is 0.6
+      // playback will start from 0.6
+      // if loop, loop will resume from 0.5
+      // else playback stops at 0.7
     }
   });
 
-  const play = (buffer: AudioBuffer, region = { start: 0, end: 1 }) => {
+  const play = (buffer: AudioBuffer, region = { start: 0, end: 1 }, offset = 0) => {
     stop();
     setRegion(region);
     setStartedAt(audioContext.currentTime);
@@ -84,9 +98,9 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
       active.nodeAssembly.sourceNode.buffer.duration;
     const timeSinceStart = audioContext.currentTime - startedAt_;
     const loopTime = timeSinceStart * speed() % regionDuration;
-    const startOffset = active.nodeAssembly.sourceNode.buffer.duration *
+    const regionOffset = active.nodeAssembly.sourceNode.buffer.duration *
       region().start;
-    const elapsed = loopTime + startOffset;
+    const elapsed = loopTime + regionOffset;
 
     setProgress(elapsed / active.nodeAssembly.sourceNode.buffer.duration);
   });
@@ -99,10 +113,10 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
     progress,
     loop,
     setLoop,
-    offsetSemis,
-    setOffsetSemis,
-    offsetCents,
-    setOffsetCents,
+    pitchOffsetSemis,
+    setPitchOffsetSemis,
+    pitchOffsetCents,
+    setPitchOffsetCents,
     speed,
   };
 }
