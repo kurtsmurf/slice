@@ -1,5 +1,12 @@
 import { AudioInput } from "./AudioInput";
-import { createEffect, createMemo, createSignal, For, Show } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  JSX,
+  Show,
+} from "solid-js";
 import { player } from "../player";
 import { download, share } from "../export";
 import { dispatch, state } from "../store";
@@ -67,9 +74,7 @@ export const App = () => (
       <Waveform buffer={state.clip!.buffer} />
     </div>
     <BottomPanel />
-    <dialog
-      id="settings-dialog"
-    >
+    <dialog id="settings-dialog">
       <div>
         <button
           onClick={() => {
@@ -77,7 +82,7 @@ export const App = () => (
             if (dialog instanceof HTMLDialogElement) dialog.close();
           }}
           style={{
-            "align-self": "flex-start"
+            "align-self": "flex-start",
           }}
         >
           X
@@ -98,61 +103,69 @@ export const App = () => (
         </div>
         <fieldset>
           <legend>speed/pitch</legend>
-
-          <div>
-            <div
-              style={{
-                display: "flex",
-                
-              }}
-            >
-              <label for="speed-semitones">semis</label>
-              <p>
-                <span style={{ "font-family": "monospace"}}>
-                  {player.pitchOffsetSemis() >= 0 ? "+" : "-"}
-                </span>
-                {Math.abs(player.pitchOffsetSemis())}
-              </p>
-            </div>
-            <input
-              value={player.pitchOffsetSemis()}
-              type="range"
-              name="speed-semitones"
-              id="speed-semitones"
-              min={-12}
-              max={12}
-              onInput={(e) => {
-                player.setPitchOffsetSemis(parseFloat(e.currentTarget.value));
-              }}
-            />
-          </div>
-          <div>
-            <label for="speed-cents">cents</label>
-            <p>
-              <span style={{ "font-family": "monospace"}}>
-                {player.pitchOffsetCents() >= 0 ? "+" : "-"}
-              </span>
-              {Math.abs(player.pitchOffsetCents())}
-            </p>
-            <input
-              value={player.pitchOffsetCents()}
-              type="range"
-              name="speed-cents"
-              id="speed-cents"
-              min={-50}
-              max={50}
-              onInput={(e) => {
-                player.setPitchOffsetCents(parseFloat(e.currentTarget.value));
-              }}
-            />
-          </div>
+          <RangeInput
+            value={player.pitchOffsetSemis()}
+            onInput={(e) => {
+              player.setPitchOffsetSemis(parseFloat(e.currentTarget.value));
+            }}
+            label="semis"
+            id="speed-semis"
+            min={-12}
+            max={12}
+          />
+          <RangeInput
+            value={player.pitchOffsetCents()}
+            onInput={(e) => {
+              player.setPitchOffsetCents(parseFloat(e.currentTarget.value));
+            }}
+            label="cents"
+            id="speed-cents"
+            min={-50}
+            max={50}
+          />
         </fieldset>
-
       </div>
     </dialog>
   </Show>
 );
 
+const RangeInput = (
+  props: {
+    min: number;
+    max: number;
+    id: string;
+    label: string;
+    value: number;
+    onInput: JSX.EventHandlerUnion<HTMLInputElement, InputEvent>;
+  },
+) => (
+  <div
+    style={{
+      width: "100%",
+    }}
+  >
+    <p style={{ display: "flex", "font-family": "monospace", }}>
+      <label for={props.id}>{props.label}</label>
+      <span style={{ "margin-inline-start": "auto"}}>
+        <span style={{  }}>
+          {props.value >= 0 ? "+" : "-"}
+          {Math.abs(props.value)}
+          <span style={{ "font-size": "small", "margin-left": "0.25ch", }}>{props.unit}</span>
+        </span>
+      </span>
+    </p>
+    <input
+      style={{ width: "100%"}}
+      value={props.value}
+      type="range"
+      name={props.id}
+      id={props.id}
+      min={props.min}
+      max={props.max}
+      onInput={props.onInput}
+    />
+  </div>
+);
 export const Pads = () => {
   return (
     <div
@@ -351,7 +364,6 @@ const RegionDetails = (props: { index: number }) => {
     </>
   );
 };
-
 
 const SegmentRegionForm = (props: { index: number }) => {
   let input: HTMLInputElement | undefined;

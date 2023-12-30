@@ -46,7 +46,7 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
       // player.play(currentBuffer, player.region(), offset);
 
       // Variable "offset" is where to start playback
-      // In units progress 0-1 
+      // In units progress 0-1
       // If no offset is provided, then region.start is used
       // Example:
       // if buffer.duration is 1s
@@ -58,7 +58,11 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
     }
   });
 
-  const play = (buffer: AudioBuffer, region = { start: 0, end: 1 }, offset = 0) => {
+  const play = (
+    buffer: AudioBuffer,
+    region = { start: 0, end: 1 },
+    offset = 0,
+  ) => {
     stop();
     setRegion(region);
     setStartedAt(audioContext.currentTime);
