@@ -74,59 +74,80 @@ export const App = () => (
       <Waveform buffer={state.clip!.buffer} />
     </div>
     <BottomPanel />
-    <dialog id="settings-dialog">
-      <div>
-        <button
-          onClick={() => {
-            const dialog = document.getElementById("settings-dialog");
-            if (dialog instanceof HTMLDialogElement) dialog.close();
-          }}
-          style={{
-            "align-self": "flex-start",
-          }}
-        >
-          X
-        </button>
-        <div>
-          <label for="loop-toggle">loop</label>
-          <input
-            type="checkbox"
-            id="loop-toggle"
-            name="loop"
-            checked={player.loop()}
-            disabled={player.playing()}
-            onChange={(e) => {
-              // @ts-ignore
-              player.setLoop(e.target.checked);
-            }}
-          />
-        </div>
-        <fieldset>
-          <legend>speed/pitch</legend>
-          <RangeInput
-            value={player.pitchOffsetSemis()}
-            onInput={(e) => {
-              player.setPitchOffsetSemis(parseFloat(e.currentTarget.value));
-            }}
-            label="semis"
-            id="speed-semis"
-            min={-12}
-            max={12}
-          />
-          <RangeInput
-            value={player.pitchOffsetCents()}
-            onInput={(e) => {
-              player.setPitchOffsetCents(parseFloat(e.currentTarget.value));
-            }}
-            label="cents"
-            id="speed-cents"
-            min={-50}
-            max={50}
-          />
-        </fieldset>
-      </div>
-    </dialog>
+    <SettingsDialog />
   </Show>
+);
+
+const SettingsDialog = () => {
+  let dialog: HTMLDialogElement | undefined;
+
+  return (
+    <dialog
+      id="settings-dialog"
+      ref={dialog}
+      onClick={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const clickWasOutside = e.x < rect.x || e.y < rect.y ||
+          e.x > rect.x + rect.width || e.y > rect.y + rect.height;
+        if (clickWasOutside) dialog?.close();
+      }}
+    >
+      <SettingsForm />
+    </dialog>
+  );
+};
+
+const SettingsForm = () => (
+  <div>
+    <button
+      onClick={() => {
+        const dialog = document.getElementById("settings-dialog");
+        if (dialog instanceof HTMLDialogElement) dialog.close();
+      }}
+      style={{
+        "align-self": "flex-start",
+      }}
+    >
+      X
+    </button>
+    <div>
+      <label for="loop-toggle">loop</label>
+      <input
+        type="checkbox"
+        id="loop-toggle"
+        name="loop"
+        checked={player.loop()}
+        disabled={player.playing()}
+        onChange={(e) => {
+          // @ts-ignore
+          player.setLoop(e.target.checked);
+        }}
+      />
+    </div>
+    <fieldset>
+      <legend>speed/pitch</legend>
+      <RangeInput
+        value={player.pitchOffsetSemis()}
+        onInput={(e) => {
+          player.setPitchOffsetSemis(parseFloat(e.currentTarget.value));
+        }}
+        label="semis"
+        id="speed-semis"
+        min={-12}
+        max={12}
+      />
+      <RangeInput
+        value={player.pitchOffsetCents()}
+        onInput={(e) => {
+          player.setPitchOffsetCents(parseFloat(e.currentTarget.value));
+        }}
+        label="cents"
+        id="speed-cents"
+        min={-50}
+        max={50}
+      />
+    </fieldset>
+  </div>
 );
 
 const RangeInput = (
@@ -144,18 +165,17 @@ const RangeInput = (
       width: "100%",
     }}
   >
-    <p style={{ display: "flex", "font-family": "monospace", }}>
+    <p style={{ display: "flex", "font-family": "monospace" }}>
       <label for={props.id}>{props.label}</label>
-      <span style={{ "margin-inline-start": "auto"}}>
-        <span style={{  }}>
+      <span style={{ "margin-inline-start": "auto" }}>
+        <span>
           {props.value >= 0 ? "+" : "-"}
           {Math.abs(props.value)}
-          <span style={{ "font-size": "small", "margin-left": "0.25ch", }}>{props.unit}</span>
         </span>
       </span>
     </p>
     <input
-      style={{ width: "100%"}}
+      style={{ width: "100%" }}
       value={props.value}
       type="range"
       name={props.id}
