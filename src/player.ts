@@ -5,13 +5,41 @@ import audiobufferToWav from "audiobuffer-to-wav";
 
 export const player = createPlayer(audioContext);
 
-type NodeAssembly = {
+type SourceAssembly = {
   sourceNode: AudioBufferSourceNode;
   gainNode: GainNode;
 };
 
 // @ts-ignore
 window.player = player;
+
+type FxAssembly = {
+  in: AudioNode;
+  out: AudioNode;
+  loPassFreq: AudioParam;
+  hiPassFreq: AudioParam;
+};
+
+function createFxAssembly(
+  audioContext: AudioContext | OfflineAudioContext,
+): FxAssembly {
+  const loPassFilter = audioContext.createBiquadFilter();
+  loPassFilter.type = "lowpass";
+  loPassFilter.Q.value = 0;
+
+  const hiPassFilter = audioContext.createBiquadFilter();
+  hiPassFilter.type = "highpass";
+  hiPassFilter.Q.value = 0;
+
+  loPassFilter.connect(hiPassFilter);
+
+  return {
+    in: loPassFilter,
+    out: hiPassFilter,
+    loPassFreq: loPassFilter.frequency,
+    hiPassFreq: hiPassFilter.frequency,
+  };
+}
 
 function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
   const [startedAt, setStartedAt] = createSignal<number | undefined>(undefined);
@@ -20,15 +48,28 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
     end: 1,
   });
   let active:
-    | { nodeAssembly: NodeAssembly; gainEnvelopeScheduler?: NodeJS.Timer }
+    | { nodeAssembly: SourceAssembly; gainEnvelopeScheduler?: NodeJS.Timer }
     | undefined;
   const [loop, setLoop] = createSignal(false);
   const [pitchOffsetSemis, setPitchOffsetSemis] = createSignal(0);
   const [pitchOffsetCents, setPitchOffsetCents] = createSignal(0);
+  const [loPass, setLoPass] = createSignal(100);
+  const [hiPass, setHiPass] = createSignal(0);
   const speed = () => {
     const totalCents = pitchOffsetCents() + (100 * pitchOffsetSemis());
     return Math.pow(2, totalCents / 1200);
   };
+
+  const fxAssembly = createFxAssembly(audioContext);
+  fxAssembly.out.connect(audioContext.destination);
+
+  createEffect(() => {
+    fxAssembly.hiPassFreq.value = mapLinearToLogarithmic(hiPass());
+  });
+
+  createEffect(() => {
+    fxAssembly.loPassFreq.value = mapLinearToLogarithmic(loPass());
+  });
 
   createEffect(() => {
     // when speed updates
@@ -61,13 +102,18 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
   const play = (
     buffer: AudioBuffer,
     region = { start: 0, end: 1 },
-    offset = 0,
   ) => {
     stop();
     setRegion(region);
     setStartedAt(audioContext.currentTime);
     if (loop()) {
-      active = schedulePlaybackLoop(audioContext, buffer, region, speed());
+      active = schedulePlaybackLoop(
+        audioContext,
+        buffer,
+        region,
+        speed(),
+        fxAssembly.in,
+      );
     } else {
       active = {
         nodeAssembly: schedulePlaybackSingle(
@@ -75,6 +121,7 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
           buffer,
           region,
           speed(),
+          fxAssembly.in,
           stop,
         ),
       };
@@ -121,6 +168,20 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
     setPitchOffsetSemis,
     pitchOffsetCents,
     setPitchOffsetCents,
+    loPass,
+    setLoPass: (v: number) => {
+      if (v < hiPass()) {
+        setHiPass(v);
+      }
+      setLoPass(v);
+    },
+    hiPass,
+    setHiPass: (v: number) => {
+      if (loPass() < v) {
+        setLoPass(v);
+      }
+      setHiPass(v);
+    },
     speed,
   };
 }
@@ -128,7 +189,7 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
 // @ts-ignore
 window.createPlayer = createPlayer;
 
-const smoothStop = (assembly: NodeAssembly, ramp = 0.001) => {
+const smoothStop = (assembly: SourceAssembly, ramp = 0.001) => {
   const end = audioContext.currentTime + ramp;
   assembly.gainNode.gain.cancelScheduledValues(audioContext.currentTime);
   assembly.gainNode.gain.setValueAtTime(1, audioContext.currentTime);
@@ -143,14 +204,15 @@ const schedulePlaybackSingle = (
   buffer: AudioBuffer,
   region: { start: number; end: number },
   speed: number,
+  out: AudioNode,
   onended?: () => void,
-): NodeAssembly => {
+): SourceAssembly => {
   const now = audioContext.currentTime;
   const start = buffer.duration * region.start;
   const duration = buffer.duration * (region.end - region.start);
 
   const gainNode = audioContext.createGain();
-  gainNode.connect(audioContext.destination);
+  gainNode.connect(out);
 
   const sourceNode = audioContext.createBufferSource();
   sourceNode.playbackRate.value = speed;
@@ -174,13 +236,14 @@ const schedulePlaybackLoop = (
   buffer: AudioBuffer,
   region: { start: number; end: number },
   speed: number,
+  out: AudioNode,
 ) => {
   const now = audioContext.currentTime;
   const bufferStartOffset = buffer.duration * region.start;
   const bufferEndOffset = buffer.duration * region.end;
 
   const gainNode = audioContext.createGain();
-  gainNode.connect(audioContext.destination);
+  gainNode.connect(out);
 
   const sourceNode = audioContext.createBufferSource();
   sourceNode.buffer = buffer;
@@ -205,7 +268,7 @@ const schedulePlaybackLoop = (
 };
 
 const startEnvelopeScheduler = (
-  nodeAssembly: NodeAssembly,
+  nodeAssembly: SourceAssembly,
   region: { start: number; end: number },
   when: number,
   speed: number,
@@ -260,6 +323,8 @@ export const print = async (
   buffer: AudioBuffer,
   region: { start: number; end: number },
   speed: number,
+  hiPass: number,
+  loPass: number,
 ) => {
   // render audiobuffer of region
   const offlineAudioContext = new OfflineAudioContext(
@@ -268,7 +333,19 @@ export const print = async (
       (region.end - region.start) / speed,
     buffer.sampleRate,
   );
-  schedulePlaybackSingle(offlineAudioContext, buffer, region, speed);
+
+  const fxPipeline = createFxAssembly(offlineAudioContext);
+  fxPipeline.hiPassFreq.value = mapLinearToLogarithmic(hiPass);
+  fxPipeline.loPassFreq.value = mapLinearToLogarithmic(loPass);
+  fxPipeline.out.connect(offlineAudioContext.destination);
+
+  schedulePlaybackSingle(
+    offlineAudioContext,
+    buffer,
+    region,
+    speed,
+    fxPipeline.in,
+  );
   const offlineResult = await offlineAudioContext
     .startRendering();
 
@@ -284,3 +361,16 @@ export const print = async (
 
   return { wav, fileName };
 };
+
+export function mapLinearToLogarithmic(x: number) {
+  const xMin = 0;
+  const xMax = 100;
+  const yMin = 20;
+  const yMax = 20000;
+
+  const logInterpolation = (Math.log10(yMax) - Math.log10(yMin)) *
+    ((x - xMin) / (xMax - xMin));
+  const y = Math.pow(10, Math.log10(yMin) + logInterpolation);
+
+  return y;
+}

@@ -4,8 +4,10 @@ export const download = async (
   buffer: AudioBuffer,
   region: { start: number; end: number },
   speed: number,
+  loPass: number,
+  hiPass: number,
 ) => {
-  const { wav, fileName } = await print(buffer, region, speed);
+  const { wav, fileName } = await print(buffer, region, speed, hiPass, loPass);
   const url = URL.createObjectURL(
     new Blob([wav], { type: "audio/wav" }),
   );
@@ -20,8 +22,10 @@ export const share = async (
   buffer: AudioBuffer,
   region: { start: number; end: number },
   speed: number,
+  loPass: number,
+  hiPass: number,
 ) => {
-  const { wav, fileName } = await print(buffer, region, speed);
+  const { wav, fileName } = await print(buffer, region, speed, hiPass, loPass);
   const file = new File([wav], fileName, { type: "audio/wav" });
   navigator.share({
     files: [file],

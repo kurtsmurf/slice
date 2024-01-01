@@ -7,7 +7,7 @@ import {
   JSX,
   Show,
 } from "solid-js";
-import { player } from "../player";
+import { mapLinearToLogarithmic, player } from "../player";
 import { download, share } from "../export";
 import { dispatch, state } from "../store";
 import {
@@ -131,20 +131,51 @@ const SettingsForm = () => (
         onInput={(e) => {
           player.setPitchOffsetSemis(parseFloat(e.currentTarget.value));
         }}
-        label="semis"
+        label="coarse"
         id="speed-semis"
         min={-12}
         max={12}
+        sign={true}
+        unit="semis"
       />
       <RangeInput
         value={player.pitchOffsetCents()}
         onInput={(e) => {
           player.setPitchOffsetCents(parseFloat(e.currentTarget.value));
         }}
-        label="cents"
+        label="fine"
         id="speed-cents"
         min={-50}
         max={50}
+        sign={true}
+        unit="cents"
+      />
+    </fieldset>
+    <fieldset>
+      <legend>filter</legend>
+      <RangeInput
+        value={player.loPass()}
+        transformDisplay={(x) => Math.floor(mapLinearToLogarithmic(x))}
+        onInput={(e) => {
+          player.setLoPass(parseFloat(e.currentTarget.value));
+        }}
+        label="low pass"
+        id="filter-low-pass"
+        min={0}
+        max={100}
+        unit={"hz"}
+      />
+      <RangeInput
+        value={player.hiPass()}
+        transformDisplay={(x) => Math.floor(mapLinearToLogarithmic(x))}
+        onInput={(e) => {
+          player.setHiPass(parseFloat(e.currentTarget.value));
+        }}
+        label="high pass"
+        id="filter-high-pass"
+        min={0}
+        max={100}
+        unit={"hz"}
       />
     </fieldset>
   </div>
@@ -158,34 +189,50 @@ const RangeInput = (
     label: string;
     value: number;
     onInput: JSX.EventHandlerUnion<HTMLInputElement, InputEvent>;
+    transformDisplay?: (x: number) => number;
+    sign?: boolean;
+    unit?: string;
   },
-) => (
-  <div
-    style={{
-      width: "100%",
-    }}
-  >
-    <p style={{ display: "flex", "font-family": "monospace" }}>
-      <label for={props.id}>{props.label}</label>
-      <span style={{ "margin-inline-start": "auto" }}>
-        <span>
-          {props.value >= 0 ? "+" : "-"}
-          {Math.abs(props.value)}
+) => {
+  const display = () => {
+    const transformedValue = props.transformDisplay
+      ? props.transformDisplay(props.value)
+      : props.value;
+    const blah = props.sign
+      ? `${props.value >= 0 ? "+" : "-"}${Math.abs(transformedValue)}`
+      : transformedValue;
+
+    return blah + (props.unit || "");
+  };
+
+  return (
+    <div
+      style={{
+        width: "100%",
+      }}
+    >
+      <p style={{ display: "flex", "font-family": "monospace" }}>
+        <label for={props.id}>{props.label}</label>
+        <span style={{ "margin-inline-start": "auto" }}>
+          <span>
+            {display()}
+          </span>
         </span>
-      </span>
-    </p>
-    <input
-      style={{ width: "100%" }}
-      value={props.value}
-      type="range"
-      name={props.id}
-      id={props.id}
-      min={props.min}
-      max={props.max}
-      onInput={props.onInput}
-    />
-  </div>
-);
+      </p>
+      <input
+        style={{ width: "100%" }}
+        value={props.value}
+        type="range"
+        name={props.id}
+        id={props.id}
+        min={props.min}
+        max={props.max}
+        onInput={props.onInput}
+      />
+    </div>
+  );
+};
+
 export const Pads = () => {
   return (
     <div
@@ -358,7 +405,13 @@ const RegionDetails = (props: { index: number }) => {
                 const buffer = state.clip?.buffer;
                 const region = state.regions[props.index];
                 if (buffer && region) {
-                  download(buffer, region, player.speed());
+                  download(
+                    buffer,
+                    region,
+                    player.speed(),
+                    player.loPass(),
+                    player.hiPass(),
+                  );
                 }
               }}
             >
@@ -370,7 +423,13 @@ const RegionDetails = (props: { index: number }) => {
                   const buffer = state.clip?.buffer;
                   const region = state.regions[props.index];
                   if (buffer && region) {
-                    share(buffer, region, player.speed());
+                    share(
+                      buffer,
+                      region,
+                      player.speed(),
+                      player.loPass(),
+                      player.hiPass(),
+                    );
                   }
                 }}
               >
