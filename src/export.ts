@@ -1,4 +1,4 @@
-import { Region, print } from "./player";
+import { print, Region } from "./player";
 
 export const download = async (
   buffer: AudioBuffer,

@@ -11,7 +11,7 @@ window.player = player;
 type SourceAssembly = {
   sourceNode: AudioBufferSourceNode;
   gainNode: GainNode;
-};  
+};
 
 type FxAssembly = {
   in: AudioNode;
@@ -27,7 +27,7 @@ export type Region = {
   /** start position within buffer range 0-1 */
   start: number;
   /** end position within buffer range 0-1 */
-  end: number
+  end: number;
 };
 
 function createFxAssembly(
@@ -51,7 +51,10 @@ function createFxAssembly(
   };
 }
 
-type Source = { sourceAssembly: SourceAssembly; gainEnvelopeScheduler?: NodeJS.Timer }
+type Source = {
+  sourceAssembly: SourceAssembly;
+  gainEnvelopeScheduler?: NodeJS.Timer;
+};
 
 function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
   const [startedAt, setStartedAt] = createSignal<number | undefined>(undefined);
@@ -64,7 +67,7 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
   /**
    * pitch offset in semitones where 0 is no offset and 12 is double the pitch -12 is half the pitch
    */
-  const [pitchOffsetSemis,setPitchOffsetSemis] = createSignal(0);
+  const [pitchOffsetSemis, setPitchOffsetSemis] = createSignal(0);
   /**
    * pitch offset in cents where 0 is no offset, +50 is up 1/2 semitone, -50 is down 1/2 semitone
    */
@@ -173,7 +176,7 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
   const playing = () => startedAt() !== undefined;
 
   const [progress, setProgress] = createSignal(0);
-  
+
   // sync progress
   useAnimationFrame(() => {
     const startedAt_ = startedAt();
@@ -183,11 +186,14 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
       activeSource.sourceAssembly.sourceNode.buffer.duration;
     const timeSinceStart = audioContext.currentTime - startedAt_;
     const loopTime = timeSinceStart * speed() % regionDuration;
-    const regionOffset = activeSource.sourceAssembly.sourceNode.buffer.duration *
+    const regionOffset =
+      activeSource.sourceAssembly.sourceNode.buffer.duration *
       region().start;
     const elapsed = loopTime + regionOffset;
 
-    setProgress(elapsed / activeSource.sourceAssembly.sourceNode.buffer.duration);
+    setProgress(
+      elapsed / activeSource.sourceAssembly.sourceNode.buffer.duration,
+    );
   });
 
   return {

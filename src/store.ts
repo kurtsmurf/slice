@@ -1,7 +1,7 @@
 import { Clip } from "./types";
 import { createStore } from "solid-js/store";
 import { range } from "./util/range";
-import { Region, player } from "./player";
+import { player, Region } from "./player";
 
 type Mode = "delete" | "edit" | "slice";
 
