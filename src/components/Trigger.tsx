@@ -1,9 +1,9 @@
 import { createMemo, JSX, Show, splitProps } from "solid-js";
-import { player } from "../player";
+import { player, Region } from "../player";
 import { same, state } from "../store";
 
 export const Trigger = (props: {
-  region: { start: number; end: number };
+  region: Region;
   text?: string;
   onTrigger?: () => void;
   style?: JSX.CSSProperties;

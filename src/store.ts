@@ -1,11 +1,9 @@
 import { Clip } from "./types";
 import { createStore } from "solid-js/store";
 import { range } from "./util/range";
-import { player } from "./player";
+import { Region, player } from "./player";
 
 type Mode = "delete" | "edit" | "slice";
-
-type Region = { start: number; end: number };
 
 type State = {
   cursor: number;

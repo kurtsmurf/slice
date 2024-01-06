@@ -8,7 +8,7 @@ import {
   Show,
 } from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
-import { player } from "../player";
+import { player, Region } from "../player";
 import { dispatch, same, state } from "../store";
 import { ChannelSegment } from "./ChannelSegment";
 import { useAnimationFrame } from "../behaviors/useAnimationFrame";
@@ -201,7 +201,7 @@ const ActiveRegion = () => {
 
 const Slice = (
   props: JSX.HTMLAttributes<HTMLDivElement> & {
-    region: { start: number; end: number };
+    region: Region;
     index: number;
   },
 ) => {

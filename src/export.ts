@@ -1,8 +1,8 @@
-import { print } from "./player";
+import { Region, print } from "./player";
 
 export const download = async (
   buffer: AudioBuffer,
-  region: { start: number; end: number },
+  region: Region,
   speed: number,
   loPass: number,
   hiPass: number,
@@ -20,7 +20,7 @@ export const download = async (
 
 export const share = async (
   buffer: AudioBuffer,
-  region: { start: number; end: number },
+  region: Region,
   speed: number,
   loPass: number,
   hiPass: number,

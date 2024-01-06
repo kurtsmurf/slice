@@ -5,19 +5,29 @@ import audiobufferToWav from "audiobuffer-to-wav";
 
 export const player = createPlayer(audioContext);
 
+// @ts-ignore
+window.player = player;
+
 type SourceAssembly = {
   sourceNode: AudioBufferSourceNode;
   gainNode: GainNode;
-};
-
-// @ts-ignore
-window.player = player;
+};  
 
 type FxAssembly = {
   in: AudioNode;
   out: AudioNode;
   loPassFreq: AudioParam;
   hiPassFreq: AudioParam;
+};
+
+/**
+ * represents a region of an audio buffer
+ */
+export type Region = {
+  /** start position within buffer range 0-1 */
+  start: number;
+  /** end position within buffer range 0-1 */
+  end: number
 };
 
 function createFxAssembly(
@@ -41,15 +51,15 @@ function createFxAssembly(
   };
 }
 
+type Source = { sourceAssembly: SourceAssembly; gainEnvelopeScheduler?: NodeJS.Timer }
+
 function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
   const [startedAt, setStartedAt] = createSignal<number | undefined>(undefined);
-  const [region, setRegion] = createSignal<{ start: number; end: number }>({
+  const [region, setRegion] = createSignal<Region>({
     start: 0,
     end: 1,
   });
-  let active:
-    | { nodeAssembly: SourceAssembly; gainEnvelopeScheduler?: NodeJS.Timer }
-    | undefined;
+  let activeSource: Source | undefined;
   const [loop, setLoop] = createSignal(false);
   const [pitchOffsetSemis, setPitchOffsetSemis] = createSignal(0);
   const [pitchOffsetCents, setPitchOffsetCents] = createSignal(0);
@@ -75,7 +85,7 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
     // when speed updates
     speed();
 
-    const currentBuffer = active?.nodeAssembly.sourceNode.buffer;
+    const currentBuffer = activeSource?.sourceAssembly.sourceNode.buffer;
 
     // if playing
     if (currentBuffer) {
@@ -107,7 +117,7 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
     setRegion(region);
     setStartedAt(audioContext.currentTime);
     if (loop()) {
-      active = schedulePlaybackLoop(
+      activeSource = schedulePlaybackLoop(
         audioContext,
         buffer,
         region,
@@ -115,8 +125,8 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
         fxAssembly.in,
       );
     } else {
-      active = {
-        nodeAssembly: schedulePlaybackSingle(
+      activeSource = {
+        sourceAssembly: schedulePlaybackSingle(
           audioContext,
           buffer,
           region,
@@ -129,12 +139,12 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
   };
 
   const stop = () => {
-    if (!active) {
+    if (!activeSource) {
       return;
     }
-    clearInterval(active.gainEnvelopeScheduler);
-    smoothStop(active.nodeAssembly);
-    active = undefined;
+    clearInterval(activeSource.gainEnvelopeScheduler);
+    smoothStop(activeSource.sourceAssembly);
+    activeSource = undefined;
     setStartedAt(undefined);
   };
 
@@ -143,17 +153,17 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
   const [progress, setProgress] = createSignal(0);
   useAnimationFrame(() => {
     const startedAt_ = startedAt();
-    if (!startedAt_ || !active?.nodeAssembly.sourceNode.buffer) return;
+    if (!startedAt_ || !activeSource?.sourceAssembly.sourceNode.buffer) return;
 
     const regionDuration = (region().end - region().start) *
-      active.nodeAssembly.sourceNode.buffer.duration;
+      activeSource.sourceAssembly.sourceNode.buffer.duration;
     const timeSinceStart = audioContext.currentTime - startedAt_;
     const loopTime = timeSinceStart * speed() % regionDuration;
-    const regionOffset = active.nodeAssembly.sourceNode.buffer.duration *
+    const regionOffset = activeSource.sourceAssembly.sourceNode.buffer.duration *
       region().start;
     const elapsed = loopTime + regionOffset;
 
-    setProgress(elapsed / active.nodeAssembly.sourceNode.buffer.duration);
+    setProgress(elapsed / activeSource.sourceAssembly.sourceNode.buffer.duration);
   });
 
   return {
@@ -202,7 +212,7 @@ const smoothStop = (assembly: SourceAssembly, ramp = 0.001) => {
 const schedulePlaybackSingle = (
   audioContext: AudioContext | OfflineAudioContext,
   buffer: AudioBuffer,
-  region: { start: number; end: number },
+  region: Region,
   speed: number,
   out: AudioNode,
   onended?: () => void,
@@ -234,10 +244,10 @@ const schedulePlaybackSingle = (
 const schedulePlaybackLoop = (
   audioContext: AudioContext | OfflineAudioContext,
   buffer: AudioBuffer,
-  region: { start: number; end: number },
+  region: Region,
   speed: number,
   out: AudioNode,
-) => {
+): Source => {
   const now = audioContext.currentTime;
   const bufferStartOffset = buffer.duration * region.start;
   const bufferEndOffset = buffer.duration * region.end;
@@ -253,10 +263,10 @@ const schedulePlaybackLoop = (
   sourceNode.playbackRate.value = speed;
   sourceNode.connect(gainNode);
 
-  const nodeAssembly = { sourceNode, gainNode };
+  const sourceAssembly = { sourceNode, gainNode };
 
   const gainEnvelopeScheduler = startEnvelopeScheduler(
-    nodeAssembly,
+    sourceAssembly,
     region,
     now,
     speed,
@@ -264,17 +274,17 @@ const schedulePlaybackLoop = (
 
   sourceNode.start(now, bufferStartOffset);
 
-  return { nodeAssembly, gainEnvelopeScheduler };
+  return { sourceAssembly, gainEnvelopeScheduler };
 };
 
 const startEnvelopeScheduler = (
-  nodeAssembly: SourceAssembly,
-  region: { start: number; end: number },
+  sourceAssembly: SourceAssembly,
+  region: Region,
   when: number,
   speed: number,
 ) => {
   const regionDuration = (region.end - region.start) *
-    (nodeAssembly.sourceNode.buffer?.duration || 1) / speed;
+    (sourceAssembly.sourceNode.buffer?.duration || 1) / speed;
 
   let lastIterationScheduled = -1;
 
@@ -290,7 +300,7 @@ const startEnvelopeScheduler = (
     ) {
       lastIterationScheduled = i;
       scheduleEnvelope(
-        nodeAssembly.gainNode,
+        sourceAssembly.gainNode,
         {
           start: when + i * regionDuration,
           end: when + (i + 1) * regionDuration,
@@ -321,7 +331,7 @@ const scheduleEnvelope = (
 
 export const print = async (
   buffer: AudioBuffer,
-  region: { start: number; end: number },
+  region: Region,
   speed: number,
   hiPass: number,
   loPass: number,
