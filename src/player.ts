@@ -61,10 +61,28 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
   });
   let activeSource: Source | undefined;
   const [loop, setLoop] = createSignal(false);
-  const [pitchOffsetSemis, setPitchOffsetSemis] = createSignal(0);
+  /**
+   * pitch offset in semitones where 0 is no offset and 12 is double the pitch -12 is half the pitch
+   */
+  const [pitchOffsetSemis,setPitchOffsetSemis] = createSignal(0);
+  /**
+   * pitch offset in cents where 0 is no offset, +50 is up 1/2 semitone, -50 is down 1/2 semitone
+   */
   const [pitchOffsetCents, setPitchOffsetCents] = createSignal(0);
+  /**
+   * low pass frequency in % where 100% is 20000hz and 0% is 0hz
+   * default 100% i.e. everything below 20000hz passes through (i.e. everything)
+   */
   const [loPass, setLoPass] = createSignal(100);
+  /**
+   * high pass frequency in % where 100% is 20000hz and 0% is 0hz
+   * default 0% i.e. everything above 0hz passes through (i.e. everything)
+   */
   const [hiPass, setHiPass] = createSignal(0);
+
+  /**
+   * @returns the speed at which to play audio based on the pitch offset
+   */
   const speed = () => {
     const totalCents = pitchOffsetCents() + (100 * pitchOffsetSemis());
     return Math.pow(2, totalCents / 1200);
@@ -74,10 +92,14 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
   fxAssembly.out.connect(audioContext.destination);
 
   createEffect(() => {
+    // when hiPass changes
+    // update the filter by mapping hiPass to hz
     fxAssembly.hiPassFreq.value = mapLinearToLogarithmic(hiPass());
   });
 
   createEffect(() => {
+    // when loPass changes
+    // update the filter by mapping loPass to hz
     fxAssembly.loPassFreq.value = mapLinearToLogarithmic(loPass());
   });
 
@@ -90,11 +112,11 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
     // if playing
     if (currentBuffer) {
       // restart player
-      player.stop();
-      player.play(currentBuffer, player.region());
+      stop();
+      play(currentBuffer, region());
 
       // restart where you left off
-      // player.play(currentBuffer, player.region(), offset);
+      // play(currentBuffer, region(), offset);
 
       // Variable "offset" is where to start playback
       // In units progress 0-1
@@ -151,6 +173,8 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
   const playing = () => startedAt() !== undefined;
 
   const [progress, setProgress] = createSignal(0);
+  
+  // sync progress
   useAnimationFrame(() => {
     const startedAt_ = startedAt();
     if (!startedAt_ || !activeSource?.sourceAssembly.sourceNode.buffer) return;
