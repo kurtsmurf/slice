@@ -107,7 +107,7 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
   });
 
   createEffect(() => {
-    // when speed updates
+    // when speed changes
     speed();
 
     const currentBuffer = activeSource?.sourceAssembly.sourceNode.buffer;
@@ -117,20 +117,6 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
       // restart player
       stop();
       play(currentBuffer, region());
-
-      // restart where you left off
-      // play(currentBuffer, region(), offset);
-
-      // Variable "offset" is where to start playback
-      // In units progress 0-1
-      // If no offset is provided, then region.start is used
-      // Example:
-      // if buffer.duration is 1s
-      // and region is { start: 0.5, end: 0.7}
-      // and offset is 0.6
-      // playback will start from 0.6
-      // if loop, loop will resume from 0.5
-      // else playback stops at 0.7
     }
   });
 
