@@ -191,6 +191,7 @@ const ActiveRegion = () => {
           width: (region().end - region().start) * 100 + "cqi",
           left: region().start * 100 + "cqi",
           background: "hsl(39deg 100% 50% / 25%)",
+          "background-image": "url('noise.svg')",
           "pointer-events": "none",
         }}
       >
@@ -479,7 +480,7 @@ const Cursor = (
           ref={ref}
           pos={dragPos()}
           width={30}
-          background="hsl(39deg 100% 50% / 50%)"
+          background="url('noise.svg') hsl(39deg 100% 50% / 50%)"
           onPointerDown={drag.start}
           onKeyDown={onKeyDown}
           onFocus={() => setZoomCenter(dragPos())}
