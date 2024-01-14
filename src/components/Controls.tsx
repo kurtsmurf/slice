@@ -7,7 +7,6 @@ export const Controls = () => (
     <button
       onClick={() => {
         const dialog = document.getElementById("settings-dialog");
-        console.log(dialog);
         if (dialog instanceof HTMLDialogElement) {
           dialog.showModal();
         }

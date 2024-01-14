@@ -178,6 +178,20 @@ const SettingsForm = () => (
         unit={"hz"}
       />
     </fieldset>
+    <fieldset>
+      <legend>compression</legend>
+      <RangeInput
+        value={player.compressionThreshold()}
+        onInput={(e) => {
+          player.setCompressionThreshold(parseFloat(e.currentTarget.value));
+        }}
+        label="threshold"
+        id="compression-threshold"
+        min={-30}
+        max={0}
+        unit={"dB"}
+      />
+    </fieldset>
   </div>
 );
 

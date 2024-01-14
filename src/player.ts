@@ -18,6 +18,7 @@ type FxAssembly = {
   out: AudioNode;
   loPassFreq: AudioParam;
   hiPassFreq: AudioParam;
+  compressionThreshold: AudioParam;
 };
 
 /**
@@ -41,13 +42,16 @@ function createFxAssembly(
   hiPassFilter.type = "highpass";
   hiPassFilter.Q.value = 0;
 
-  loPassFilter.connect(hiPassFilter);
+  const compressor = audioContext.createDynamicsCompressor();
+
+  loPassFilter.connect(hiPassFilter).connect(compressor);
 
   return {
     in: loPassFilter,
-    out: hiPassFilter,
+    out: compressor,
     loPassFreq: loPassFilter.frequency,
     hiPassFreq: hiPassFilter.frequency,
+    compressionThreshold: compressor.threshold,
   };
 }
 
@@ -84,6 +88,12 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
   const [hiPass, setHiPass] = createSignal(0);
 
   /**
+   * threshold, measured in decibels, above which compression will be applied
+   * max=0, min=??
+   */
+  const [compressionThreshold, setCompressionThreshold] = createSignal(0);
+
+  /**
    * @returns the speed at which to play audio based on the pitch offset
    */
   const speed = () => {
@@ -104,6 +114,12 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
     // when loPass changes
     // update the filter by mapping loPass to hz
     fxAssembly.loPassFreq.value = mapLinearToLogarithmic(loPass());
+  });
+
+  createEffect(() => {
+    // when compression threshold changes
+    // update the dynamics compressor node threshold
+    fxAssembly.compressionThreshold.value = compressionThreshold();
   });
 
   createEffect(() => {
@@ -209,6 +225,8 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
       setHiPass(v);
     },
     speed,
+    compressionThreshold,
+    setCompressionThreshold,
   };
 }
 
