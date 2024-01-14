@@ -19,6 +19,7 @@ type FxAssembly = {
   loPassFreq: AudioParam;
   hiPassFreq: AudioParam;
   compressionThreshold: AudioParam;
+  gain: AudioParam;
 };
 
 /**
@@ -44,14 +45,17 @@ function createFxAssembly(
 
   const compressor = audioContext.createDynamicsCompressor();
 
-  loPassFilter.connect(hiPassFilter).connect(compressor);
+  const gain = audioContext.createGain();
+
+  loPassFilter.connect(hiPassFilter).connect(compressor).connect(gain);
 
   return {
     in: loPassFilter,
-    out: compressor,
+    out: gain,
     loPassFreq: loPassFilter.frequency,
     hiPassFreq: hiPassFilter.frequency,
     compressionThreshold: compressor.threshold,
+    gain: gain.gain,
   };
 }
 
@@ -86,12 +90,15 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
    * default 0% i.e. everything above 0hz passes through (i.e. everything)
    */
   const [hiPass, setHiPass] = createSignal(0);
-
   /**
    * threshold, measured in decibels, above which compression will be applied
    * max=0, min=??
    */
   const [compressionThreshold, setCompressionThreshold] = createSignal(0);
+  /**
+   * gain measured in decibels
+   */
+  const [gain, setGain] = createSignal(0);
 
   /**
    * @returns the speed at which to play audio based on the pitch offset
@@ -103,6 +110,12 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
 
   const fxAssembly = createFxAssembly(audioContext);
   fxAssembly.out.connect(audioContext.destination);
+
+  createEffect(() => {
+    // when gain changes
+    // update the gain node gain by mapping dB value to factor
+    fxAssembly.gain.value = Math.pow(10, gain() / 20);
+  });
 
   createEffect(() => {
     // when hiPass changes
@@ -227,6 +240,8 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
     speed,
     compressionThreshold,
     setCompressionThreshold,
+    gain,
+    setGain,
   };
 }
 

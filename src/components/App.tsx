@@ -189,9 +189,22 @@ const SettingsForm = () => (
         id="compression-threshold"
         min={-30}
         max={0}
+        sign={true}
         unit={"dB"}
       />
     </fieldset>
+    <RangeInput
+      value={player.gain()}
+      onInput={(e) => {
+        player.setGain(parseFloat(e.currentTarget.value));
+      }}
+      label="gain"
+      id="gain"
+      min={-20}
+      max={20}
+      sign={true}
+      unit={"dB"}
+    />
   </div>
 );
 
