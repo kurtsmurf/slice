@@ -89,7 +89,15 @@ const SettingsDialog = () => {
         const rect = e.currentTarget.getBoundingClientRect();
         const clickWasOutside = e.x < rect.x || e.y < rect.y ||
           e.x > rect.x + rect.width || e.y > rect.y + rect.height;
-        if (clickWasOutside) dialog?.close();
+        console.log(e.target);
+        if (e.target === dialog && clickWasOutside) dialog?.close();
+      }}
+      style={{
+        "max-height": "unset",
+        height: "100vh",
+        border: "none",
+        "border-right": "2px solid",
+        "box-shadow": "0px 0px 10px",
       }}
     >
       <SettingsForm />
