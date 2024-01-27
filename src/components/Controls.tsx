@@ -4,16 +4,6 @@ import "./Controls.css";
 
 export const Controls = () => (
   <div class="controls">
-    <button
-      onClick={() => {
-        const dialog = document.getElementById("settings-dialog");
-        if (dialog instanceof HTMLDialogElement) {
-          dialog.showModal();
-        }
-      }}
-    >
-      FX
-    </button>
     <fieldset
       onChange={(e) => {
         // @ts-ignore

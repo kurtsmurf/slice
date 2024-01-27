@@ -74,6 +74,7 @@ export const App = () => (
       <Waveform buffer={state.clip!.buffer} />
     </div>
     <BottomPanel />
+    <FloatingSettingsButton />
     <SettingsDialog />
   </Show>
 );
@@ -275,6 +276,8 @@ export const Pads = () => {
         display: "grid",
         "grid-template-columns": "repeat( auto-fit, minmax(100px, 1fr) )",
         "grid-auto-rows": "100px",
+        // compensate for hovering buttons
+        "padding-bottom": "calc(var(--min-btn-dimension) * 2)",
       }}
     >
       <For each={state.regions}>
@@ -407,6 +410,8 @@ const RegionDetails = (props: { index: number }) => {
             "flex-wrap": "wrap",
             gap: "1rem",
             "margin-inline": "1rem",
+            // compensate for hovering buttons
+            "padding-bottom": "calc(var(--min-btn-dimension) * 2)",
           }}
         >
           <fieldset
@@ -541,4 +546,31 @@ const scrollRegionIntoView = (region: typeof state.regions[number]) => {
     scrollElement.scrollLeft = region.start * contentElement.clientWidth -
       scrollElement.clientWidth / 2;
   }
+};
+
+const FloatingSettingsButton = () => {
+  return (
+    <button
+      style={{
+        position: "fixed",
+        bottom: "calc(var(--min-btn-dimension) * .25)",
+        left: "calc(var(--min-btn-dimension) * .25)",
+        "min-width": "unset",
+        width: "calc(var(--min-btn-dimension) * 1.5)",
+        height: "calc(var(--min-btn-dimension) * 1.5)",
+        // "border-radius": "50%",
+        // background: "black",
+        // color: "white",
+        // border: "none",
+      }}
+      onClick={() => {
+        const dialog = document.getElementById("settings-dialog");
+        if (dialog instanceof HTMLDialogElement) {
+          dialog.showModal();
+        }
+      }}
+    >
+      FX
+    </button>
+  );
 };
