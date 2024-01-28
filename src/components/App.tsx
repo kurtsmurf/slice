@@ -363,6 +363,10 @@ const RegionDetails = (props: { index: number }) => {
           style={{
             display: "flex",
             "align-items": "center",
+            position: "sticky",
+            top: 0,
+            background: "white",
+            "z-index": 1,
           }}
         >
           <button
@@ -558,10 +562,7 @@ const FloatingSettingsButton = () => {
         "min-width": "unset",
         width: "calc(var(--min-btn-dimension) * 1.5)",
         height: "calc(var(--min-btn-dimension) * 1.5)",
-        // "border-radius": "50%",
-        // background: "black",
-        // color: "white",
-        // border: "none",
+        "z-index": 2,
       }}
       onClick={() => {
         const dialog = document.getElementById("settings-dialog");
