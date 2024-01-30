@@ -111,28 +111,28 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
   const fxAssembly = createFxAssembly(audioContext);
   fxAssembly.out.connect(audioContext.destination);
 
+
+
   createEffect(() => {
-    // when gain changes
-    // update the gain node gain by mapping dB value to factor
-    fxAssembly.gain.value = Math.pow(10, gain() / 20);
+    rampTo(fxAssembly.gain, Math.pow(10, gain() / 20));
   });
 
   createEffect(() => {
     // when hiPass changes
     // update the filter by mapping hiPass to hz
-    fxAssembly.hiPassFreq.value = mapLinearToLogarithmic(hiPass());
+    rampTo(fxAssembly.hiPassFreq, mapLinearToLogarithmic(hiPass()));
   });
 
   createEffect(() => {
     // when loPass changes
     // update the filter by mapping loPass to hz
-    fxAssembly.loPassFreq.value = mapLinearToLogarithmic(loPass());
+    rampTo(fxAssembly.loPassFreq, mapLinearToLogarithmic(loPass()));
   });
 
   createEffect(() => {
     // when compression threshold changes
     // update the dynamics compressor node threshold
-    fxAssembly.compressionThreshold.value = compressionThreshold();
+    rampTo(fxAssembly.compressionThreshold, compressionThreshold());
   });
 
   createEffect(() => {
@@ -247,6 +247,13 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
 
 // @ts-ignore
 window.createPlayer = createPlayer;
+
+
+function rampTo (param: AudioParam, value: number, ramp = 0.0001) {
+  param.cancelScheduledValues(audioContext.currentTime);
+  param.value = param.value;
+  param.linearRampToValueAtTime(value, audioContext.currentTime + ramp);
+};
 
 const smoothStop = (assembly: SourceAssembly, ramp = 0.001) => {
   const end = audioContext.currentTime + ramp;
