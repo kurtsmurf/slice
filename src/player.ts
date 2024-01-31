@@ -111,8 +111,6 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
   const fxAssembly = createFxAssembly(audioContext);
   fxAssembly.out.connect(audioContext.destination);
 
-
-
   createEffect(() => {
     rampTo(fxAssembly.gain, Math.pow(10, gain() / 20));
   });
@@ -248,12 +246,11 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
 // @ts-ignore
 window.createPlayer = createPlayer;
 
-
-function rampTo (param: AudioParam, value: number, ramp = 0.0001) {
+function rampTo(param: AudioParam, value: number, ramp = 0.0001) {
   param.cancelScheduledValues(audioContext.currentTime);
   param.value = param.value;
   param.linearRampToValueAtTime(value, audioContext.currentTime + ramp);
-};
+}
 
 const smoothStop = (assembly: SourceAssembly, ramp = 0.001) => {
   const end = audioContext.currentTime + ramp;

@@ -74,7 +74,7 @@ export const App = () => (
       <Waveform buffer={state.clip!.buffer} />
     </div>
     <BottomPanel />
-    <FloatingSettingsButton />
+    <FloatingControls />
     <SettingsDialog />
   </Show>
 );
@@ -119,20 +119,6 @@ const SettingsForm = () => (
     >
       X
     </button>
-    <div>
-      <label for="loop-toggle">loop</label>
-      <input
-        type="checkbox"
-        id="loop-toggle"
-        name="loop"
-        checked={player.loop()}
-        disabled={player.playing()}
-        onChange={(e) => {
-          // @ts-ignore
-          player.setLoop(e.target.checked);
-        }}
-      />
-    </div>
     <fieldset>
       <legend>speed/pitch</legend>
       <RangeInput
@@ -552,26 +538,61 @@ const scrollRegionIntoView = (region: typeof state.regions[number]) => {
   }
 };
 
-const FloatingSettingsButton = () => {
-  return (
-    <button
-      style={{
-        position: "fixed",
-        bottom: "calc(var(--min-btn-dimension) * .25)",
-        left: "calc(var(--min-btn-dimension) * .25)",
-        "min-width": "unset",
-        width: "calc(var(--min-btn-dimension) * 1.5)",
-        height: "calc(var(--min-btn-dimension) * 1.5)",
-        "z-index": 2,
+const FloatingControls = () => (
+  <div
+    style={{
+      position: "fixed",
+      bottom: "calc(var(--min-btn-dimension) * .25)",
+      left: "calc(var(--min-btn-dimension) * .25)",
+      "min-width": "unset",
+      "z-index": 2,
+      display: "flex",
+      gap: "calc(var(--min-btn-dimension) * .25)",
+    }}
+  >
+    <ToggleFxDialog />
+    <ToggleLoop />
+  </div>
+);
+
+const ToggleFxDialog = () => (
+  <button
+    style={{
+      width: "calc(var(--min-btn-dimension) * 1.25)",
+      height: "calc(var(--min-btn-dimension) * 1.25)",
+    }}
+    onClick={() => {
+      const dialog = document.getElementById("settings-dialog");
+      if (dialog instanceof HTMLDialogElement) {
+        dialog.showModal();
+      }
+    }}
+  >
+    FX
+  </button>
+);
+
+const ToggleLoop = () => (
+  <label
+    for="loop-toggle"
+    style={{
+      background: "white",
+      width: "calc(var(--min-btn-dimension) * 1.25)",
+      height: "calc(var(--min-btn-dimension) * 1.25)",
+      border: "1px solid",
+    }}
+  >
+    <span>loop</span>
+    <input
+      type="checkbox"
+      id="loop-toggle"
+      name="loop"
+      checked={player.loop()}
+      disabled={player.playing()}
+      onChange={(e) => {
+        // @ts-ignore
+        player.setLoop(e.target.checked);
       }}
-      onClick={() => {
-        const dialog = document.getElementById("settings-dialog");
-        if (dialog instanceof HTMLDialogElement) {
-          dialog.showModal();
-        }
-      }}
-    >
-      FX
-    </button>
-  );
-};
+    />
+  </label>
+);
