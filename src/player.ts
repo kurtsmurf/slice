@@ -246,7 +246,7 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
 // @ts-ignore
 window.createPlayer = createPlayer;
 
-function rampTo(param: AudioParam, value: number, ramp = 0.0001) {
+function rampTo(param: AudioParam, value: number, ramp = 0.001) {
   param.cancelScheduledValues(audioContext.currentTime);
   param.value = param.value;
   param.linearRampToValueAtTime(value, audioContext.currentTime + ramp);

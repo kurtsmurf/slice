@@ -87,6 +87,7 @@ export const dispatch = {
     ) {
       player.stop();
     }
+
     setStore("regions", index - 1, (prev) => ({ start: prev.start, end: pos }));
     setStore("regions", index, (prev) => ({ start: pos, end: prev.end }));
   },
