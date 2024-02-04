@@ -442,6 +442,7 @@ const RegionDetails = (props: { index: number }) => {
                     player.loPass(),
                     player.hiPass(),
                     player.compressionThreshold(),
+                    player.gain(),
                   );
                 }
               }}
@@ -461,6 +462,7 @@ const RegionDetails = (props: { index: number }) => {
                       player.loPass(),
                       player.hiPass(),
                       player.compressionThreshold(),
+                      player.gain(),
                     );
                   }
                 }}
