@@ -27,20 +27,6 @@ button {
 #region-details-playback button {
   position: relative;
 }
-/* :focus-visible */
-#region-details-playback button:focus-visible::before {
-  font-size: 1rem;
-  content: "‹";
-  position: absolute;
-  left: -0.75rem;
-}
-/* :focus-visible */
-#region-details-playback button:focus-visible::after {
-  font-size: 1rem;
-  content: "›";
-  position: absolute;
-  right: -0.75rem
-}
 
 fieldset {
   display: flex;
