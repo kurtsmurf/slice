@@ -388,6 +388,7 @@ export const print = async (
   speed: number,
   hiPass: number,
   loPass: number,
+  compressionThreshold: number,
 ) => {
   // render audiobuffer of region
   const offlineAudioContext = new OfflineAudioContext(
@@ -400,6 +401,7 @@ export const print = async (
   const fxPipeline = createFxAssembly(offlineAudioContext);
   fxPipeline.hiPassFreq.value = mapLinearToLogarithmic(hiPass);
   fxPipeline.loPassFreq.value = mapLinearToLogarithmic(loPass);
+  fxPipeline.compressionThreshold.value = compressionThreshold; 
   fxPipeline.out.connect(offlineAudioContext.destination);
 
   schedulePlaybackSingle(
