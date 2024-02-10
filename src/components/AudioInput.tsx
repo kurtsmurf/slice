@@ -1,7 +1,4 @@
-import { audioContext } from "../audioContext";
-import { Clip } from "../types";
-
-type Props = { onChange: (clip: Clip) => void };
+type Props = { onChange: (file: File) => void };
 
 export const AudioInput = (props: Props) => {
   let input: HTMLInputElement | undefined;
@@ -20,27 +17,9 @@ export const AudioInput = (props: Props) => {
         accept=".mp3, .wav, .m4a"
         onChange={(e) => {
           const [file] = [...(e.currentTarget.files || [])];
-          clipOfFile(file).then(props.onChange);
+          props.onChange(file);
         }}
       />
     </>
   );
 };
-
-const clipOfFile = async (file: File): Promise<Clip> => ({
-  name: file.name,
-  buffer: await audioContext.decodeAudioData(await arrayBufferOfFile(file)),
-});
-
-const arrayBufferOfFile = (file: File) =>
-  new Promise<ArrayBuffer>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = (e) => {
-      if (!(e.target?.result instanceof ArrayBuffer)) {
-        reject();
-        return;
-      }
-      resolve(e.target.result);
-    };
-    reader.readAsArrayBuffer(file);
-  });

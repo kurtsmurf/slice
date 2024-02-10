@@ -21,10 +21,29 @@ import { Details } from "./Details";
 import { Trigger } from "./Trigger";
 import "./style.css";
 import { audioContext } from "../audioContext";
+import { Clip } from "../types";
+
+export const [loading, setLoading] = createSignal(false);
+
+const clipOfFile = async (file: File): Promise<Clip> => ({
+  name: file.name,
+  buffer: await audioContext.decodeAudioData(await arrayBufferOfFile(file)),
+});
+
+const arrayBufferOfFile = (file: File) =>
+  new Promise<ArrayBuffer>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = (e) => {
+      if (!(e.target?.result instanceof ArrayBuffer)) {
+        reject();
+        return;
+      }
+      resolve(e.target.result);
+    };
+    reader.readAsArrayBuffer(file);
+  });
 
 const LoadAudio = () => {
-  let input: HTMLInputElement | undefined;
-
   return (
     <fieldset
       style={{
@@ -32,51 +51,103 @@ const LoadAudio = () => {
       }}
     >
       <legend>import audio</legend>
-      <AudioInput onChange={dispatch.setClip} />
-      <form
-        style={{
-          display: "flex",
-          gap: "1ch",
-          "align-items": "center",
-          "flex-wrap": "wrap",
+      <AudioInput
+        onChange={async (file) => {
+          setLoading(true);
+          const clip = await clipOfFile(file)
+            .catch((err) => {
+              console.error(err);
+              alert("failed to load audio");
+              setLoading(false);
+            });
+
+          if (!clip) return;
+
+          setLoading(false);
+          dispatch.setClip(clip);
         }}
-        onSubmit={async (e) => {
-          e.preventDefault();
-          if (e.currentTarget.checkValidity() && input) {
-            const url = input.value;
-            const response = await fetch(url);
-            const buffer = await audioContext.decodeAudioData(
-              await response.arrayBuffer(),
-            );
-            const name = url.slice(url.lastIndexOf("/") + 1);
-            dispatch.setClip({ name, buffer });
-          }
-        }}
-      >
-        <button type="submit">from url</button>
-        <label for="url-input">
-          url:
-        </label>
-        <input ref={input} type="url" id="url-input" name="url" required />
-      </form>
+      />
+      <UrlInput />
     </fieldset>
   );
 };
 
+const UrlInput = () => {
+  let input: HTMLInputElement | undefined;
+  return (
+    <form
+      style={{
+        display: "flex",
+        gap: "1ch",
+        "align-items": "center",
+        "flex-wrap": "wrap",
+      }}
+      onSubmit={async (e) => {
+        e.preventDefault();
+        if (e.currentTarget.checkValidity() && input) {
+          setLoading(true);
+          const url = input.value;
+
+          const buffer = await fetch(url)
+            .then((response) => response.arrayBuffer())
+            .then((arrayBuffer) => audioContext.decodeAudioData(arrayBuffer))
+            .catch((err) => {
+              console.error(err);
+              alert("failed to load audio");
+              setLoading(false);
+            });
+
+          if (!buffer) return;
+
+          const name = url.slice(url.lastIndexOf("/") + 1);
+          dispatch.setClip({ name, buffer });
+          setLoading(false);
+        }
+      }}
+    >
+      <button type="submit">from url</button>
+      <label for="url-input">
+        url:
+      </label>
+      <input ref={input} type="url" id="url-input" name="url" required />
+    </form>
+  );
+};
+
 export const App = () => (
-  <Show
-    when={state.clip}
-    fallback={<LoadAudio />}
-  >
-    <div>
-      <Details clip={state.clip!} />
-      <Controls />
-      <Waveform buffer={state.clip!.buffer} />
-    </div>
-    <BottomPanel />
-    <FloatingControls />
-    <SettingsDialog />
-  </Show>
+  <>
+    <Show
+      when={state.clip}
+      fallback={<LoadAudio />}
+    >
+      <div>
+        <Details clip={state.clip!} />
+        <Controls />
+        <Waveform buffer={state.clip!.buffer} />
+      </div>
+      <BottomPanel />
+      <FloatingControls />
+      <SettingsDialog />
+    </Show>
+    <Show when={loading()}>
+      <div
+        style={{
+          position: "absolute",
+          width: "100vw",
+          height: "100vh",
+          left: 0,
+          top: 0,
+          background: "black",
+          opacity: 0.3,
+          display: "grid",
+          "place-content": "center",
+          "z-index": 100,
+        }}
+      >
+        <progress></progress>
+      </div>
+    </Show>
+  </>
 );
 
 const SettingsDialog = () => {
@@ -431,11 +502,12 @@ const RegionDetails = (props: { index: number }) => {
           <fieldset>
             <legend>export</legend>
             <button
-              onClick={() => {
+              onClick={async () => {
                 const buffer = state.clip?.buffer;
                 const region = state.regions[props.index];
                 if (buffer && region) {
-                  download(
+                  setLoading(true);
+                  await download(
                     buffer,
                     region,
                     player.speed(),
@@ -443,7 +515,8 @@ const RegionDetails = (props: { index: number }) => {
                     player.hiPass(),
                     player.compressionThreshold(),
                     player.gain(),
-                  );
+                  ).catch();
+                  setLoading(false);
                 }
               }}
             >
@@ -451,11 +524,12 @@ const RegionDetails = (props: { index: number }) => {
             </button>
             <Show when={!!navigator.share}>
               <button
-                onClick={() => {
+                onClick={async () => {
                   const buffer = state.clip?.buffer;
                   const region = state.regions[props.index];
                   if (buffer && region) {
-                    share(
+                    setLoading(true);
+                    await share(
                       buffer,
                       region,
                       player.speed(),
@@ -463,7 +537,8 @@ const RegionDetails = (props: { index: number }) => {
                       player.hiPass(),
                       player.compressionThreshold(),
                       player.gain(),
-                    );
+                    ).catch();
+                    setLoading(false);
                   }
                 }}
               >
