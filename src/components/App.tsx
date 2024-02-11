@@ -22,8 +22,9 @@ import { Trigger } from "./Trigger";
 import "./style.css";
 import { audioContext } from "../audioContext";
 import { Clip } from "../types";
+import { Curtain } from "./Curtain";
 
-export const [loading, setLoading] = createSignal(false);
+export const [busy, setBusy] = createSignal(false);
 
 const clipOfFile = async (file: File): Promise<Clip> => ({
   name: file.name,
@@ -53,17 +54,17 @@ const LoadAudio = () => {
       <legend>import audio</legend>
       <AudioInput
         onChange={async (file) => {
-          setLoading(true);
+          setBusy(true);
           const clip = await clipOfFile(file)
             .catch((err) => {
               console.error(err);
               alert("failed to load audio");
-              setLoading(false);
+              setBusy(false);
             });
 
           if (!clip) return;
 
-          setLoading(false);
+          setBusy(false);
           dispatch.setClip(clip);
         }}
       />
@@ -85,7 +86,7 @@ const UrlInput = () => {
       onSubmit={async (e) => {
         e.preventDefault();
         if (e.currentTarget.checkValidity() && input) {
-          setLoading(true);
+          setBusy(true);
           const url = input.value;
 
           const buffer = await fetch(url)
@@ -94,14 +95,14 @@ const UrlInput = () => {
             .catch((err) => {
               console.error(err);
               alert("failed to load audio");
-              setLoading(false);
+              setBusy(false);
             });
 
           if (!buffer) return;
 
           const name = url.slice(url.lastIndexOf("/") + 1);
           dispatch.setClip({ name, buffer });
-          setLoading(false);
+          setBusy(false);
         }
       }}
     >
@@ -129,23 +130,8 @@ export const App = () => (
       <FloatingControls />
       <SettingsDialog />
     </Show>
-    <Show when={loading()}>
-      <div
-        style={{
-          position: "absolute",
-          width: "100vw",
-          height: "100vh",
-          left: 0,
-          top: 0,
-          background: "black",
-          opacity: 0.3,
-          display: "grid",
-          "place-content": "center",
-          "z-index": 100,
-        }}
-      >
-        <progress></progress>
-      </div>
+    <Show when={busy()}>
+      <Curtain />
     </Show>
   </>
 );
@@ -166,6 +152,8 @@ const SettingsDialog = () => {
       }}
       style={{
         "max-height": "unset",
+        "max-width": "100vw",
+        "box-sizing": "border-box",
         height: "100vh",
         border: "none",
         "border-right": "2px solid",
@@ -506,7 +494,7 @@ const RegionDetails = (props: { index: number }) => {
                 const buffer = state.clip?.buffer;
                 const region = state.regions[props.index];
                 if (buffer && region) {
-                  setLoading(true);
+                  setBusy(true);
                   await download(
                     buffer,
                     region,
@@ -516,7 +504,7 @@ const RegionDetails = (props: { index: number }) => {
                     player.compressionThreshold(),
                     player.gain(),
                   ).catch();
-                  setLoading(false);
+                  setBusy(false);
                 }
               }}
             >
@@ -528,7 +516,7 @@ const RegionDetails = (props: { index: number }) => {
                   const buffer = state.clip?.buffer;
                   const region = state.regions[props.index];
                   if (buffer && region) {
-                    setLoading(true);
+                    setBusy(true);
                     await share(
                       buffer,
                       region,
@@ -538,7 +526,7 @@ const RegionDetails = (props: { index: number }) => {
                       player.compressionThreshold(),
                       player.gain(),
                     ).catch();
-                    setLoading(false);
+                    setBusy(false);
                   }
                 }}
               >
