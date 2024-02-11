@@ -490,14 +490,19 @@ const Cursor = (
       <button
         style={{
           position: "absolute",
-          transform: `translateX(${dragPos() * 100}cqi)`,
+          "width": "min-content",
+          transform: `translateX(calc(${dragPos() * 100}cqi))`,
           display: "grid",
-          "place-content": "center",
+          // "place-content": "center",
+          left: "-15px",
+          "align-content": "center",
           "font-size": "large",
-          left: "15px",
-          background: "hsl(39deg 100% 50% / 50%)",
+          background: "hsl(39deg 100% 50% / 0%)",
           border: "none",
-          color: "orange"
+          color: "orange",
+          "min-width": "unset",
+          "box-sizing": "border-box",
+          padding: "0",
         }}
         onClick={() => {
           if (state.cursorControlsVisible) {
@@ -507,9 +512,24 @@ const Cursor = (
           }
         }}
         onKeyDown={onKeyDown}
-        ondblclick={e => e.stopPropagation()}
+        ondblclick={(e) => e.stopPropagation()}
+        onPointerDown={drag.start}
       >
-        {state.cursorControlsVisible ? <>&#709;</> : <>&#708;</>}
+        <svg
+          viewBox="0 0 1 1"
+          style={{
+            width: "30px",
+            transform: `
+            ${state.cursorControlsVisible ? "rotate(-90deg)" : "rotate(90deg)"}
+            scale(0.5)
+          `,
+          }}
+        >
+          <polygon
+            points="0,0 1,0.5 0,1"
+            fill="orange"
+          />
+        </svg>
       </button>
       <Show
         when={state.cursorControlsVisible}
