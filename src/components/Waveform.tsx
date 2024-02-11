@@ -115,7 +115,7 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
     const contentRect = contentElement.getBoundingClientRect();
     const offsetPx = e.clientX - contentRect.left;
     dispatch.setCursor(offsetPx / contentElement.clientWidth);
-    dispatch.showCursorControls();
+    // dispatch.showCursorControls();
   };
 
   return (
@@ -412,7 +412,7 @@ const Cursor = (
   const preventDefault = (e: Event) => e.preventDefault();
   const drag = createDrag({
     onStart: () => {
-      dispatch.showCursorControls();
+      // dispatch.showCursorControls();
       scrollElement?.addEventListener("touchmove", preventDefault);
     },
     onFinished: () => {
@@ -431,7 +431,7 @@ const Cursor = (
   };
 
   const onKeyDown = createKeyboardMovementHandler((delta) => {
-    dispatch.showCursorControls();
+    // dispatch.showCursorControls();
     dispatch.setCursor(state.cursor + delta);
     setZoomCenter(state.cursor);
   });
@@ -487,6 +487,30 @@ const Cursor = (
         >
         </Stick>
       </Show>
+      <button
+        style={{
+          position: "absolute",
+          transform: `translateX(${dragPos() * 100}cqi)`,
+          display: "grid",
+          "place-content": "center",
+          "font-size": "large",
+          left: "15px",
+          background: "hsl(39deg 100% 50% / 50%)",
+          border: "none",
+          color: "orange"
+        }}
+        onClick={() => {
+          if (state.cursorControlsVisible) {
+            dispatch.hideCursorControls();
+          } else {
+            dispatch.showCursorControls();
+          }
+        }}
+        onKeyDown={onKeyDown}
+        ondblclick={e => e.stopPropagation()}
+      >
+        {state.cursorControlsVisible ? <>&#709;</> : <>&#708;</>}
+      </button>
       <Show
         when={state.cursorControlsVisible}
       >
