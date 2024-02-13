@@ -95,6 +95,111 @@ export const dispatch = {
     setStore("selectedRegion", index),
 };
 
+const spicyDispatch = (state: State, event: Event) => {
+  switch (event.type) {
+    case "reset": {
+      return setStore(defaultState);
+    }
+    case "setClip": {
+      return setStore("clip", event.clip);
+    }
+    case "setCursor": {
+      return setStore("cursor", Math.max(0, Math.min(event.pos, 1)));
+    }
+    case "showCursorControls": {
+      return setStore("cursorControlsVisible", true);
+    }
+    case "hideCursorControls": {
+      return setStore("cursorControlsVisible", false);
+    }
+    case "setMode": {
+      return setStore("mode", event.mode);
+    }
+    case "slice": {
+      const region = store.regions[event.index];
+      if (event.pos <= region.start || event.pos >= region.end) return;
+      if (same(player.region(), region)) player.stop();
+      return setStore("regions", (prev) => [
+        ...prev.slice(0, event.index),
+        { start: region.start, end: event.pos },
+        { start: event.pos, end: region.end },
+        ...prev.slice(event.index + 1),
+      ]);
+    }
+    case "segmentRegion": {
+      const region = store.regions[event.index];
+      const segmentLength = (region.end - region.start) / event.pieces;
+      if (same(player.region(), region)) player.stop();
+      return setStore("regions", (prev) => [
+        ...prev.slice(0, event.index),
+        ...range(0, event.pieces).map((n) => ({
+          start: region.start + segmentLength * n,
+          end: region.start + segmentLength * (n + 1),
+        })),
+        ...prev.slice(event.index + 1),
+      ]);
+    }
+    case "healSlice": {
+      if (
+        same(player.region(), store.regions[event.index]) ||
+        same(player.region(), store.regions[event.index - 1])
+      ) {
+        player.stop();
+      }
+
+      return setStore("regions", (prev) => [
+        ...prev.slice(0, event.index).map((v, i) =>
+          // update right bound of removed region left neighbor
+          i === event.index - 1
+            ? { start: v.start, end: prev[event.index + 1]?.start || 1 }
+            : v
+        ),
+        // omit region
+        ...prev.slice(event.index + 1),
+      ]);
+    }
+    case "moveSlice": {
+      const region = store.regions[event.index];
+      const leftBound = store.regions[event.index - 1].start || 0;
+      if (event.pos <= leftBound || event.pos >= region.end) return;
+      if (
+        same(player.region(), store.regions[event.index]) ||
+        same(player.region(), store.regions[event.index - 1])
+      ) {
+        player.stop();
+      }
+
+      setStore(
+        "regions",
+        event.index - 1,
+        (prev) => ({ start: prev.start, end: event.pos }),
+      );
+      setStore(
+        "regions",
+        event.index,
+        (prev) => ({ start: event.pos, end: prev.end }),
+      );
+      return;
+    }
+    case "selectRegion": {
+      return setStore("selectedRegion", event.index);
+    }
+  }
+};
+
+type Event =
+  | { type: "reset" }
+  | { type: "setClip"; clip: Clip }
+  | { type: "setCursor"; pos: number }
+  | { type: "showCursorControls" }
+  | { type: "hideCursorControls" }
+  | { type: "setMode"; mode: Mode }
+  | { type: "slice"; index: number; pos: number }
+  | { type: "segmentRegion"; index: number; pieces: number }
+  | { type: "healSlice"; index: number }
+  | { type: "moveSlice"; index: number; pos: number }
+  | { type: "selectRegion"; index: number | undefined };
+
 // @ts-ignore
 window.state = state;
 // @ts-ignore
