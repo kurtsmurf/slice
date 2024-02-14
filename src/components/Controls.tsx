@@ -1,4 +1,4 @@
-import { spicyDispatch, state } from "../store";
+import { dispatch, state } from "../store";
 import { zoom } from "./Waveform";
 import "./Controls.css";
 
@@ -9,11 +9,11 @@ export const Controls = () => (
         // @ts-ignore
         switch (e.target.value) {
           case "slice":
-            return spicyDispatch({ type: "setMode", mode: "slice" });
+            return dispatch({ type: "setMode", mode: "slice" });
           case "edit":
-            return spicyDispatch({ type: "setMode", mode: "edit" });
+            return dispatch({ type: "setMode", mode: "edit" });
           case "delete":
-            return spicyDispatch({ type: "setMode", mode: "delete" });
+            return dispatch({ type: "setMode", mode: "delete" });
         }
       }}
     >

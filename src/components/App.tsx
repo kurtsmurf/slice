@@ -9,7 +9,7 @@ import {
 } from "solid-js";
 import { mapLinearToLogarithmic, player } from "../player";
 import { download, share } from "../export";
-import { spicyDispatch, state } from "../store";
+import { dispatch, state } from "../store";
 import {
   contentElement,
   scrollElement,
@@ -66,7 +66,7 @@ const LoadAudio = () => {
 
           setBusy(false);
 
-          spicyDispatch({ type: "setClip", clip })
+          dispatch({ type: "setClip", clip })
         }}
       />
       <UrlInput />
@@ -103,7 +103,7 @@ const UrlInput = () => {
 
           const name = url.slice(url.lastIndexOf("/") + 1);
 
-          spicyDispatch({ type: "setClip", clip: { name, buffer } })
+          dispatch({ type: "setClip", clip: { name, buffer } })
           setBusy(false);
         }
       }}
@@ -359,7 +359,7 @@ export const Pads = () => {
               }}
               onClick={() => {
 
-                spicyDispatch({ type: "selectRegion", index: index() })
+                dispatch({ type: "selectRegion", index: index() })
                 setZoomCenter(state.regions[index()].start);
                 const focusTarget = document.querySelector(
                   "#region-details button",
@@ -382,7 +382,7 @@ const RegionDetails = (props: { index: number }) => {
     const next = props.index + 1;
     if (next < state.regions.length) {
 
-      spicyDispatch({ type: "selectRegion", index: next })
+      dispatch({ type: "selectRegion", index: next })
       setZoomCenter(state.regions[next].start);
       scrollRegionIntoView(state.regions[next]);
     }
@@ -392,7 +392,7 @@ const RegionDetails = (props: { index: number }) => {
     const prev = props.index - 1;
     if (prev > -1) {
 
-      spicyDispatch({ type: "selectRegion", index: prev })
+      dispatch({ type: "selectRegion", index: prev })
 
       setZoomCenter(state.regions[prev].start);
       scrollRegionIntoView(state.regions[prev]);
@@ -424,7 +424,7 @@ const RegionDetails = (props: { index: number }) => {
             onClick={() => {
               const index = props.index;
 
-              spicyDispatch({ type: "selectRegion", index: undefined })
+              dispatch({ type: "selectRegion", index: undefined })
               // return focus to region details button
               const detailsBtn = document.querySelector(
                 `#region-${index} [data-details-link]`,
@@ -569,7 +569,7 @@ const SegmentRegionForm = (props: { index: number }) => {
         e.preventDefault();
         if (e.currentTarget.checkValidity() && input) {
 
-          spicyDispatch({ type: "segmentRegion", index: props.index, pieces: parseInt(input.value) })
+          dispatch({ type: "segmentRegion", index: props.index, pieces: parseInt(input.value) })
         }
       }}
     >

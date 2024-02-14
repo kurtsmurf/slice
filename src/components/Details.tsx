@@ -1,5 +1,5 @@
 import { player } from "../player";
-import { spicyDispatch } from "../store";
+import { dispatch } from "../store";
 import { Clip } from "../types";
 import { formatOf } from "../util/formatOf";
 
@@ -15,7 +15,7 @@ export const Details = (props: { clip: Clip }) => (
       onClick={() => {
         if (confirm("Are you sure?")) {
 
-          spicyDispatch({ type: "reset" })
+          dispatch({ type: "reset" })
           player.stop();
         }
       }}

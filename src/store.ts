@@ -27,7 +27,7 @@ const defaultState: State = Object.freeze({
 const [store, setStore] = createStore<State>(defaultState);
 
 export const state = store;
-export const spicyDispatch = (event: Event) => {
+export const dispatch = (event: Event) => {
 
   console.log(event)
 
@@ -123,7 +123,7 @@ export const spicyDispatch = (event: Event) => {
 };
 
 // @ts-ignore
-window.spicyDispatch = spicyDispatch;
+window.spicyDispatch = dispatch;
 
 type Event =
   | { type: "reset" }
