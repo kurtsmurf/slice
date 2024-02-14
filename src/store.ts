@@ -95,7 +95,10 @@ export const dispatch = {
     setStore("selectedRegion", index),
 };
 
-const spicyDispatch = (state: State, event: Event) => {
+export const spicyDispatch = (event: Event) => {
+
+  console.log(event)
+
   switch (event.type) {
     case "reset": {
       return setStore(defaultState);
@@ -186,6 +189,9 @@ const spicyDispatch = (state: State, event: Event) => {
     }
   }
 };
+
+// @ts-ignore
+window.spicyDispatch = spicyDispatch;
 
 type Event =
   | { type: "reset" }

@@ -9,7 +9,7 @@ import {
 } from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
 import { player, Region } from "../player";
-import { dispatch, same, state } from "../store";
+import { dispatch, same, spicyDispatch, state } from "../store";
 import { ChannelSegment } from "./ChannelSegment";
 import { useAnimationFrame } from "../behaviors/useAnimationFrame";
 import { createDrag } from "../behaviors/createDrag";
@@ -80,11 +80,11 @@ export const Waveform = (props: { buffer: AudioBuffer }) => {
       onkeypress={(e) => {
         switch (e.key) {
           case "s":
-            return dispatch.setMode("slice");
+            return spicyDispatch({ type: "setMode", mode: "slice"});
           case "e":
-            return dispatch.setMode("edit");
+            return spicyDispatch({ type: "setMode", mode: "edit"});
           case "d":
-            return dispatch.setMode("delete");
+            return spicyDispatch({ type: "setMode", mode: "delete"});
         }
       }}
     >
@@ -114,8 +114,8 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
     }
     const contentRect = contentElement.getBoundingClientRect();
     const offsetPx = e.clientX - contentRect.left;
-    dispatch.setCursor(offsetPx / contentElement.clientWidth);
-    // dispatch.showCursorControls();
+
+    spicyDispatch({ type: "setCursor", pos: offsetPx / contentElement.clientWidth })
   };
 
   return (
@@ -211,7 +211,7 @@ const Slice = (
       scrollElement?.addEventListener("touchmove", preventDefault);
     },
     onFinished: () => {
-      dispatch.moveSlice(props.index, dragPos());
+      spicyDispatch({ type: "moveSlice", index: props.index, pos: dragPos()});
       setZoomCenter(props.region.start);
       scrollElement?.removeEventListener("touchmove", preventDefault);
     },
@@ -256,7 +256,7 @@ const Slice = (
       Math.min(bounds.right, props.region.start + delta),
     );
 
-    dispatch.moveSlice(props.index, next);
+    spicyDispatch({ type: "moveSlice", index: props.index, pos: next });
     setZoomCenter(next);
     document.getElementById(`slice-${next}`)?.focus();
   });
@@ -313,10 +313,10 @@ const Slice = (
         <Show when={state.mode === "delete" && props.index > 0}>
           <button
             onClick={() => {
-              dispatch.healSlice(props.index);
+              spicyDispatch({ type: "healSlice", index: props.index });
               if (state.selectedRegion !== undefined) {
                 if (props.index <= state.selectedRegion) {
-                  dispatch.selectRegion(state.selectedRegion - 1);
+                  spicyDispatch({ type: "selectRegion", index: state.selectedRegion - 1 });
                 }
               }
             }}
@@ -330,7 +330,7 @@ const Slice = (
           onTrigger={() => {
             setZoomCenter(props.region.start);
             if (state.selectedRegion !== undefined) {
-              dispatch.selectRegion(props.index);
+              spicyDispatch({ type: "selectRegion", index: props.index });
             }
           }}
         />
@@ -412,11 +412,12 @@ const Cursor = (
   const preventDefault = (e: Event) => e.preventDefault();
   const drag = createDrag({
     onStart: () => {
-      // dispatch.showCursorControls();
+
       scrollElement?.addEventListener("touchmove", preventDefault);
     },
     onFinished: () => {
-      dispatch.setCursor(dragPos());
+
+      spicyDispatch({ type: "setCursor", pos: dragPos()})
       scrollElement?.removeEventListener("touchmove", preventDefault);
       setZoomCenter(state.cursor);
     },
@@ -431,8 +432,8 @@ const Cursor = (
   };
 
   const onKeyDown = createKeyboardMovementHandler((delta) => {
-    // dispatch.showCursorControls();
-    dispatch.setCursor(state.cursor + delta);
+
+    spicyDispatch({ type: "setCursor", pos: state.cursor + delta})
     setZoomCenter(state.cursor);
   });
 
@@ -506,9 +507,11 @@ const Cursor = (
         }}
         onClick={() => {
           if (state.cursorControlsVisible) {
-            dispatch.hideCursorControls();
+
+            spicyDispatch({ type: "hideCursorControls" })
           } else {
-            dispatch.showCursorControls();
+
+            spicyDispatch({ type: "showCursorControls" })
           }
         }}
         onKeyDown={onKeyDown}
@@ -549,12 +552,14 @@ const Cursor = (
             <button
               onClick={() => {
                 syncRegion();
-                dispatch.slice(region(), state.cursor);
-                dispatch.hideCursorControls();
+
+                spicyDispatch({ type: "slice", index: region(), pos: state.cursor})
+
+                spicyDispatch({ type: "hideCursorControls" })
                 ref?.focus();
                 setZoomCenter(state.cursor);
                 if (state.selectedRegion !== undefined) {
-                  dispatch.selectRegion(region() + 1);
+                  spicyDispatch({ type: "selectRegion", index: region() + 1 });
                 }
               }}
             >
