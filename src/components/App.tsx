@@ -9,7 +9,7 @@ import {
 } from "solid-js";
 import { mapLinearToLogarithmic, player } from "../player";
 import { download, share } from "../export";
-import { dispatch, spicyDispatch, state } from "../store";
+import { spicyDispatch, state } from "../store";
 import {
   contentElement,
   scrollElement,

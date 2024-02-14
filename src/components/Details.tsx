@@ -1,5 +1,5 @@
 import { player } from "../player";
-import { dispatch, spicyDispatch } from "../store";
+import { spicyDispatch } from "../store";
 import { Clip } from "../types";
 import { formatOf } from "../util/formatOf";
 

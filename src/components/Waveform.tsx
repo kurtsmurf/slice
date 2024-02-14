@@ -9,7 +9,7 @@ import {
 } from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
 import { player, Region } from "../player";
-import { dispatch, same, spicyDispatch, state } from "../store";
+import { same, spicyDispatch, state } from "../store";
 import { ChannelSegment } from "./ChannelSegment";
 import { useAnimationFrame } from "../behaviors/useAnimationFrame";
 import { createDrag } from "../behaviors/createDrag";

@@ -37,8 +37,11 @@ const initializePage = () => {
   });
 
   // @ts-ignore
-  window.dispatch.setClip({
-    name: "sinusoid-mono",
-    buffer,
-  });
+  window.spicyDispatch({
+    type: "setClip",
+    clip: {
+      name: "sinusoid-mono",
+      buffer,
+    }
+  })
 };
