@@ -28,53 +28,23 @@ const [store, setStore] = createStore<State>(defaultState);
 
 export const state = store;
 
-let undoStack: Event[] = [];
-let redoStack: Event[] = [];
+let undoStack: UpdateRegionsEvent[] = [];
+let redoStack: UpdateRegionsEvent[] = [];
 
 let lastDispatchTime = Date.now();
 
-const undoableEvents: readonly Event["type"][] = [
-  "slice",
-  "segmentRegion",
-  "healSlice",
-  "moveSlice",
-  // "setCursor",
-];
-
-export const dispatch = (event: Event, isRedo = false) => {
-  console.log("dispatching:", event);
-
-  if (undoableEvents.includes(event.type)) {
-    const lastEvent = undoStack[undoStack.length - 1];
-    // deduplicate rapid moveSlice events on the undo stack
-    if (
-      event.type === "moveSlice" &&
-      lastEvent?.type === "moveSlice" &&
-      event.index === lastEvent?.index &&
-      Date.now() - lastDispatchTime < 1000
-    ) {
-      undoStack[undoStack.length - 1] = event;
-    } else {
-      undoStack.push(event);
-    }
-    if (!isRedo) redoStack = [];
-  }
-
-  if (["reset", "setClip"].includes(event.type)) {
-    undoStack = [];
-    redoStack = [];
-  }
-
+export const dispatch = (event: Event) => {
   lastDispatchTime = Date.now();
-
-  console.log("undo stack:", undoStack);
-  console.log("redo stack:", redoStack);
 
   switch (event.type) {
     case "reset": {
+      undoStack = [];
+      redoStack = [];
       return setStore(defaultState);
     }
     case "setClip": {
+      undoStack = [];
+      redoStack = [];  
       return setStore("clip", event.clip);
     }
     case "setCursor": {
@@ -89,6 +59,33 @@ export const dispatch = (event: Event, isRedo = false) => {
     case "setMode": {
       return setStore("mode", event.mode);
     }
+    case "selectRegion": {
+      return setStore("selectedRegion", event.index);
+    }
+    default: {
+      const lastEvent = undoStack[undoStack.length - 1];
+
+      // deduplicate rapid moveSlice events on the undo stack
+      if (
+        event.type === "moveSlice" &&
+        lastEvent?.type === "moveSlice" &&
+        event.index === lastEvent?.index &&
+        Date.now() - lastDispatchTime < 1000
+      ) {
+        undoStack[undoStack.length - 1] = event;
+      } else {
+        undoStack.push(event);
+      }
+
+      redoStack = [];
+  
+      updateRegions(event)
+    }
+  }
+};
+
+const updateRegions = (event: UpdateRegionsEvent) => {
+  switch (event.type) {
     case "slice": {
       const region = store.regions[event.index];
 
@@ -161,11 +158,8 @@ export const dispatch = (event: Event, isRedo = false) => {
       );
       return;
     }
-    case "selectRegion": {
-      return setStore("selectedRegion", event.index);
-    }
   }
-};
+}
 
 // @ts-ignore
 window.dispatch = dispatch;
@@ -177,11 +171,15 @@ type Event =
   | { type: "showCursorControls" }
   | { type: "hideCursorControls" }
   | { type: "setMode"; mode: Mode }
-  | { type: "slice"; index: number; pos: number }
-  | { type: "segmentRegion"; index: number; pieces: number }
-  | { type: "healSlice"; index: number }
-  | { type: "moveSlice"; index: number; pos: number }
-  | { type: "selectRegion"; index: number | undefined };
+  | { type: "selectRegion"; index: number | undefined }
+  | UpdateRegionsEvent;
+
+type UpdateRegionsEvent = 
+| { type: "slice"; index: number; pos: number }
+| { type: "segmentRegion"; index: number; pieces: number }
+| { type: "healSlice"; index: number }
+| { type: "moveSlice"; index: number; pos: number }
+
 
 // @ts-ignore
 window.state = state;
@@ -192,14 +190,13 @@ export const same = (a: Region, b: Region) =>
 const roughUndo = () => {
   console.log(undoStack, redoStack);
 
-  const eventsCopy = undoStack.slice();
-  const eventToUndo = eventsCopy.pop();
+  const eventToUndo = undoStack.pop();
+
   if (eventToUndo) {
     setStore("regions", defaultState.regions);
-    undoStack = [];
     console.log("undoing:", eventToUndo);
     redoStack.push(eventToUndo);
-    eventsCopy.forEach((e) => dispatch(e, true));
+    undoStack.forEach(updateRegions);
     if (state.selectedRegion && state.selectedRegion >= state.regions.length) {
       setStore("selectedRegion", state.regions.length - 1);
     }
@@ -211,7 +208,8 @@ const roughRedo = () => {
 
   const eventToRedo = redoStack.pop();
   if (eventToRedo) {
-    dispatch(eventToRedo, true);
+    updateRegions(eventToRedo);
+    undoStack.push(eventToRedo)
   }
 };
 
