@@ -2,6 +2,7 @@ import { Clip } from "./types";
 import { createStore } from "solid-js/store";
 import { range } from "./util/range";
 import { player, Region } from "./player";
+import { createSignal } from "solid-js";
 
 type Mode = "delete" | "edit" | "slice";
 
@@ -28,8 +29,8 @@ const [store, setStore] = createStore<State>(defaultState);
 
 export const state = store;
 
-let undoStack: RegionsMigration[] = [];
-let redoStack: RegionsMigration[] = [];
+let [undoStack, setUndoStack] = createSignal<RegionsMigration[]>([], { equals: false });
+let [redoStack, setRedoStack] = createSignal<RegionsMigration[]>([], { equals: false });
 
 let lastDispatchTime = Date.now();
 
@@ -38,13 +39,13 @@ export const dispatch = (event: Event) => {
 
   switch (event.type) {
     case "reset": {
-      undoStack = [];
-      redoStack = [];
+      setUndoStack([]);
+      setRedoStack([]);
       return setStore(defaultState);
     }
     case "setClip": {
-      undoStack = [];
-      redoStack = [];
+      setUndoStack([]);
+      setRedoStack([]);
       return setStore("clip", event.clip);
     }
     case "setCursor": {
@@ -63,7 +64,7 @@ export const dispatch = (event: Event) => {
       return setStore("selectedRegion", event.index);
     }
     default: {
-      const lastMigration = undoStack[undoStack.length - 1];
+      const lastMigration = undoStack()[undoStack().length - 1];
 
       // deduplicate rapid moveSlice events on the undo stack
       if (
@@ -72,15 +73,21 @@ export const dispatch = (event: Event) => {
         event.index === lastMigration?.forward.index &&
         Date.now() - lastDispatchTime < 1000
       ) {
-        undoStack[undoStack.length - 1] = {
-          forward: event,
-          backward: lastMigration.backward,
-        };
+        setUndoStack(prev => {
+          prev[prev.length - 1] = {
+            forward: event,
+            backward: lastMigration.backward,
+          };
+          return prev
+        })
       } else {
-        undoStack.push(migrationOfEvent(event));
+        setUndoStack(prev => {
+        prev.push(migrationOfEvent(event));
+          return prev;
+        })        
       }
 
-      redoStack = [];
+      setRedoStack([]);
 
       updateRegions(event);
     }
@@ -287,12 +294,19 @@ export const same = (a: Region, b: Region) =>
 const roughUndo = () => {
   console.log(undoStack, redoStack);
 
-  const eventToUndo = undoStack.pop();
+  const eventToUndo = undoStack().pop();
+
+  setUndoStack(prev => prev)
 
   if (eventToUndo) {
     // setStore("regions", defaultState.regions);
     console.log("undoing:", eventToUndo);
-    redoStack.push(eventToUndo);
+
+      setRedoStack(prev => {
+        prev.push(eventToUndo);
+        return prev;
+      })
+
     // undoStack.map(m => m.forward).forEach(updateRegions);
 
     updateRegions(eventToUndo.backward);
@@ -306,15 +320,24 @@ const roughUndo = () => {
 const roughRedo = () => {
   console.log(undoStack, redoStack);
 
-  const eventToRedo = redoStack.pop();
+  const eventToRedo = redoStack().pop();
+  setRedoStack(prev => prev);
+
   if (eventToRedo) {
     updateRegions(eventToRedo.forward);
-    undoStack.push(eventToRedo);
+    undoStack().push(eventToRedo);
+    setUndoStack(prev => prev)
   }
 };
 
-export const undo = roughUndo;
-export const redo = roughRedo;
+export const undo = {
+  execute: roughUndo,
+  disabled: () => undoStack().length === 0
+};
+export const redo = {
+  execute: roughRedo,
+  disabled: () => redoStack().length === 0,
+}
 
 // @ts-ignore
 window.undo = roughUndo;
