@@ -116,6 +116,36 @@ const updateRegions = (event: UpdateRegionsEvent) => {
         ...prev.slice(event.index + 1),
       ]);
     }
+    case "combineRegions": {
+      if (
+        !state.regions[event.startIndex] ||
+        !state.regions[event.endIndex] ||
+        event.endIndex <= event.startIndex
+      ) {
+        return;
+      }
+
+      if (state.selectedRegion) {
+        if (state.selectedRegion > event.startIndex) {
+          if (state.selectedRegion <= event.endIndex) {
+            setStore("selectedRegion", event.startIndex);
+          } else {
+            setStore(
+              "selectedRegion",
+              state.selectedRegion - (event.endIndex - event.startIndex),
+            );
+          }
+        }
+      }
+
+      setStore("regions", (prev) => [
+        ...prev.slice(0, event.startIndex),
+        { start: prev[event.startIndex].start, end: prev[event.endIndex].end },
+        ...prev.slice(event.endIndex + 1),
+      ]);
+
+      return;
+    }
     case "healSlice": {
       if (
         same(player.region(), store.regions[event.index]) ||
@@ -177,6 +207,7 @@ type Event =
 type UpdateRegionsEvent =
   | { type: "slice"; index: number; pos: number }
   | { type: "segmentRegion"; index: number; pieces: number }
+  | { type: "combineRegions"; startIndex: number; endIndex: number }
   | { type: "healSlice"; index: number }
   | { type: "moveSlice"; index: number; pos: number };
 
