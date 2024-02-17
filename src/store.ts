@@ -26,10 +26,40 @@ const defaultState: State = Object.freeze({
 
 const [store, setStore] = createStore<State>(defaultState);
 
+
+// @ts-ignore
+window.setStore = setStore;
+
+// @ts-ignore
+window.reset = () => setStore(defaultState);
+
+
 export const state = store;
+
+let events: Event[] = [];
+
+// @ts-ignore
+window.events = () => events;
+
+
+// @ts-ignore
+window.clearEvents = () => { events = [] };
+
 export const dispatch = (event: Event) => {
 
-  console.log(event)
+  console.log("dispatching:", event)
+
+  const undoableEvents: Event["type"][] = ["slice", "segmentRegion", "healSlice", "moveSlice", "setCursor"];
+
+  if (undoableEvents.includes(event.type)) {
+    events.push(event);
+  }
+
+  if (["reset", "setClip"].includes(event.type)) {
+    events = [];
+  }
+
+  console.log("events:", events)
 
   switch (event.type) {
     case "reset": {
@@ -52,6 +82,9 @@ export const dispatch = (event: Event) => {
     }
     case "slice": {
       const region = store.regions[event.index];
+
+      if (!region) return;
+
       if (event.pos <= region.start || event.pos >= region.end) return;
       if (same(player.region(), region)) player.stop();
       return setStore("regions", (prev) => [
@@ -63,6 +96,9 @@ export const dispatch = (event: Event) => {
     }
     case "segmentRegion": {
       const region = store.regions[event.index];
+
+      if (!region) return;
+
       const segmentLength = (region.end - region.start) / event.pieces;
       if (same(player.region(), region)) player.stop();
       return setStore("regions", (prev) => [
@@ -123,7 +159,7 @@ export const dispatch = (event: Event) => {
 };
 
 // @ts-ignore
-window.spicyDispatch = dispatch;
+window.dispatch = dispatch;
 
 type Event =
   | { type: "reset" }
@@ -143,3 +179,16 @@ window.state = state;
 
 export const same = (a: Region, b: Region) =>
   a.start === b.start && a.end === b.end;
+
+const roughUndo = () => {
+  setStore("regions", [{ start: 0, end: 1 }]);
+  setStore("cursor", 0)
+  const eventsCopy = events.slice()
+  events = [];
+  console.log("undoing:", eventsCopy.pop());
+  eventsCopy.forEach(dispatch);
+  if (state.selectedRegion && state.selectedRegion >= state.regions.length) setStore("selectedRegion", state.regions.length - 1)
+}
+
+// @ts-ignore
+window.undo = roughUndo
