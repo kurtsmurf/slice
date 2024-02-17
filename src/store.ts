@@ -317,6 +317,9 @@ const roughRedo = () => {
   }
 };
 
+export const undo = roughUndo
+export const redo = roughRedo
+
 // @ts-ignore
 window.undo = roughUndo;
 
