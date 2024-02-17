@@ -65,8 +65,6 @@ export const dispatch = (event: Event) => {
     default: {
       const lastMigration = undoStack[undoStack.length - 1];
 
-
-
       // deduplicate rapid moveSlice events on the undo stack
       if (
         event.type === "moveSlice" &&
@@ -78,7 +76,6 @@ export const dispatch = (event: Event) => {
           forward: event,
           backward: lastMigration.backward,
         };
-
       } else {
         undoStack.push(migrationOfEvent(event));
       }
@@ -97,8 +94,8 @@ const migrationOfEvent = (event: UpdateRegionsEvent): RegionsMigration => {
         forward: event,
         backward: {
           type: "healSlice",
-          index: event.index + 1
-        }
+          index: event.index + 1,
+        },
       };
     }
     case "segmentRegion": {
@@ -108,7 +105,7 @@ const migrationOfEvent = (event: UpdateRegionsEvent): RegionsMigration => {
           type: "combineRegions",
           startIndex: event.index,
           endIndex: event.index + event.pieces - 1,
-        }
+        },
       };
     }
     case "combineRegions": {
@@ -124,7 +121,7 @@ const migrationOfEvent = (event: UpdateRegionsEvent): RegionsMigration => {
           type: "segmentRegion",
           index: event.startIndex,
           pieces: event.endIndex - event.startIndex,
-        }
+        },
       };
     }
     case "healSlice": {
@@ -133,22 +130,21 @@ const migrationOfEvent = (event: UpdateRegionsEvent): RegionsMigration => {
         backward: {
           type: "slice",
           index: event.index - 1,
-          pos: state.regions[event.index].start
-        }
+          pos: state.regions[event.index].start,
+        },
       };
     }
     case "moveSlice": {
-
       return {
         forward: event,
         backward: {
           ...event,
-          pos: state.regions[event.index].start
-        }
+          pos: state.regions[event.index].start,
+        },
       };
     }
   }
-}
+};
 
 const updateRegions = (event: UpdateRegionsEvent) => {
   switch (event.type) {
@@ -278,9 +274,9 @@ type UpdateRegionsEvent =
   | { type: "moveSlice"; index: number; pos: number };
 
 type RegionsMigration = {
-  forward: UpdateRegionsEvent,
-  backward: UpdateRegionsEvent,
-}
+  forward: UpdateRegionsEvent;
+  backward: UpdateRegionsEvent;
+};
 
 // @ts-ignore
 window.state = state;
@@ -299,7 +295,7 @@ const roughUndo = () => {
     redoStack.push(eventToUndo);
     // undoStack.map(m => m.forward).forEach(updateRegions);
 
-    updateRegions(eventToUndo.backward)
+    updateRegions(eventToUndo.backward);
 
     if (state.selectedRegion && state.selectedRegion >= state.regions.length) {
       setStore("selectedRegion", state.regions.length - 1);
@@ -317,8 +313,8 @@ const roughRedo = () => {
   }
 };
 
-export const undo = roughUndo
-export const redo = roughRedo
+export const undo = roughUndo;
+export const redo = roughRedo;
 
 // @ts-ignore
 window.undo = roughUndo;

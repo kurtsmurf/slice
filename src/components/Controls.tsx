@@ -5,8 +5,8 @@ import "./Controls.css";
 export const Controls = () => (
   <div class="controls">
     <fieldset>
-      <button onClick={() => undo()} >undo</button>
-      <button onClick={() => redo()} >redo</button>
+      <button onClick={() => undo()}>undo</button>
+      <button onClick={() => redo()}>redo</button>
     </fieldset>
     <fieldset
       onChange={(e) => {
