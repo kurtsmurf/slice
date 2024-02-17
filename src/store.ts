@@ -29,8 +29,12 @@ const [store, setStore] = createStore<State>(defaultState);
 
 export const state = store;
 
-let [undoStack, setUndoStack] = createSignal<RegionsMigration[]>([], { equals: false });
-let [redoStack, setRedoStack] = createSignal<RegionsMigration[]>([], { equals: false });
+let [undoStack, setUndoStack] = createSignal<RegionsMigration[]>([], {
+  equals: false,
+});
+let [redoStack, setRedoStack] = createSignal<RegionsMigration[]>([], {
+  equals: false,
+});
 
 let lastDispatchTime = Date.now();
 
@@ -73,18 +77,18 @@ export const dispatch = (event: Event) => {
         event.index === lastMigration?.forward.index &&
         Date.now() - lastDispatchTime < 1000
       ) {
-        setUndoStack(prev => {
+        setUndoStack((prev) => {
           prev[prev.length - 1] = {
             forward: event,
             backward: lastMigration.backward,
           };
-          return prev
-        })
-      } else {
-        setUndoStack(prev => {
-        prev.push(migrationOfEvent(event));
           return prev;
-        })        
+        });
+      } else {
+        setUndoStack((prev) => {
+          prev.push(migrationOfEvent(event));
+          return prev;
+        });
       }
 
       setRedoStack([]);
@@ -296,16 +300,16 @@ const roughUndo = () => {
 
   const eventToUndo = undoStack().pop();
 
-  setUndoStack(prev => prev)
+  setUndoStack((prev) => prev);
 
   if (eventToUndo) {
     // setStore("regions", defaultState.regions);
     console.log("undoing:", eventToUndo);
 
-      setRedoStack(prev => {
-        prev.push(eventToUndo);
-        return prev;
-      })
+    setRedoStack((prev) => {
+      prev.push(eventToUndo);
+      return prev;
+    });
 
     // undoStack.map(m => m.forward).forEach(updateRegions);
 
@@ -321,23 +325,23 @@ const roughRedo = () => {
   console.log(undoStack, redoStack);
 
   const eventToRedo = redoStack().pop();
-  setRedoStack(prev => prev);
+  setRedoStack((prev) => prev);
 
   if (eventToRedo) {
     updateRegions(eventToRedo.forward);
     undoStack().push(eventToRedo);
-    setUndoStack(prev => prev)
+    setUndoStack((prev) => prev);
   }
 };
 
 export const undo = {
   execute: roughUndo,
-  disabled: () => undoStack().length === 0
+  disabled: () => undoStack().length === 0,
 };
 export const redo = {
   execute: roughRedo,
   disabled: () => redoStack().length === 0,
-}
+};
 
 // @ts-ignore
 window.undo = roughUndo;

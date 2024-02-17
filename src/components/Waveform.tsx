@@ -442,22 +442,17 @@ const Cursor = (
 
   const [region, setRegion] = createSignal(0);
   const active = createMemo(() => {
-
     const blah = state.regions[region()];
 
-
-
     return blah !== undefined && player.playing() &&
-    same(
-      player.region(),
-      {
-        start: state.cursor,
-        end: blah.end,
-      },
-    )
-  }
-    
-  );
+      same(
+        player.region(),
+        {
+          start: state.cursor,
+          end: blah.end,
+        },
+      );
+  });
 
   const syncRegion = () => {
     const cursor = document.getElementById("cursor");
