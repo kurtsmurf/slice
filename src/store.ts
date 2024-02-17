@@ -33,20 +33,19 @@ let redoStack: Event[] = [];
 
 let lastDispatchTime = Date.now();
 
-const undoableEvents: readonly Event["type"][] = 
-  [
-    "slice",
-    "segmentRegion",
-    "healSlice",
-    "moveSlice",
-    // "setCursor",
-  ]
+const undoableEvents: readonly Event["type"][] = [
+  "slice",
+  "segmentRegion",
+  "healSlice",
+  "moveSlice",
+  // "setCursor",
+];
 
-export const dispatch = (event: Event, isRedo=false) => {
+export const dispatch = (event: Event, isRedo = false) => {
   console.log("dispatching:", event);
 
   if (undoableEvents.includes(event.type)) {
-    const lastEvent = undoStack[undoStack.length - 1]
+    const lastEvent = undoStack[undoStack.length - 1];
     // deduplicate rapid moveSlice events on the undo stack
     if (
       event.type === "moveSlice" &&
@@ -191,7 +190,7 @@ export const same = (a: Region, b: Region) =>
   a.start === b.start && a.end === b.end;
 
 const roughUndo = () => {
-  console.log(undoStack, redoStack)
+  console.log(undoStack, redoStack);
 
   const eventsCopy = undoStack.slice();
   const eventToUndo = eventsCopy.pop();
@@ -199,8 +198,8 @@ const roughUndo = () => {
     setStore("regions", defaultState.regions);
     undoStack = [];
     console.log("undoing:", eventToUndo);
-    redoStack.push(eventToUndo)
-    eventsCopy.forEach(e => dispatch(e, true));
+    redoStack.push(eventToUndo);
+    eventsCopy.forEach((e) => dispatch(e, true));
     if (state.selectedRegion && state.selectedRegion >= state.regions.length) {
       setStore("selectedRegion", state.regions.length - 1);
     }
@@ -208,13 +207,13 @@ const roughUndo = () => {
 };
 
 const roughRedo = () => {
-  console.log(undoStack, redoStack)
+  console.log(undoStack, redoStack);
 
   const eventToRedo = redoStack.pop();
   if (eventToRedo) {
-    dispatch(eventToRedo, true)
+    dispatch(eventToRedo, true);
   }
-}
+};
 
 // @ts-ignore
 window.undo = roughUndo;
