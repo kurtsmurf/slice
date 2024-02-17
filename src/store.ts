@@ -31,19 +31,33 @@ export const state = store;
 let undoStack: Event[] = [];
 let redoStack: Event[] = [];
 
-export const dispatch = (event: Event, isRedo=false) => {
-  console.log("dispatching:", event);
+let lastDispatchTime = Date.now();
 
-  const undoableEvents: Event["type"][] = [
+const undoableEvents: readonly Event["type"][] = 
+  [
     "slice",
     "segmentRegion",
     "healSlice",
     "moveSlice",
-    "setCursor",
-  ];
+    // "setCursor",
+  ]
+
+export const dispatch = (event: Event, isRedo=false) => {
+  console.log("dispatching:", event);
 
   if (undoableEvents.includes(event.type)) {
-    undoStack.push(event);
+    const lastEvent = undoStack[undoStack.length - 1]
+    // deduplicate rapid moveSlice events on the undo stack
+    if (
+      event.type === "moveSlice" &&
+      lastEvent?.type === "moveSlice" &&
+      event.index === lastEvent?.index &&
+      Date.now() - lastDispatchTime < 1000
+    ) {
+      undoStack[undoStack.length - 1] = event;
+    } else {
+      undoStack.push(event);
+    }
     if (!isRedo) redoStack = [];
   }
 
@@ -51,6 +65,8 @@ export const dispatch = (event: Event, isRedo=false) => {
     undoStack = [];
     redoStack = [];
   }
+
+  lastDispatchTime = Date.now();
 
   console.log("undo stack:", undoStack);
   console.log("redo stack:", redoStack);
@@ -180,8 +196,7 @@ const roughUndo = () => {
   const eventsCopy = undoStack.slice();
   const eventToUndo = eventsCopy.pop();
   if (eventToUndo) {
-    setStore("regions", [{ start: 0, end: 1 }]);
-    setStore("cursor", 0);
+    setStore("regions", defaultState.regions);
     undoStack = [];
     console.log("undoing:", eventToUndo);
     redoStack.push(eventToUndo)
