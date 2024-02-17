@@ -28,8 +28,8 @@ const [store, setStore] = createStore<State>(defaultState);
 
 export const state = store;
 
-let undoStack: UpdateRegionsEvent[] = [];
-let redoStack: UpdateRegionsEvent[] = [];
+let undoStack: RegionsMigration[] = [];
+let redoStack: RegionsMigration[] = [];
 
 let lastDispatchTime = Date.now();
 
@@ -63,18 +63,24 @@ export const dispatch = (event: Event) => {
       return setStore("selectedRegion", event.index);
     }
     default: {
-      const lastEvent = undoStack[undoStack.length - 1];
+      const lastMigration = undoStack[undoStack.length - 1];
+
+
 
       // deduplicate rapid moveSlice events on the undo stack
       if (
         event.type === "moveSlice" &&
-        lastEvent?.type === "moveSlice" &&
-        event.index === lastEvent?.index &&
+        lastMigration?.forward.type === "moveSlice" &&
+        event.index === lastMigration?.forward.index &&
         Date.now() - lastDispatchTime < 1000
       ) {
-        undoStack[undoStack.length - 1] = event;
+        undoStack[undoStack.length - 1] = {
+          forward: event,
+          backward: lastMigration.backward,
+        };
+
       } else {
-        undoStack.push(event);
+        undoStack.push(migrationOfEvent(event));
       }
 
       redoStack = [];
@@ -83,6 +89,66 @@ export const dispatch = (event: Event) => {
     }
   }
 };
+
+const migrationOfEvent = (event: UpdateRegionsEvent): RegionsMigration => {
+  switch (event.type) {
+    case "slice": {
+      return {
+        forward: event,
+        backward: {
+          type: "healSlice",
+          index: event.index + 1
+        }
+      };
+    }
+    case "segmentRegion": {
+      return {
+        forward: event,
+        backward: {
+          type: "combineRegions",
+          startIndex: event.index,
+          endIndex: event.index + event.pieces - 1,
+        }
+      };
+    }
+    case "combineRegions": {
+      // bad - segmentRegions is not equivalent to reversing combine
+      // because the combined regions may not be evenly spaced
+      // but the segmented regions will be
+      // solution: create an "replace" event that replaces a target region
+      // by index with an arbitrary array of regions
+      // use that to reverse combineRegions
+      return {
+        forward: event,
+        backward: {
+          type: "segmentRegion",
+          index: event.startIndex,
+          pieces: event.endIndex - event.startIndex,
+        }
+      };
+    }
+    case "healSlice": {
+      return {
+        forward: event,
+        backward: {
+          type: "slice",
+          index: event.index - 1,
+          pos: state.regions[event.index].start
+        }
+      };
+    }
+    case "moveSlice": {
+
+      return {
+        forward: event,
+        backward: {
+          ...event,
+          pos: state.regions[event.index].start
+        }
+      };
+    }
+  }
+}
 
 const updateRegions = (event: UpdateRegionsEvent) => {
   switch (event.type) {
@@ -211,6 +277,11 @@ type UpdateRegionsEvent =
   | { type: "healSlice"; index: number }
   | { type: "moveSlice"; index: number; pos: number };
 
+type RegionsMigration = {
+  forward: UpdateRegionsEvent,
+  backward: UpdateRegionsEvent,
+}
+
 // @ts-ignore
 window.state = state;
 
@@ -223,10 +294,13 @@ const roughUndo = () => {
   const eventToUndo = undoStack.pop();
 
   if (eventToUndo) {
-    setStore("regions", defaultState.regions);
+    // setStore("regions", defaultState.regions);
     console.log("undoing:", eventToUndo);
     redoStack.push(eventToUndo);
-    undoStack.forEach(updateRegions);
+    // undoStack.map(m => m.forward).forEach(updateRegions);
+
+    updateRegions(eventToUndo.backward)
+
     if (state.selectedRegion && state.selectedRegion >= state.regions.length) {
       setStore("selectedRegion", state.regions.length - 1);
     }
@@ -238,7 +312,7 @@ const roughRedo = () => {
 
   const eventToRedo = redoStack.pop();
   if (eventToRedo) {
-    updateRegions(eventToRedo);
+    updateRegions(eventToRedo.forward);
     undoStack.push(eventToRedo);
   }
 };
