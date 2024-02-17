@@ -9,7 +9,7 @@ import {
 } from "solid-js";
 import { createVirtualizer } from "@tanstack/solid-virtual";
 import { player, Region } from "../player";
-import { same, dispatch, state } from "../store";
+import { dispatch, same, state } from "../store";
 import { ChannelSegment } from "./ChannelSegment";
 import { useAnimationFrame } from "../behaviors/useAnimationFrame";
 import { createDrag } from "../behaviors/createDrag";
@@ -80,11 +80,11 @@ export const Waveform = (props: { buffer: AudioBuffer }) => {
       onkeypress={(e) => {
         switch (e.key) {
           case "s":
-            return dispatch({ type: "setMode", mode: "slice"});
+            return dispatch({ type: "setMode", mode: "slice" });
           case "e":
-            return dispatch({ type: "setMode", mode: "edit"});
+            return dispatch({ type: "setMode", mode: "edit" });
           case "d":
-            return dispatch({ type: "setMode", mode: "delete"});
+            return dispatch({ type: "setMode", mode: "delete" });
         }
       }}
     >
@@ -115,7 +115,7 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
     const contentRect = contentElement.getBoundingClientRect();
     const offsetPx = e.clientX - contentRect.left;
 
-    dispatch({ type: "setCursor", pos: offsetPx / contentElement.clientWidth })
+    dispatch({ type: "setCursor", pos: offsetPx / contentElement.clientWidth });
   };
 
   return (
@@ -211,7 +211,7 @@ const Slice = (
       scrollElement?.addEventListener("touchmove", preventDefault);
     },
     onFinished: () => {
-      dispatch({ type: "moveSlice", index: props.index, pos: dragPos()});
+      dispatch({ type: "moveSlice", index: props.index, pos: dragPos() });
       setZoomCenter(props.region.start);
       scrollElement?.removeEventListener("touchmove", preventDefault);
     },
@@ -316,7 +316,10 @@ const Slice = (
               dispatch({ type: "healSlice", index: props.index });
               if (state.selectedRegion !== undefined) {
                 if (props.index <= state.selectedRegion) {
-                  dispatch({ type: "selectRegion", index: state.selectedRegion - 1 });
+                  dispatch({
+                    type: "selectRegion",
+                    index: state.selectedRegion - 1,
+                  });
                 }
               }
             }}
@@ -412,12 +415,10 @@ const Cursor = (
   const preventDefault = (e: Event) => e.preventDefault();
   const drag = createDrag({
     onStart: () => {
-
       scrollElement?.addEventListener("touchmove", preventDefault);
     },
     onFinished: () => {
-
-      dispatch({ type: "setCursor", pos: dragPos()})
+      dispatch({ type: "setCursor", pos: dragPos() });
       scrollElement?.removeEventListener("touchmove", preventDefault);
       setZoomCenter(state.cursor);
     },
@@ -432,8 +433,7 @@ const Cursor = (
   };
 
   const onKeyDown = createKeyboardMovementHandler((delta) => {
-
-    dispatch({ type: "setCursor", pos: state.cursor + delta})
+    dispatch({ type: "setCursor", pos: state.cursor + delta });
     setZoomCenter(state.cursor);
   });
 
@@ -507,11 +507,9 @@ const Cursor = (
         }}
         onClick={() => {
           if (state.cursorControlsVisible) {
-
-            dispatch({ type: "hideCursorControls" })
+            dispatch({ type: "hideCursorControls" });
           } else {
-
-            dispatch({ type: "showCursorControls" })
+            dispatch({ type: "showCursorControls" });
           }
         }}
         onKeyDown={onKeyDown}
@@ -553,9 +551,9 @@ const Cursor = (
               onClick={() => {
                 syncRegion();
 
-                dispatch({ type: "slice", index: region(), pos: state.cursor})
+                dispatch({ type: "slice", index: region(), pos: state.cursor });
 
-                dispatch({ type: "hideCursorControls" })
+                dispatch({ type: "hideCursorControls" });
                 ref?.focus();
                 setZoomCenter(state.cursor);
                 if (state.selectedRegion !== undefined) {

@@ -14,8 +14,7 @@ export const Details = (props: { clip: Clip }) => (
     <button
       onClick={() => {
         if (confirm("Are you sure?")) {
-
-          dispatch({ type: "reset" })
+          dispatch({ type: "reset" });
           player.stop();
         }
       }}

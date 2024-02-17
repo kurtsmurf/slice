@@ -26,13 +26,11 @@ const defaultState: State = Object.freeze({
 
 const [store, setStore] = createStore<State>(defaultState);
 
-
 // @ts-ignore
 window.setStore = setStore;
 
 // @ts-ignore
 window.reset = () => setStore(defaultState);
-
 
 export const state = store;
 
@@ -41,15 +39,21 @@ let events: Event[] = [];
 // @ts-ignore
 window.events = () => events;
 
-
 // @ts-ignore
-window.clearEvents = () => { events = [] };
+window.clearEvents = () => {
+  events = [];
+};
 
 export const dispatch = (event: Event) => {
+  console.log("dispatching:", event);
 
-  console.log("dispatching:", event)
-
-  const undoableEvents: Event["type"][] = ["slice", "segmentRegion", "healSlice", "moveSlice", "setCursor"];
+  const undoableEvents: Event["type"][] = [
+    "slice",
+    "segmentRegion",
+    "healSlice",
+    "moveSlice",
+    "setCursor",
+  ];
 
   if (undoableEvents.includes(event.type)) {
     events.push(event);
@@ -59,7 +63,7 @@ export const dispatch = (event: Event) => {
     events = [];
   }
 
-  console.log("events:", events)
+  console.log("events:", events);
 
   switch (event.type) {
     case "reset": {
@@ -182,13 +186,15 @@ export const same = (a: Region, b: Region) =>
 
 const roughUndo = () => {
   setStore("regions", [{ start: 0, end: 1 }]);
-  setStore("cursor", 0)
-  const eventsCopy = events.slice()
+  setStore("cursor", 0);
+  const eventsCopy = events.slice();
   events = [];
   console.log("undoing:", eventsCopy.pop());
   eventsCopy.forEach(dispatch);
-  if (state.selectedRegion && state.selectedRegion >= state.regions.length) setStore("selectedRegion", state.regions.length - 1)
-}
+  if (state.selectedRegion && state.selectedRegion >= state.regions.length) {
+    setStore("selectedRegion", state.regions.length - 1);
+  }
+};
 
 // @ts-ignore
-window.undo = roughUndo
+window.undo = roughUndo;

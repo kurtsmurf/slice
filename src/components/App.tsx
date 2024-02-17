@@ -66,7 +66,7 @@ const LoadAudio = () => {
 
           setBusy(false);
 
-          dispatch({ type: "setClip", clip })
+          dispatch({ type: "setClip", clip });
         }}
       />
       <UrlInput />
@@ -103,7 +103,7 @@ const UrlInput = () => {
 
           const name = url.slice(url.lastIndexOf("/") + 1);
 
-          dispatch({ type: "setClip", clip: { name, buffer } })
+          dispatch({ type: "setClip", clip: { name, buffer } });
           setBusy(false);
         }
       }}
@@ -358,8 +358,7 @@ export const Pads = () => {
                 right: 0,
               }}
               onClick={() => {
-
-                dispatch({ type: "selectRegion", index: index() })
+                dispatch({ type: "selectRegion", index: index() });
                 setZoomCenter(state.regions[index()].start);
                 const focusTarget = document.querySelector(
                   "#region-details button",
@@ -381,8 +380,7 @@ const RegionDetails = (props: { index: number }) => {
   const next = () => {
     const next = props.index + 1;
     if (next < state.regions.length) {
-
-      dispatch({ type: "selectRegion", index: next })
+      dispatch({ type: "selectRegion", index: next });
       setZoomCenter(state.regions[next].start);
       scrollRegionIntoView(state.regions[next]);
     }
@@ -391,8 +389,7 @@ const RegionDetails = (props: { index: number }) => {
   const prev = () => {
     const prev = props.index - 1;
     if (prev > -1) {
-
-      dispatch({ type: "selectRegion", index: prev })
+      dispatch({ type: "selectRegion", index: prev });
 
       setZoomCenter(state.regions[prev].start);
       scrollRegionIntoView(state.regions[prev]);
@@ -424,7 +421,7 @@ const RegionDetails = (props: { index: number }) => {
             onClick={() => {
               const index = props.index;
 
-              dispatch({ type: "selectRegion", index: undefined })
+              dispatch({ type: "selectRegion", index: undefined });
               // return focus to region details button
               const detailsBtn = document.querySelector(
                 `#region-${index} [data-details-link]`,
@@ -568,8 +565,11 @@ const SegmentRegionForm = (props: { index: number }) => {
       onSubmit={(e) => {
         e.preventDefault();
         if (e.currentTarget.checkValidity() && input) {
-
-          dispatch({ type: "segmentRegion", index: props.index, pieces: parseInt(input.value) })
+          dispatch({
+            type: "segmentRegion",
+            index: props.index,
+            pieces: parseInt(input.value),
+          });
         }
       }}
     >
