@@ -26,25 +26,12 @@ const defaultState: State = Object.freeze({
 
 const [store, setStore] = createStore<State>(defaultState);
 
-// @ts-ignore
-window.setStore = setStore;
-
-// @ts-ignore
-window.reset = () => setStore(defaultState);
-
 export const state = store;
 
-let events: Event[] = [];
+let undoStack: Event[] = [];
+let redoStack: Event[] = [];
 
-// @ts-ignore
-window.events = () => events;
-
-// @ts-ignore
-window.clearEvents = () => {
-  events = [];
-};
-
-export const dispatch = (event: Event) => {
+export const dispatch = (event: Event, isRedo=false) => {
   console.log("dispatching:", event);
 
   const undoableEvents: Event["type"][] = [
@@ -56,14 +43,17 @@ export const dispatch = (event: Event) => {
   ];
 
   if (undoableEvents.includes(event.type)) {
-    events.push(event);
+    undoStack.push(event);
+    if (!isRedo) redoStack = [];
   }
 
   if (["reset", "setClip"].includes(event.type)) {
-    events = [];
+    undoStack = [];
+    redoStack = [];
   }
 
-  console.log("events:", events);
+  console.log("undo stack:", undoStack);
+  console.log("redo stack:", redoStack);
 
   switch (event.type) {
     case "reset": {
@@ -185,16 +175,34 @@ export const same = (a: Region, b: Region) =>
   a.start === b.start && a.end === b.end;
 
 const roughUndo = () => {
-  setStore("regions", [{ start: 0, end: 1 }]);
-  setStore("cursor", 0);
-  const eventsCopy = events.slice();
-  events = [];
-  console.log("undoing:", eventsCopy.pop());
-  eventsCopy.forEach(dispatch);
-  if (state.selectedRegion && state.selectedRegion >= state.regions.length) {
-    setStore("selectedRegion", state.regions.length - 1);
+  console.log(undoStack, redoStack)
+
+  const eventsCopy = undoStack.slice();
+  const eventToUndo = eventsCopy.pop();
+  if (eventToUndo) {
+    setStore("regions", [{ start: 0, end: 1 }]);
+    setStore("cursor", 0);
+    undoStack = [];
+    console.log("undoing:", eventToUndo);
+    redoStack.push(eventToUndo)
+    eventsCopy.forEach(e => dispatch(e, true));
+    if (state.selectedRegion && state.selectedRegion >= state.regions.length) {
+      setStore("selectedRegion", state.regions.length - 1);
+    }
   }
 };
 
+const roughRedo = () => {
+  console.log(undoStack, redoStack)
+
+  const eventToRedo = redoStack.pop();
+  if (eventToRedo) {
+    dispatch(eventToRedo, true)
+  }
+}
+
 // @ts-ignore
 window.undo = roughUndo;
+
+// @ts-ignore
+window.redo = roughRedo;
