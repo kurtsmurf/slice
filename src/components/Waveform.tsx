@@ -514,7 +514,7 @@ const Cursor = (
         }}
         onKeyDown={onKeyDown}
         ondblclick={(e) => e.stopPropagation()}
-        onPointerDown={drag.start}
+        // onPointerDown={drag.start}
       >
         <svg
           viewBox="0 0 1 1"
