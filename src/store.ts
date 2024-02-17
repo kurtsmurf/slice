@@ -44,7 +44,7 @@ export const dispatch = (event: Event) => {
     }
     case "setClip": {
       undoStack = [];
-      redoStack = [];  
+      redoStack = [];
       return setStore("clip", event.clip);
     }
     case "setCursor": {
@@ -78,8 +78,8 @@ export const dispatch = (event: Event) => {
       }
 
       redoStack = [];
-  
-      updateRegions(event)
+
+      updateRegions(event);
     }
   }
 };
@@ -159,7 +159,7 @@ const updateRegions = (event: UpdateRegionsEvent) => {
       return;
     }
   }
-}
+};
 
 // @ts-ignore
 window.dispatch = dispatch;
@@ -174,12 +174,11 @@ type Event =
   | { type: "selectRegion"; index: number | undefined }
   | UpdateRegionsEvent;
 
-type UpdateRegionsEvent = 
-| { type: "slice"; index: number; pos: number }
-| { type: "segmentRegion"; index: number; pieces: number }
-| { type: "healSlice"; index: number }
-| { type: "moveSlice"; index: number; pos: number }
-
+type UpdateRegionsEvent =
+  | { type: "slice"; index: number; pos: number }
+  | { type: "segmentRegion"; index: number; pieces: number }
+  | { type: "healSlice"; index: number }
+  | { type: "moveSlice"; index: number; pos: number };
 
 // @ts-ignore
 window.state = state;
@@ -209,7 +208,7 @@ const roughRedo = () => {
   const eventToRedo = redoStack.pop();
   if (eventToRedo) {
     updateRegions(eventToRedo);
-    undoStack.push(eventToRedo)
+    undoStack.push(eventToRedo);
   }
 };
 
