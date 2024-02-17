@@ -1,19 +1,29 @@
 .controls {
   display: flex;
-  justify-content: end;
+  gap: 1ch;
+  padding-inline: 1ch;
+  width: max-content;
+}
+.controls-outer {
+  overflow: auto;
+  width: 100%;
 }
 .controls fieldset {
   display: flex;
-  gap: 1ch;
   border: none;
   padding: 0;
-  margin-inline: 1ch;
+  /* margin-inline: 1ch; */
 }
-.controls div {
+
+.controls fieldset:has(button) {
+  gap: 0;
+}
+
+.radio-item {
   display: flex;
   gap: 0.5ch;
-  align-items: center;
 }
+
 .controls legend {
   display: none;
 }

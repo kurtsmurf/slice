@@ -441,15 +441,22 @@ const Cursor = (
   let ref: HTMLDivElement | undefined;
 
   const [region, setRegion] = createSignal(0);
-  const active = createMemo(() =>
-    player.playing() &&
+  const active = createMemo(() => {
+
+    const blah = state.regions[region()];
+
+
+
+    return blah !== undefined && player.playing() &&
     same(
       player.region(),
       {
         start: state.cursor,
-        end: state.regions[region()].end,
+        end: blah.end,
       },
     )
+  }
+    
   );
 
   const syncRegion = () => {
