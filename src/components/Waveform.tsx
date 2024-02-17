@@ -133,6 +133,7 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
       ondblclick={(e) => {
         placeCursor(e);
         setZoomCenter(state.cursor);
+        dispatch({ type: "showCursorControls" });
       }}
     >
       <svg
