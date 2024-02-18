@@ -48,7 +48,7 @@ const renderAudio = async () => {
 
   // load the result
   // @ts-ignore
-  window.spicyDispatch({
+  window.dispatch({
     type: "setClip",
     clip: {
       name: "unknown",
