@@ -247,7 +247,8 @@ const Slice = (
 
     const marginCqi = marginSeconds / lengthSeconds;
 
-    const left = state.regions[props.index - 1]?.start || 0 + marginCqi;
+    const left = (state.regions[props.index - 1]?.start || 0) +
+      (props.index > 0 ? marginCqi : 0);
     const right = props.region.end - marginCqi;
 
     return { left, right };
