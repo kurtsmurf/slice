@@ -120,7 +120,7 @@ const migrationOfEvent = (event: UpdateRegionsEvent): RegionsMigration => {
       };
     }
     case "combineRegions": {
-      // bad - segmentRegions is not equivalent to reversing combine
+      // bad? - segmentRegions is not equivalent to reversing combine
       // because the combined regions may not be evenly spaced
       // but the segmented regions will be
       // solution: create an "replace" event that replaces a target region
@@ -311,21 +311,14 @@ export const same = (a: Region, b: Region) =>
   a.start === b.start && a.end === b.end;
 
 const roughUndo = () => {
-  console.log(undoStack, redoStack);
-
   const eventToUndo = undoStack().pop();
   setUndoStack((prev) => prev);
 
   if (eventToUndo) {
-    // setStore("regions", defaultState.regions);
-    console.log("undoing:", eventToUndo);
-
     setRedoStack((prev) => {
       prev.push(eventToUndo);
       return prev;
     });
-
-    // undoStack.map(m => m.forward).forEach(updateRegions);
 
     updateRegions(eventToUndo.backward);
 
@@ -336,8 +329,6 @@ const roughUndo = () => {
 };
 
 const roughRedo = () => {
-  console.log(undoStack, redoStack);
-
   const eventToRedo = redoStack().pop();
   setRedoStack((prev) => prev);
 

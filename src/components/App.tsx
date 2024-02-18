@@ -149,7 +149,6 @@ const SettingsDialog = () => {
         const rect = e.currentTarget.getBoundingClientRect();
         const clickWasOutside = e.x < rect.x || e.y < rect.y ||
           e.x > rect.x + rect.width || e.y > rect.y + rect.height;
-        console.log(e.target);
         if (e.target === dialog && clickWasOutside) dialog?.close();
       }}
       style={{
