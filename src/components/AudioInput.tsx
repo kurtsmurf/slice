@@ -17,6 +17,7 @@ export const AudioInput = (props: Props) => {
         accept=".mp3, .wav, .m4a"
         onChange={(e) => {
           const [file] = [...(e.currentTarget.files || [])];
+          if (!file) return;
           props.onChange(file);
         }}
       />

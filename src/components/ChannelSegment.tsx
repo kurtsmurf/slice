@@ -95,7 +95,9 @@ const drawBars = (
 
   // draw buckets as vertical lines
   for (let i = 0; i < buckets.length; i++) {
-    const { min, max } = buckets[i];
+    const bucket = buckets[i];
+    if (!bucket) return;
+    const { min, max } = bucket;
     context.beginPath();
     context.moveTo(i, max * (canvas.height / 2) + LINE_WIDTH / 2);
     context.lineTo(i, min * (canvas.height / 2) - LINE_WIDTH / 2);

@@ -141,6 +141,7 @@ const migrationOfEvent = (event: UpdateRegionsEvent): RegionsMigration => {
         backward: {
           type: "slice",
           index: event.index - 1,
+          // @ts-ignore ?????
           pos: state.regions[event.index].start,
         },
       };
@@ -150,6 +151,7 @@ const migrationOfEvent = (event: UpdateRegionsEvent): RegionsMigration => {
         forward: event,
         backward: {
           ...event,
+          // @ts-ignore ?????
           pos: state.regions[event.index].start,
         },
       };
@@ -211,18 +213,30 @@ const updateRegions = (event: UpdateRegionsEvent) => {
         }
       }
 
-      setStore("regions", (prev) => [
-        ...prev.slice(0, event.startIndex),
-        { start: prev[event.startIndex].start, end: prev[event.endIndex].end },
-        ...prev.slice(event.endIndex + 1),
-      ]);
+      setStore("regions", (prev) => {
+        const first = prev[event.startIndex];
+        const last = prev[event.endIndex];
+
+        if (!first || !last) return prev;
+
+        return [
+          ...prev.slice(0, event.startIndex),
+          { start: first.start, end: last.end },
+          ...prev.slice(event.endIndex + 1),
+        ];
+      });
 
       return;
     }
     case "healSlice": {
+      const target = store.regions[event.index];
+      const leftNeighbor = store.regions[event.index - 1];
+
+      if (!target || !leftNeighbor) return;
+
       if (
-        same(player.region(), store.regions[event.index]) ||
-        same(player.region(), store.regions[event.index - 1])
+        same(player.region(), target) ||
+        same(player.region(), leftNeighbor)
       ) {
         player.stop();
       }
@@ -240,11 +254,12 @@ const updateRegions = (event: UpdateRegionsEvent) => {
     }
     case "moveSlice": {
       const region = store.regions[event.index];
-      const leftBound = store.regions[event.index - 1].start || 0;
-      if (event.pos <= leftBound || event.pos >= region.end) return;
+      const leftNeighbor = store.regions[event.index - 1];
+      if (!region || !leftNeighbor) return;
+      if (event.pos <= leftNeighbor.start || event.pos >= region.end) return;
       if (
-        same(player.region(), store.regions[event.index]) ||
-        same(player.region(), store.regions[event.index - 1])
+        same(player.region(), region) ||
+        same(player.region(), leftNeighbor)
       ) {
         player.stop();
       }
@@ -299,7 +314,6 @@ const roughUndo = () => {
   console.log(undoStack, redoStack);
 
   const eventToUndo = undoStack().pop();
-
   setUndoStack((prev) => prev);
 
   if (eventToUndo) {

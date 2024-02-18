@@ -178,10 +178,13 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
 };
 
 const ActiveRegion = () => {
-  const region = createMemo(() =>
-    state
-      .regions[state.selectedRegion !== undefined ? state.selectedRegion : -1]
-  );
+  const region = createMemo(() => {
+    const r = state
+      .regions[state.selectedRegion !== undefined ? state.selectedRegion : -1];
+
+    if (!r) return { start: 0, end: 0 };
+    return r;
+  });
   return (
     <Show when={region()}>
       <div
@@ -243,7 +246,8 @@ const Slice = (
     const marginSeconds = 0.005;
 
     const marginCqi = marginSeconds / lengthSeconds;
-    const left = state.regions[props.index - 1]?.start + marginCqi || 0;
+
+    const left = state.regions[props.index - 1]?.start || 0 + marginCqi;
     const right = props.region.end - marginCqi;
 
     return { left, right };
@@ -575,9 +579,13 @@ const Cursor = (
                 setZoomCenter(state.cursor);
                 syncRegion();
 
+                const region_ = state.regions[region()];
+
+                if (!region_) return;
+
                 player.play(state.clip!.buffer, {
                   start: state.cursor,
-                  end: state.regions[region()].end,
+                  end: region_.end,
                 });
               }
             }}

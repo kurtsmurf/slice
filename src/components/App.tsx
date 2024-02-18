@@ -359,12 +359,15 @@ export const Pads = () => {
               }}
               onClick={() => {
                 dispatch({ type: "selectRegion", index: index() });
-                setZoomCenter(state.regions[index()].start);
+
+                const region = state.regions[index()];
+                if (!region) return;
+                setZoomCenter(region.start);
                 const focusTarget = document.querySelector(
                   "#region-details button",
                 );
                 if (focusTarget instanceof HTMLElement) focusTarget.focus();
-                scrollRegionIntoView(state.regions[index()]);
+                scrollRegionIntoView(region);
               }}
             >
               ...
@@ -379,10 +382,13 @@ export const Pads = () => {
 const RegionDetails = (props: { index: number }) => {
   const next = () => {
     const next = props.index + 1;
+    const region = state.regions[next];
+    if (!region) return;
+
     if (next < state.regions.length) {
       dispatch({ type: "selectRegion", index: next });
-      setZoomCenter(state.regions[next].start);
-      scrollRegionIntoView(state.regions[next]);
+      setZoomCenter(region.start);
+      scrollRegionIntoView(region);
     }
   };
 
@@ -390,9 +396,11 @@ const RegionDetails = (props: { index: number }) => {
     const prev = props.index - 1;
     if (prev > -1) {
       dispatch({ type: "selectRegion", index: prev });
+      const region = state.regions[prev];
+      if (!region) return;
 
-      setZoomCenter(state.regions[prev].start);
-      scrollRegionIntoView(state.regions[prev]);
+      setZoomCenter(region.start);
+      scrollRegionIntoView(region);
     }
   };
 
