@@ -295,7 +295,7 @@ const Slice = (
         <Stick
           pos={dragPos()}
           width={30}
-          background="hsl(0deg 0% 25% / 30%)"
+          background="hsl(0deg 0% 25% / 50%)"
           onPointerDown={(e) => {
             drag.start(e);
           }}
