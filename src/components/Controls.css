@@ -1,8 +1,9 @@
 .controls {
   display: flex;
   gap: 1ch;
-  padding-inline: 1ch;
+  /* padding-inline: 1ch; */
   width: max-content;
+  margin-inline-start: auto;
 }
 .controls-outer {
   overflow: auto;
