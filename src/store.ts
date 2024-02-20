@@ -39,33 +39,38 @@ let [redoStack, setRedoStack] = createSignal<RegionsMigration[]>([], {
 let lastDispatchTime = Date.now();
 
 export const dispatch = (event: Event) => {
-  lastDispatchTime = Date.now();
-
   switch (event.type) {
     case "reset": {
       setUndoStack([]);
       setRedoStack([]);
-      return setStore(defaultState);
+      setStore(defaultState);
+      break;
     }
     case "setClip": {
       setUndoStack([]);
       setRedoStack([]);
-      return setStore("clip", event.clip);
+      setStore("clip", event.clip);
+      break;
     }
     case "setCursor": {
-      return setStore("cursor", Math.max(0, Math.min(event.pos, 1)));
+      setStore("cursor", Math.max(0, Math.min(event.pos, 1)));
+      break;
     }
     case "showCursorControls": {
-      return setStore("cursorControlsVisible", true);
+      setStore("cursorControlsVisible", true);
+      break;
     }
     case "hideCursorControls": {
-      return setStore("cursorControlsVisible", false);
+      setStore("cursorControlsVisible", false);
+      break;
     }
     case "setMode": {
-      return setStore("mode", event.mode);
+      setStore("mode", event.mode);
+      break;
     }
     case "selectRegion": {
-      return setStore("selectedRegion", event.index);
+      setStore("selectedRegion", event.index);
+      break;
     }
     default: {
       const lastMigration = undoStack()[undoStack().length - 1];
@@ -96,6 +101,8 @@ export const dispatch = (event: Event) => {
       updateRegions(event);
     }
   }
+
+  lastDispatchTime = Date.now();
 };
 
 const migrationOfEvent = (event: UpdateRegionsEvent): RegionsMigration => {
