@@ -2,7 +2,9 @@ import { Clip } from "./types";
 import { createStore } from "solid-js/store";
 import { range } from "./util/range";
 import { player, Region } from "./player";
-import { createSignal } from "solid-js";
+import { createEffect, createSignal } from "solid-js";
+import localforage from "localforage";
+import { audioContext } from "./audioContext";
 
 type Mode = "delete" | "edit" | "slice";
 
@@ -38,6 +40,9 @@ let [redoStack, setRedoStack] = createSignal<RegionsMigration[]>([], {
 
 let lastDispatchTime = Date.now();
 
+// @ts-ignore
+window.localforage = localforage;
+
 export const dispatch = (event: Event) => {
   switch (event.type) {
     case "reset": {
@@ -49,6 +54,25 @@ export const dispatch = (event: Event) => {
     case "setClip": {
       setUndoStack([]);
       setRedoStack([]);
+
+      sessionStorage.setItem("name", event.clip.name);
+      sessionStorage.setItem("length", event.clip.buffer.length.toString());
+      sessionStorage.setItem(
+        "sampleRate",
+        event.clip.buffer.sampleRate.toString(),
+      );
+      sessionStorage.setItem(
+        "numberOfChannels",
+        event.clip.buffer.numberOfChannels.toString(),
+      );
+
+      for (let i = 0; i < event.clip.buffer.numberOfChannels; i++) {
+        localforage.setItem(
+          event.clip.name + "_" + i,
+          event.clip.buffer.getChannelData(i),
+        );
+      }
+
       setStore("clip", event.clip);
       break;
     }
@@ -175,12 +199,13 @@ const updateRegions = (event: UpdateRegionsEvent) => {
 
       if (event.pos <= region.start || event.pos >= region.end) return;
       if (same(player.region(), region)) player.stop();
-      return setStore("regions", (prev) => [
+      setStore("regions", (prev) => [
         ...prev.slice(0, event.index),
         { start: region.start, end: event.pos },
         { start: event.pos, end: region.end },
         ...prev.slice(event.index + 1),
       ]);
+      break;
     }
     case "segmentRegion": {
       const region = store.regions[event.index];
@@ -189,7 +214,7 @@ const updateRegions = (event: UpdateRegionsEvent) => {
 
       const segmentLength = (region.end - region.start) / event.pieces;
       if (same(player.region(), region)) player.stop();
-      return setStore("regions", (prev) => [
+      setStore("regions", (prev) => [
         ...prev.slice(0, event.index),
         ...range(0, event.pieces).map((n) => ({
           start: region.start + segmentLength * n,
@@ -197,6 +222,7 @@ const updateRegions = (event: UpdateRegionsEvent) => {
         })),
         ...prev.slice(event.index + 1),
       ]);
+      break;
     }
     case "combineRegions": {
       if (
@@ -233,7 +259,7 @@ const updateRegions = (event: UpdateRegionsEvent) => {
         ];
       });
 
-      return;
+      break;
     }
     case "healSlice": {
       const target = store.regions[event.index];
@@ -248,7 +274,7 @@ const updateRegions = (event: UpdateRegionsEvent) => {
         player.stop();
       }
 
-      return setStore("regions", (prev) => [
+      setStore("regions", (prev) => [
         ...prev.slice(0, event.index).map((v, i) =>
           // update right bound of removed region left neighbor
           i === event.index - 1
@@ -258,6 +284,7 @@ const updateRegions = (event: UpdateRegionsEvent) => {
         // omit region
         ...prev.slice(event.index + 1),
       ]);
+      break;
     }
     case "moveSlice": {
       const region = store.regions[event.index];
@@ -281,8 +308,14 @@ const updateRegions = (event: UpdateRegionsEvent) => {
         event.index,
         (prev) => ({ start: event.pos, end: prev.end }),
       );
-      return;
+      break;
     }
+  }
+
+  if (store.regions.length > 0) {
+    localforage.setItem("regions", store.regions.map((r) => r.start));
+  } else {
+    localforage.removeItem("regions");
   }
 };
 
@@ -360,3 +393,48 @@ window.undo = roughUndo;
 
 // @ts-ignore
 window.redo = roughRedo;
+
+export const [busy, setBusy] = createSignal(false);
+
+(async () => {
+  setBusy(true);
+  try {
+    const name = sessionStorage.getItem("name");
+    const lengthStr = sessionStorage.getItem("length");
+    const sampleRateStr = sessionStorage.getItem("sampleRate");
+    const numberOfChannelsStr = sessionStorage.getItem("numberOfChannels");
+
+    if (!name || !lengthStr || !sampleRateStr || !numberOfChannelsStr) return;
+
+    const length = parseInt(lengthStr);
+    const sampleRate = parseInt(sampleRateStr);
+    const numberOfChannels = parseInt(numberOfChannelsStr);
+
+    const buffer = audioContext.createBuffer(
+      numberOfChannels,
+      length,
+      sampleRate,
+    );
+
+    for (let i = 0; i < numberOfChannels; i++) {
+      const channel = await localforage.getItem(name + "_" + i) as Float32Array;
+      buffer.copyToChannel(channel, i);
+    }
+
+    setStore("clip", { name, buffer });
+
+    await localforage.getItem("regions").then((arr) => {
+      console.log(arr);
+
+      if (!Array.isArray(arr)) return;
+
+      const regions = arr.map((r, i, a) => {
+        return { start: r, end: a[i + 1] || 1 };
+      });
+
+      setStore("regions", regions);
+    });
+  } finally {
+    setBusy(false);
+  }
+})();

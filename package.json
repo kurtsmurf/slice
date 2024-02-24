@@ -26,6 +26,7 @@
     "@tanstack/virtual-core": "^3.0.0-alpha.1",
     "@types/lodash.debounce": "^4.0.7",
     "audiobuffer-to-wav": "^1.0.0",
+    "localforage": "^1.10.0",
     "lodash.debounce": "^4.0.8",
     "solid-js": "^1.5.1",
     "workerpool": "^6.4.0"

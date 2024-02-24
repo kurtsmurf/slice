@@ -9,7 +9,7 @@ import {
 } from "solid-js";
 import { mapLinearToLogarithmic, player } from "../player";
 import { download, share } from "../export";
-import { dispatch, state } from "../store";
+import { busy, dispatch, setBusy, state } from "../store";
 import {
   contentElement,
   scrollElement,
@@ -23,8 +23,6 @@ import "./style.css";
 import { audioContext } from "../audioContext";
 import { Clip } from "../types";
 import { Curtain } from "./Curtain";
-
-export const [busy, setBusy] = createSignal(false);
 
 const clipOfFile = async (file: File): Promise<Clip> => ({
   name: file.name,
