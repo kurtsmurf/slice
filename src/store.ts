@@ -54,25 +54,6 @@ export const dispatch = (event: Event) => {
     case "setClip": {
       setUndoStack([]);
       setRedoStack([]);
-
-      sessionStorage.setItem("name", event.clip.name);
-      sessionStorage.setItem("length", event.clip.buffer.length.toString());
-      sessionStorage.setItem(
-        "sampleRate",
-        event.clip.buffer.sampleRate.toString(),
-      );
-      sessionStorage.setItem(
-        "numberOfChannels",
-        event.clip.buffer.numberOfChannels.toString(),
-      );
-
-      for (let i = 0; i < event.clip.buffer.numberOfChannels; i++) {
-        localforage.setItem(
-          event.clip.name + "_" + i,
-          event.clip.buffer.getChannelData(i),
-        );
-      }
-
       setStore("clip", event.clip);
       break;
     }
@@ -311,12 +292,6 @@ const updateRegions = (event: UpdateRegionsEvent) => {
       break;
     }
   }
-
-  if (store.regions.length > 0) {
-    localforage.setItem("regions", store.regions.map((r) => r.start));
-  } else {
-    localforage.removeItem("regions");
-  }
 };
 
 // @ts-ignore
@@ -388,12 +363,6 @@ export const redo = {
   disabled: () => redoStack().length === 0,
 };
 
-// @ts-ignore
-window.undo = roughUndo;
-
-// @ts-ignore
-window.redo = roughRedo;
-
 export const [busy, setBusy] = createSignal(false);
 
 (async () => {
@@ -434,7 +403,60 @@ export const [busy, setBusy] = createSignal(false);
 
       setStore("regions", regions);
     });
+
+    setUndoStack(get("undoStack") || []);
+    setRedoStack(get("redoStack") || []);
   } finally {
     setBusy(false);
   }
-})();
+})().then(() => {
+  // persist undo/redo
+  createEffect(() =>
+    localStorage.setItem("redoStack", JSON.stringify(redoStack()))
+  );
+  createEffect(() =>
+    localStorage.setItem("undoStack", JSON.stringify(undoStack()))
+  );
+
+  // persist regions
+  createEffect(() => {
+    localforage.setItem("regions", store.regions.map((r) => r.start));
+  });
+
+  // persist channels, clip metadata
+  createEffect(() => {
+    const clip = state.clip;
+
+    if (clip) {
+      sessionStorage.setItem("name", clip.name);
+      sessionStorage.setItem("length", clip.buffer.length.toString());
+      sessionStorage.setItem(
+        "sampleRate",
+        clip.buffer.sampleRate.toString(),
+      );
+      sessionStorage.setItem(
+        "numberOfChannels",
+        clip.buffer.numberOfChannels.toString(),
+      );
+
+      for (let i = 0; i < clip.buffer.numberOfChannels; i++) {
+        localforage.setItem(
+          clip.name + "_" + i,
+          clip.buffer.getChannelData(i),
+        );
+      }
+    } else {
+      sessionStorage.clear();
+    }
+  });
+});
+
+function get(key: string) {
+  const stored = localStorage.getItem(key);
+  if (stored === null) return;
+  let parsed;
+  try {
+    parsed = JSON.parse(stored);
+  } catch {}
+  return parsed;
+}
