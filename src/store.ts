@@ -2,7 +2,7 @@ import { Clip } from "./types";
 import { createStore } from "solid-js/store";
 import { range } from "./util/range";
 import { player, Region } from "./player";
-import { createEffect, createSignal } from "solid-js";
+import { createSignal } from "solid-js";
 import localforage from "localforage";
 import { audioContext } from "./audioContext";
 
@@ -31,10 +31,10 @@ const [store, setStore] = createStore<State>(defaultState);
 
 export const state = store;
 
-let [undoStack, setUndoStack] = createSignal<RegionsMigration[]>([], {
+const [undoStack, setUndoStack] = createSignal<RegionsMigration[]>([], {
   equals: false,
 });
-let [redoStack, setRedoStack] = createSignal<RegionsMigration[]>([], {
+const [redoStack, setRedoStack] = createSignal<RegionsMigration[]>([], {
   equals: false,
 });
 
@@ -325,47 +325,44 @@ window.state = state;
 export const same = (a: Region, b: Region) =>
   a.start === b.start && a.end === b.end;
 
-const roughUndo = () => {
-  const eventToUndo = undoStack().pop();
-  setUndoStack((prev) => prev);
-
-  if (eventToUndo) {
-    setRedoStack((prev) => {
-      prev.push(eventToUndo);
-      return prev;
-    });
-
-    updateRegions(eventToUndo.backward);
-
-    if (state.selectedRegion && state.selectedRegion >= state.regions.length) {
-      setStore("selectedRegion", state.regions.length - 1);
-    }
-  }
-};
-
-const roughRedo = () => {
-  const eventToRedo = redoStack().pop();
-  setRedoStack((prev) => prev);
-
-  if (eventToRedo) {
-    updateRegions(eventToRedo.forward);
-    undoStack().push(eventToRedo);
-    setUndoStack((prev) => prev);
-  }
-};
-
 export const undo = {
-  execute: roughUndo,
+  execute: () => {
+    const eventToUndo = undoStack().pop();
+    setUndoStack((prev) => prev);
+  
+    if (eventToUndo) {
+      setRedoStack((prev) => {
+        prev.push(eventToUndo);
+        return prev;
+      });
+  
+      updateRegions(eventToUndo.backward);
+  
+      if (state.selectedRegion && state.selectedRegion >= state.regions.length) {
+        setStore("selectedRegion", state.regions.length - 1);
+      }
+    }
+  },
   disabled: () => undoStack().length === 0,
 };
+
 export const redo = {
-  execute: roughRedo,
+  execute: () => {
+    const eventToRedo = redoStack().pop();
+    setRedoStack((prev) => prev);
+  
+    if (eventToRedo) {
+      updateRegions(eventToRedo.forward);
+      undoStack().push(eventToRedo);
+      setUndoStack((prev) => prev);
+    }
+  },
   disabled: () => redoStack().length === 0,
 };
 
 export const [busy, setBusy] = createSignal(false);
 
-(async () => {
+const syncState = async () => {
   setBusy(true);
   try {
     const name = sessionStorage.getItem("name");
@@ -375,32 +372,32 @@ export const [busy, setBusy] = createSignal(false);
 
     if (!name || !lengthStr || !sampleRateStr || !numberOfChannelsStr) return;
 
-    const length = parseInt(lengthStr);
-    const sampleRate = parseInt(sampleRateStr);
-    const numberOfChannels = parseInt(numberOfChannelsStr);
+    if (name !== state.clip?.name) {
+      const length = parseInt(lengthStr);
+      const sampleRate = parseInt(sampleRateStr);
+      const numberOfChannels = parseInt(numberOfChannelsStr);
 
-    const buffer = audioContext.createBuffer(
-      numberOfChannels,
-      length,
-      sampleRate,
-    );
+      const buffer = audioContext.createBuffer(
+        numberOfChannels,
+        length,
+        sampleRate,
+      );
 
-    for (let i = 0; i < numberOfChannels; i++) {
-      const channel = await localforage.getItem(name + "_" + i) as Float32Array;
-      buffer.copyToChannel(channel, i);
+      for (let i = 0; i < numberOfChannels; i++) {
+        const channel = await localforage.getItem(
+          name + "_" + i,
+        ) as Float32Array;
+        buffer.copyToChannel(channel, i);
+      }
+
+      setStore("clip", { name, buffer });
     }
 
-    setStore("clip", { name, buffer });
-
     await localforage.getItem("regions").then((arr) => {
-      console.log(arr);
-
       if (!Array.isArray(arr)) return;
-
       const regions = arr.map((r, i, a) => {
         return { start: r, end: a[i + 1] || 1 };
       });
-
       setStore("regions", regions);
     });
 
@@ -409,47 +406,41 @@ export const [busy, setBusy] = createSignal(false);
   } finally {
     setBusy(false);
   }
-})().then(() => {
+};
+
+const syncStorage = () => {
   // persist undo/redo
-  createEffect(() =>
-    localStorage.setItem("redoStack", JSON.stringify(redoStack()))
-  );
-  createEffect(() =>
-    localStorage.setItem("undoStack", JSON.stringify(undoStack()))
-  );
+  localStorage.setItem("redoStack", JSON.stringify(redoStack()));
+  localStorage.setItem("undoStack", JSON.stringify(undoStack()));
 
   // persist regions
-  createEffect(() => {
-    localforage.setItem("regions", store.regions.map((r) => r.start));
-  });
+  localforage.setItem("regions", store.regions.map((r) => r.start));
 
   // persist channels, clip metadata
-  createEffect(() => {
-    const clip = state.clip;
+  const clip = state.clip;
 
-    if (clip) {
-      sessionStorage.setItem("name", clip.name);
-      sessionStorage.setItem("length", clip.buffer.length.toString());
-      sessionStorage.setItem(
-        "sampleRate",
-        clip.buffer.sampleRate.toString(),
-      );
-      sessionStorage.setItem(
-        "numberOfChannels",
-        clip.buffer.numberOfChannels.toString(),
-      );
+  if (clip) {
+    sessionStorage.setItem("name", clip.name);
+    sessionStorage.setItem("length", clip.buffer.length.toString());
+    sessionStorage.setItem(
+      "sampleRate",
+      clip.buffer.sampleRate.toString(),
+    );
+    sessionStorage.setItem(
+      "numberOfChannels",
+      clip.buffer.numberOfChannels.toString(),
+    );
 
-      for (let i = 0; i < clip.buffer.numberOfChannels; i++) {
-        localforage.setItem(
-          clip.name + "_" + i,
-          clip.buffer.getChannelData(i),
-        );
-      }
-    } else {
-      sessionStorage.clear();
+    for (let i = 0; i < clip.buffer.numberOfChannels; i++) {
+      localforage.setItem(
+        clip.name + "_" + i,
+        clip.buffer.getChannelData(i),
+      );
     }
-  });
-});
+  } else {
+    sessionStorage.clear();
+  }
+};
 
 function get(key: string) {
   const stored = localStorage.getItem(key);
@@ -460,3 +451,9 @@ function get(key: string) {
   } catch {}
   return parsed;
 }
+
+window.onblur = syncStorage;
+window.onbeforeunload = syncStorage;
+
+window.onfocus = syncState;
+window.onload = syncState;
