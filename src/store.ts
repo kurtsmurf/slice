@@ -31,10 +31,10 @@ const [store, setStore] = createStore<State>(defaultState);
 
 export const state = store;
 
-const [undoStack, setUndoStack] = createSignal<RegionsMigration[]>([], {
+const [undoStack, setUndoStack] = createSignal<UpdateRegionsEvent[]>([], {
   equals: false,
 });
-const [redoStack, setRedoStack] = createSignal<RegionsMigration[]>([], {
+const [redoStack, setRedoStack] = createSignal<UpdateRegionsEvent[]>([], {
   equals: false,
 });
 
@@ -83,20 +83,17 @@ export const dispatch = (event: Event) => {
       // deduplicate rapid moveSlice events on the undo stack
       if (
         event.type === "moveSlice" &&
-        lastMigration?.forward.type === "moveSlice" &&
-        event.index === lastMigration?.forward.index &&
+        lastMigration?.type === "moveSlice" &&
+        event.index === lastMigration?.index &&
         Date.now() - lastDispatchTime < 1000
       ) {
         setUndoStack((prev) => {
-          prev[prev.length - 1] = {
-            forward: event,
-            backward: lastMigration.backward,
-          };
+          prev[prev.length - 1] = event;
           return prev;
         });
       } else {
         setUndoStack((prev) => {
-          prev.push(migrationOfEvent(event));
+          prev.push(event);
           return prev;
         });
       }
@@ -110,25 +107,19 @@ export const dispatch = (event: Event) => {
   lastDispatchTime = Date.now();
 };
 
-const migrationOfEvent = (event: UpdateRegionsEvent): RegionsMigration => {
+const inverseOfEvent = (event: UpdateRegionsEvent): UpdateRegionsEvent => {
   switch (event.type) {
     case "slice": {
       return {
-        forward: event,
-        backward: {
-          type: "healSlice",
-          index: event.index + 1,
-        },
+        type: "healSlice",
+        index: event.index + 1,
       };
     }
     case "segmentRegion": {
       return {
-        forward: event,
-        backward: {
-          type: "combineRegions",
-          startIndex: event.index,
-          endIndex: event.index + event.pieces - 1,
-        },
+        type: "combineRegions",
+        startIndex: event.index,
+        endIndex: event.index + event.pieces - 1,
       };
     }
     case "combineRegions": {
@@ -139,33 +130,24 @@ const migrationOfEvent = (event: UpdateRegionsEvent): RegionsMigration => {
       // by index with an arbitrary array of regions
       // use that to reverse combineRegions
       return {
-        forward: event,
-        backward: {
-          type: "segmentRegion",
-          index: event.startIndex,
-          pieces: event.endIndex - event.startIndex,
-        },
+        type: "segmentRegion",
+        index: event.startIndex,
+        pieces: event.endIndex - event.startIndex,
       };
     }
     case "healSlice": {
       return {
-        forward: event,
-        backward: {
-          type: "slice",
-          index: event.index - 1,
-          // @ts-ignore ?????
-          pos: state.regions[event.index].start,
-        },
+        type: "slice",
+        index: event.index - 1,
+        // @ts-ignore ?????
+        pos: state.regions[event.index].start,
       };
     }
     case "moveSlice": {
       return {
-        forward: event,
-        backward: {
-          ...event,
-          // @ts-ignore ?????
-          pos: state.regions[event.index].start,
-        },
+        ...event,
+        // @ts-ignore ?????
+        pos: state.regions[event.index].start,
       };
     }
   }
@@ -314,11 +296,6 @@ type UpdateRegionsEvent =
   | { type: "healSlice"; index: number }
   | { type: "moveSlice"; index: number; pos: number };
 
-type RegionsMigration = {
-  forward: UpdateRegionsEvent;
-  backward: UpdateRegionsEvent;
-};
-
 // @ts-ignore
 window.state = state;
 
@@ -329,16 +306,18 @@ export const undo = {
   execute: () => {
     const eventToUndo = undoStack().pop();
     setUndoStack((prev) => prev);
-  
+
     if (eventToUndo) {
       setRedoStack((prev) => {
         prev.push(eventToUndo);
         return prev;
       });
-  
-      updateRegions(eventToUndo.backward);
-  
-      if (state.selectedRegion && state.selectedRegion >= state.regions.length) {
+
+      updateRegions(inverseOfEvent(eventToUndo));
+
+      if (
+        state.selectedRegion && state.selectedRegion >= state.regions.length
+      ) {
         setStore("selectedRegion", state.regions.length - 1);
       }
     }
@@ -350,9 +329,9 @@ export const redo = {
   execute: () => {
     const eventToRedo = redoStack().pop();
     setRedoStack((prev) => prev);
-  
+
     if (eventToRedo) {
-      updateRegions(eventToRedo.forward);
+      updateRegions(eventToRedo);
       undoStack().push(eventToRedo);
       setUndoStack((prev) => prev);
     }
