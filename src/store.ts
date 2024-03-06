@@ -46,6 +46,7 @@ window.localforage = localforage;
 export const dispatch = (event: Event) => {
   switch (event.type) {
     case "reset": {
+      syncStorage();
       setUndoStack([]);
       setRedoStack([]);
       setStore(defaultState);
@@ -101,6 +102,7 @@ export const dispatch = (event: Event) => {
       setRedoStack([]);
 
       updateRegions(event);
+
     }
   }
 
@@ -344,82 +346,113 @@ export const [busy, setBusy] = createSignal(false);
 const syncState = async () => {
   setBusy(true);
   try {
-    const name = sessionStorage.getItem("name");
-    const lengthStr = sessionStorage.getItem("length");
-    const sampleRateStr = sessionStorage.getItem("sampleRate");
-    const numberOfChannelsStr = sessionStorage.getItem("numberOfChannels");
+    const clip = state.clip;
+    if (!clip) return;
+    const sessions = await localforage.getItem("sessions") as Map<string, Session>
+    const session = sessions.get(clip.hash)
+    if (!session) return;
+    if (session.lastModified <= lastDispatchTime) return;
 
-    if (!name || !lengthStr || !sampleRateStr || !numberOfChannelsStr) return;
-
-    if (name !== state.clip?.name) {
-      const length = parseInt(lengthStr);
-      const sampleRate = parseInt(sampleRateStr);
-      const numberOfChannels = parseInt(numberOfChannelsStr);
-
-      const buffer = audioContext.createBuffer(
-        numberOfChannels,
-        length,
-        sampleRate,
-      );
-
-      for (let i = 0; i < numberOfChannels; i++) {
-        const channel = await localforage.getItem(
-          name + "_" + i,
-        ) as Float32Array;
-        buffer.copyToChannel(channel, i);
-      }
-
-      setStore("clip", { name, buffer });
-    }
-
-    await localforage.getItem("regions").then((arr) => {
-      if (!Array.isArray(arr)) return;
-      const regions = arr.map((r, i, a) => {
-        return { start: r, end: a[i + 1] || 1 };
-      });
-      setStore("regions", regions);
-    });
-
-    setUndoStack(get("undoStack") || []);
-    setRedoStack(get("redoStack") || []);
+    await loadSession(session)
+    lastDispatchTime = session.lastModified;
   } finally {
     setBusy(false);
   }
 };
 
+
+export async function loadSession(session: Session) {
+  const left = await localforage.getItem(session.hash + "_0");
+  const right = await localforage.getItem(session.hash + "_0");
+
+  const channels = [left, right].filter(Boolean) as Float32Array[];
+
+  const length = channels[0]?.length;
+  if (!length) return;
+  
+  const sampleRate = session.sampleRate;
+  const numberOfChannels = channels.length;
+  const name = session.alias;
+  
+  const buffer = audioContext.createBuffer(
+    numberOfChannels,
+    length,
+    sampleRate,
+    );
+    
+  for (let i = 0; i < numberOfChannels; i++) {
+    const channel = await localforage.getItem(
+      session.hash + "_" + i,
+    ) as Float32Array;
+    buffer.copyToChannel(channel, i);
+  }
+
+  console.log(session, channels, length, buffer)
+
+
+  setStore("clip", { name, buffer, hash: session.hash });
+
+  await localforage.getItem(session.hash + "_regions").then((arr) => {
+    if (!Array.isArray(arr)) return;
+    const regions = arr.map((r, i, a) => {
+      return { start: r, end: a[i + 1] || 1 };
+    });
+    setStore("regions", regions);
+  });
+
+  setUndoStack(get(session.hash + "_undoStack") || []);
+  setRedoStack(get(session.hash + "_redoStack") || []);
+
+}
+
+
+
+export type Session = {
+  hash: string,
+  alias: string,
+  sampleRate: number,
+  lastModified: number,
+}
+
 const syncStorage = () => {
-  // persist undo/redo
-  localStorage.setItem("redoStack", JSON.stringify(redoStack()));
-  localStorage.setItem("undoStack", JSON.stringify(undoStack()));
-
-  // persist regions
-  localforage.setItem("regions", store.regions.map((r) => r.start));
-
   // persist channels, clip metadata
   const clip = state.clip;
 
   if (clip) {
-    sessionStorage.setItem("name", clip.name);
-    sessionStorage.setItem("length", clip.buffer.length.toString());
-    sessionStorage.setItem(
-      "sampleRate",
-      clip.buffer.sampleRate.toString(),
-    );
-    sessionStorage.setItem(
-      "numberOfChannels",
-      clip.buffer.numberOfChannels.toString(),
-    );
+
+    // persist undo/redo
+    localStorage.setItem(clip.hash + "_redoStack", JSON.stringify(redoStack()));
+    localStorage.setItem(clip.hash + "_undoStack", JSON.stringify(undoStack()));
+
+    // persist regions
+    localforage.setItem(clip.hash + "_regions", store.regions.map((r) => r.start));
+
+    localforage.getItem("sessions").then((result) => {
+      const sessions = result === null ? new Map<string, Session>() : result as Map<string, Session>;
+
+      const session: Session = {
+        hash: clip.hash,
+        alias: clip.name,
+        sampleRate: clip.buffer.sampleRate,
+        lastModified: lastDispatchTime,
+      }
+      sessions.set(clip.hash, session)
+
+      localforage.setItem("sessions", sessions)
+    })
 
     for (let i = 0; i < clip.buffer.numberOfChannels; i++) {
       localforage.setItem(
-        clip.name + "_" + i,
+        clip.hash + "_" + i,
         clip.buffer.getChannelData(i),
       );
     }
-  } else {
+  } else {  
     sessionStorage.clear();
   }
 };
+
+
 
 function get(key: string) {
   const stored = localStorage.getItem(key);
@@ -434,5 +467,5 @@ function get(key: string) {
 window.onblur = syncStorage;
 window.onbeforeunload = syncStorage;
 
-window.onfocus = syncState;
-window.onload = syncState;
+window.onfocus = () => syncState();
+window.onload = () => syncState();

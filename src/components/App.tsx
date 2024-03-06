@@ -9,7 +9,7 @@ import {
 } from "solid-js";
 import { mapLinearToLogarithmic, player } from "../player";
 import { download, share } from "../export";
-import { busy, dispatch, setBusy, state } from "../store";
+import { busy, dispatch, loadSession, Session, setBusy, state } from "../store";
 import {
   contentElement,
   scrollElement,
@@ -23,11 +23,36 @@ import "./style.css";
 import { audioContext } from "../audioContext";
 import { Clip } from "../types";
 import { Curtain } from "./Curtain";
+import localforage from "localforage";
 
-const clipOfFile = async (file: File): Promise<Clip> => ({
-  name: file.name,
-  buffer: await audioContext.decodeAudioData(await arrayBufferOfFile(file)),
-});
+
+const hashHex = async (inputBuffer: BufferSource) => {
+  const hashBuffer = await crypto.subtle.digest("SHA-256", inputBuffer);
+  return Array.from(new Uint8Array(hashBuffer))
+  .map((byte) => byte.toString(16).padStart(2, "0"))
+  .join("");
+}
+
+const hashAudioBuffer = (buffer: AudioBuffer) => {
+  const channelsCombined = new Float32Array(buffer.length * buffer.numberOfChannels)
+
+  for (let i = 0; i < buffer.numberOfChannels; i++) {
+    channelsCombined.set(buffer.getChannelData(i), i * buffer.length)
+  }
+
+  return hashHex(channelsCombined)
+}
+
+const clipOfFile = async (file: File): Promise<Clip> => {
+  const buffer = await audioContext.decodeAudioData(await arrayBufferOfFile(file));
+  const hash = await hashAudioBuffer(buffer)
+
+  return {
+    name: file.name,
+    buffer,
+    hash,
+  }
+};
 
 const arrayBufferOfFile = (file: File) =>
   new Promise<ArrayBuffer>((resolve, reject) => {
@@ -72,6 +97,41 @@ const LoadAudio = () => {
   );
 };
 
+const Sessions = () => {
+
+  const [sessions, setSessions] = createSignal<Session[] | undefined>()
+
+  localforage.getItem("sessions").then((sessionsMap) => {
+    const blah = [...(sessionsMap as Map<string, Session>).values()]
+    setSessions(blah)
+  })
+
+  return (
+    <Show
+      when={sessions()}
+      fallback={() => <p>loading...</p>}
+    >
+      <For
+        each={sessions()}
+      >
+        {
+          (session) => <div
+            onClick={async () => {
+              setBusy(true);
+              await loadSession(session)
+              setBusy(false)
+            }}
+          >
+            <p>{session.alias}</p>
+            <p>{session.hash}</p>
+          </div>
+        }
+      </For>
+    </Show>
+  )
+
+}
+
 const UrlInput = () => {
   let input: HTMLInputElement | undefined;
   return (
@@ -101,7 +161,9 @@ const UrlInput = () => {
 
           const name = url.slice(url.lastIndexOf("/") + 1);
 
-          dispatch({ type: "setClip", clip: { name, buffer } });
+          const hash = await hashAudioBuffer(buffer)
+
+          dispatch({ type: "setClip", clip: { name, buffer, hash } });
           setBusy(false);
         }
       }}
@@ -119,7 +181,10 @@ export const App = () => (
   <>
     <Show
       when={state.clip}
-      fallback={<LoadAudio />}
+      fallback={() => <>
+        <LoadAudio />
+        <Sessions />
+      </>}
     >
       <div>
         <Details clip={state.clip!} />
