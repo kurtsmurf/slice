@@ -25,33 +25,36 @@ import { Clip } from "../types";
 import { Curtain } from "./Curtain";
 import localforage from "localforage";
 
-
 const hashHex = async (inputBuffer: BufferSource) => {
   const hashBuffer = await crypto.subtle.digest("SHA-256", inputBuffer);
   return Array.from(new Uint8Array(hashBuffer))
-  .map((byte) => byte.toString(16).padStart(2, "0"))
-  .join("");
-}
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+};
 
 const hashAudioBuffer = (buffer: AudioBuffer) => {
-  const channelsCombined = new Float32Array(buffer.length * buffer.numberOfChannels)
+  const channelsCombined = new Float32Array(
+    buffer.length * buffer.numberOfChannels,
+  );
 
   for (let i = 0; i < buffer.numberOfChannels; i++) {
-    channelsCombined.set(buffer.getChannelData(i), i * buffer.length)
+    channelsCombined.set(buffer.getChannelData(i), i * buffer.length);
   }
 
-  return hashHex(channelsCombined)
-}
+  return hashHex(channelsCombined);
+};
 
 const clipOfFile = async (file: File): Promise<Clip> => {
-  const buffer = await audioContext.decodeAudioData(await arrayBufferOfFile(file));
-  const hash = await hashAudioBuffer(buffer)
+  const buffer = await audioContext.decodeAudioData(
+    await arrayBufferOfFile(file),
+  );
+  const hash = await hashAudioBuffer(buffer);
 
   return {
     name: file.name,
     buffer,
     hash,
-  }
+  };
 };
 
 const arrayBufferOfFile = (file: File) =>
@@ -98,39 +101,56 @@ const LoadAudio = () => {
 };
 
 const Sessions = () => {
-
-  const [sessions, setSessions] = createSignal<Session[] | undefined>()
+  const [sessions, setSessions] = createSignal<Session[] | undefined>();
 
   localforage.getItem("sessions").then((sessionsMap) => {
-    const blah = [...(sessionsMap as Map<string, Session>).values()]
-    setSessions(blah)
-  })
+    const blah = [...(sessionsMap as Map<string, Session>).values()];
+    setSessions(blah);
+  });
+
+  const length = () => sessions()?.length || 0;
 
   return (
     <Show
       when={sessions()}
-      fallback={() => <p>loading...</p>}
+      // fallback={() => <p>loading...</p>}
     >
       <For
         each={sessions()}
       >
-        {
-          (session) => <div
+        {(session) => (
+          <div
             onClick={async () => {
               setBusy(true);
-              await loadSession(session)
-              setBusy(false)
+              await loadSession(session);
+              setBusy(false);
             }}
           >
             <p>{session.alias}</p>
             <p>{session.hash}</p>
           </div>
-        }
+        )}
       </For>
+      <Show
+        when={length()}
+      >
+        <button
+          onClick={() => {
+            if (confirm("clear sessions permanently?")) {
+              localforage.clear().then(() => {
+                localforage.setItem("sessions", new Map());
+              });
+              localStorage.clear();
+              setSessions();
+            }
+          }}
+        >
+          clear sessions
+        </button>
+      </Show>
     </Show>
-  )
-
-}
+  );
+};
 
 const UrlInput = () => {
   let input: HTMLInputElement | undefined;
@@ -161,7 +181,7 @@ const UrlInput = () => {
 
           const name = url.slice(url.lastIndexOf("/") + 1);
 
-          const hash = await hashAudioBuffer(buffer)
+          const hash = await hashAudioBuffer(buffer);
 
           dispatch({ type: "setClip", clip: { name, buffer, hash } });
           setBusy(false);
@@ -181,10 +201,12 @@ export const App = () => (
   <>
     <Show
       when={state.clip}
-      fallback={() => <>
-        <LoadAudio />
-        <Sessions />
-      </>}
+      fallback={() => (
+        <>
+          <LoadAudio />
+          <Sessions />
+        </>
+      )}
     >
       <div>
         <Details clip={state.clip!} />
