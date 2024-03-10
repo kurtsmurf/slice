@@ -388,34 +388,35 @@ const syncState = async () => {
 window.syncState = syncState;
 
 export async function loadSession(session: Session) {
-  const left = await localforage.getItem(session.hash + "_0");
-  const right = await localforage.getItem(session.hash + "_0");
-
-  const channels = [left, right].filter(Boolean) as Float32Array[];
-
-  const length = channels[0]?.length;
-  if (!length) throw new Error("no channel data for " + session.hash);
-
   const sampleRate = session.sampleRate;
-  const numberOfChannels = channels.length;
+  const numberOfChannels = session.numberOfChannels;
   const name = session.alias;
 
-  const buffer = audioContext.createBuffer(
-    numberOfChannels,
-    length,
-    sampleRate,
-  );
+  // load clip if not yet loaded
+  if (state.clip?.hash !== session.hash) {
+    const left = await localforage.getItem(session.hash + "_0");
+    const right = await localforage.getItem(session.hash + "_0");
 
-  for (let i = 0; i < numberOfChannels; i++) {
-    const channel = await localforage.getItem(
-      session.hash + "_" + i,
-    ) as Float32Array;
-    buffer.copyToChannel(channel, i);
+    const channels = [left, right].filter(Boolean) as Float32Array[];
+
+    const length = channels[0]?.length;
+    if (!length) throw new Error("no channel data for " + session.hash);
+
+    const buffer = audioContext.createBuffer(
+      numberOfChannels,
+      length,
+      sampleRate,
+    );
+
+    for (let i = 0; i < numberOfChannels; i++) {
+      const channel = await localforage.getItem(
+        session.hash + "_" + i,
+      ) as Float32Array;
+      buffer.copyToChannel(channel, i);
+    }
+
+    setStore("clip", { name, buffer, hash: session.hash });
   }
-
-  console.log(session, channels, length, buffer);
-
-  setStore("clip", { name, buffer, hash: session.hash });
 
   await localforage.getItem(session.hash + "_regions").then((arr) => {
     if (!Array.isArray(arr)) return;
@@ -433,6 +434,7 @@ export type Session = {
   hash: string;
   alias: string;
   sampleRate: number;
+  numberOfChannels: number;
   lastModified: number;
 };
 
@@ -460,6 +462,7 @@ const syncStorage = async () => {
         hash: clip.hash,
         alias: clip.name,
         sampleRate: clip.buffer.sampleRate,
+        numberOfChannels: clip.buffer.numberOfChannels,
         lastModified: lastModified,
       };
       sessions.set(clip.hash, session);
