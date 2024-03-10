@@ -140,7 +140,6 @@ const Sessions = () => {
               localforage.clear().then(() => {
                 localforage.setItem("sessions", new Map());
               });
-              localStorage.clear();
               setSessions();
             }
           }}

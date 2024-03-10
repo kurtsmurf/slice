@@ -426,8 +426,8 @@ export async function loadSession(session: Session) {
     setStore("regions", regions);
   });
 
-  setUndoStack(get(session.hash + "_undoStack") || []);
-  setRedoStack(get(session.hash + "_redoStack") || []);
+  setUndoStack(await localforage.getItem(session.hash + "_undoStack") || []);
+  setRedoStack(await localforage.getItem(session.hash + "_redoStack") || []);
 }
 
 export type Session = {
@@ -442,38 +442,36 @@ const syncStorage = async () => {
   // persist channels, clip metadata
   const clip = state.clip;
 
-  if (clip) {
-    // persist undo/redo
-    localStorage.setItem(clip.hash + "_redoStack", JSON.stringify(redoStack()));
-    localStorage.setItem(clip.hash + "_undoStack", JSON.stringify(undoStack()));
+  if (!clip) return;
 
-    // persist regions
-    await localforage.setItem(
-      clip.hash + "_regions",
-      store.regions.map((r) => r.start),
-    );
+  // persist undo/redo
+  await localforage.setItem(clip.hash + "_redoStack", redoStack());
+  await localforage.setItem(clip.hash + "_undoStack", undoStack());
 
-    await localforage.getItem("sessions").then((result) => {
-      const sessions = result === null
-        ? new Map<string, Session>()
-        : result as Map<string, Session>;
+  // persist regions
+  await localforage.setItem(
+    clip.hash + "_regions",
+    store.regions.map((r) => r.start),
+  );
 
-      const session: Session = {
-        hash: clip.hash,
-        alias: clip.name,
-        sampleRate: clip.buffer.sampleRate,
-        numberOfChannels: clip.buffer.numberOfChannels,
-        lastModified: lastModified,
-      };
-      sessions.set(clip.hash, session);
+  await localforage.getItem("sessions").then((result) => {
+    const sessions = result === null
+      ? new Map<string, Session>()
+      : result as Map<string, Session>;
 
-      localforage.setItem("sessions", sessions);
-    });
+    const session: Session = {
+      hash: clip.hash,
+      alias: clip.name,
+      sampleRate: clip.buffer.sampleRate,
+      numberOfChannels: clip.buffer.numberOfChannels,
+      lastModified: lastModified,
+    };
+    sessions.set(clip.hash, session);
 
-    tabSyncChannel.postMessage(clip.hash);
-  } else {
-    sessionStorage.clear();
-  }
+    localforage.setItem("sessions", sessions);
+  });
+
+  tabSyncChannel.postMessage(clip.hash);
 };
 
 const saveChannels = (clip: Clip) => {
@@ -488,16 +486,6 @@ const saveChannels = (clip: Clip) => {
 // @ts-ignore
 window.syncStorage = syncStorage;
 
-function get(key: string) {
-  const stored = localStorage.getItem(key);
-  if (stored === null) return;
-  let parsed;
-  try {
-    parsed = JSON.parse(stored);
-  } catch {}
-  return parsed;
-}
-
 // window.onblur = syncStorage;
 // window.onbeforeunload = syncStorage;
 
@@ -505,6 +493,6 @@ function get(key: string) {
 // window.onload = () => syncState();
 
 // initialize sessions if necessary
-localforage.getItem("sessions", (result) => {
-  if (!result) localforage.setItem("sessions", new Map());
-});
+if (await localforage.keys().then((keys) => !keys.includes("sessions"))) {
+  localforage.setItem("sessions", new Map());
+}
