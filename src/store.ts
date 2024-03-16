@@ -58,6 +58,26 @@ export const dispatch = (event: Event) => {
       setUndoStack([]);
       setRedoStack([]);
       setStore("clip", event.clip);
+
+      localforage.getItem("sessions").then((result) => {
+        const sessions = result as Map<string, Session>;
+        const session = sessions.get(event.clip.hash)
+
+        if (session) {
+          loadSession(session)
+        } else {
+          sessions.set(event.clip.hash, {
+            alias: event.clip.name,
+            hash: event.clip.hash,
+            lastModified: Date.now(),
+            numberOfChannels: event.clip.buffer.numberOfChannels,
+            sampleRate: event.clip.buffer.sampleRate
+          })
+
+          localforage.setItem("sessions", sessions)
+        }
+      })
+
       // every time? what if we have them already?
       saveChannels(event.clip);
       break;
@@ -485,12 +505,6 @@ const saveChannels = (clip: Clip) => {
 
 // @ts-ignore
 window.syncStorage = syncStorage;
-
-// window.onblur = syncStorage;
-// window.onbeforeunload = syncStorage;
-
-// window.onfocus = () => syncState();
-// window.onload = () => syncState();
 
 // initialize sessions if necessary
 if (await localforage.keys().then((keys) => !keys.includes("sessions"))) {
