@@ -32,10 +32,15 @@ const [store, setStore] = createStore<State>(defaultState);
 
 export const state = store;
 
-const [undoStack, setUndoStack] = createSignal<UpdateRegionsEvent[]>([], {
+type RegionsMigration = {
+  forward: UpdateRegionsEvent;
+  backward: UpdateRegionsEvent;
+};
+
+const [undoStack, setUndoStack] = createSignal<RegionsMigration[]>([], {
   equals: false,
 });
-const [redoStack, setRedoStack] = createSignal<UpdateRegionsEvent[]>([], {
+const [redoStack, setRedoStack] = createSignal<RegionsMigration[]>([], {
   equals: false,
 });
 
@@ -108,17 +113,20 @@ export const dispatch = (event: Event) => {
       // deduplicate rapid moveSlice events on the undo stack
       if (
         event.type === "moveSlice" &&
-        lastMigration?.type === "moveSlice" &&
-        event.index === lastMigration?.index &&
+        lastMigration?.forward.type === "moveSlice" &&
+        event.index === lastMigration?.forward.index &&
         Date.now() - lastModified < 1000
       ) {
         setUndoStack((prev) => {
-          prev[prev.length - 1] = event;
+          prev[prev.length - 1] = {
+            forward: event,
+            backward: lastMigration.backward,
+          };
           return prev;
         });
       } else {
         setUndoStack((prev) => {
-          prev.push(event);
+          prev.push(migrationOfEvent(event));
           return prev;
         });
       }
@@ -130,19 +138,25 @@ export const dispatch = (event: Event) => {
   }
 };
 
-const inverseOfEvent = (event: UpdateRegionsEvent): UpdateRegionsEvent => {
+const migrationOfEvent = (event: UpdateRegionsEvent): RegionsMigration => {
   switch (event.type) {
     case "slice": {
       return {
-        type: "healSlice",
-        index: event.index + 1,
+        forward: event,
+        backward: {
+          type: "healSlice",
+          index: event.index + 1,
+        },
       };
     }
     case "segmentRegion": {
       return {
-        type: "combineRegions",
-        startIndex: event.index,
-        endIndex: event.index + event.pieces - 1,
+        forward: event,
+        backward: {
+          type: "combineRegions",
+          startIndex: event.index,
+          endIndex: event.index + event.pieces - 1,
+        },
       };
     }
     case "combineRegions": {
@@ -153,28 +167,38 @@ const inverseOfEvent = (event: UpdateRegionsEvent): UpdateRegionsEvent => {
       // by index with an arbitrary array of regions
       // use that to reverse combineRegions
       return {
-        type: "segmentRegion",
-        index: event.startIndex,
-        pieces: event.endIndex - event.startIndex,
+        forward: event,
+        backward: {
+          type: "segmentRegion",
+          index: event.startIndex,
+          pieces: event.endIndex - event.startIndex,
+        },
       };
     }
     case "healSlice": {
       return {
-        type: "slice",
-        index: event.index - 1,
-        // @ts-ignore ?????
-        pos: state.regions[event.index].start,
+        forward: event,
+        backward: {
+          type: "slice",
+          index: event.index - 1,
+          // @ts-ignore ?????
+          pos: state.regions[event.index].start,
+        },
       };
     }
     case "moveSlice": {
       return {
-        ...event,
-        // @ts-ignore ?????
-        pos: state.regions[event.index].start,
+        forward: event,
+        backward: {
+          ...event,
+          // @ts-ignore ?????
+          pos: state.regions[event.index].start,
+        },
       };
     }
   }
 };
+
 
 const updateRegions = (event: UpdateRegionsEvent) => {
   switch (event.type) {
@@ -348,7 +372,7 @@ export const undo = {
         return prev;
       });
 
-      updateRegions(inverseOfEvent(eventToUndo));
+      updateRegions(eventToUndo.backward);
 
       if (
         state.selectedRegion && state.selectedRegion >= state.regions.length
@@ -372,7 +396,7 @@ export const redo = {
     setRedoStack((prev) => prev);
 
     if (eventToRedo) {
-      updateRegions(eventToRedo);
+      updateRegions(eventToRedo.forward);
       undoStack().push(eventToRedo);
       setUndoStack((prev) => prev);
     }
