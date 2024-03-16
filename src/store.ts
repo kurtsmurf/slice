@@ -66,22 +66,22 @@ export const dispatch = (event: Event) => {
 
       localforage.getItem("sessions").then((result) => {
         const sessions = result as Map<string, Session>;
-        const session = sessions.get(event.clip.hash)
+        const session = sessions.get(event.clip.hash);
 
         if (session) {
-          loadSession(session)
+          loadSession(session);
         } else {
           sessions.set(event.clip.hash, {
             alias: event.clip.name,
             hash: event.clip.hash,
             lastModified: Date.now(),
             numberOfChannels: event.clip.buffer.numberOfChannels,
-            sampleRate: event.clip.buffer.sampleRate
-          })
+            sampleRate: event.clip.buffer.sampleRate,
+          });
 
-          localforage.setItem("sessions", sessions)
+          localforage.setItem("sessions", sessions);
         }
-      })
+      });
 
       // every time? what if we have them already?
       saveChannels(event.clip);
@@ -198,7 +198,6 @@ const migrationOfEvent = (event: UpdateRegionsEvent): RegionsMigration => {
     }
   }
 };
-
 
 const updateRegions = (event: UpdateRegionsEvent) => {
   switch (event.type) {
