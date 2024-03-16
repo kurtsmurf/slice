@@ -360,9 +360,6 @@ tabSyncChannel.addEventListener("message", (e: MessageEvent) => {
 export const undo = {
   execute: () => {
     const eventToUndo = undoStack().pop();
-
-    console.log(eventToUndo);
-
     setUndoStack((prev) => prev);
 
     if (eventToUndo) {
