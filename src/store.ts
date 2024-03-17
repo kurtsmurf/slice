@@ -77,6 +77,7 @@ export const dispatch = (event: Event) => {
             lastModified: Date.now(),
             numberOfChannels: event.clip.buffer.numberOfChannels,
             sampleRate: event.clip.buffer.sampleRate,
+            length: event.clip.buffer.length,
           });
 
           localforage.setItem("sessions", sessions);
@@ -424,9 +425,6 @@ const syncState = async () => {
   }
 };
 
-// @ts-ignore
-window.syncState = syncState;
-
 export async function loadSession(session: Session) {
   const sampleRate = session.sampleRate;
   const numberOfChannels = session.numberOfChannels;
@@ -475,6 +473,7 @@ export type Session = {
   alias: string;
   sampleRate: number;
   numberOfChannels: number;
+  length: number;
   lastModified: number;
 };
 
@@ -505,6 +504,7 @@ const syncStorage = async () => {
       sampleRate: clip.buffer.sampleRate,
       numberOfChannels: clip.buffer.numberOfChannels,
       lastModified: lastModified,
+      length: clip.buffer.length,
     };
     sessions.set(clip.hash, session);
 

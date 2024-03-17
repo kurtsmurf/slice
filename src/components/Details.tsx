@@ -1,7 +1,7 @@
 import { player } from "../player";
 import { dispatch } from "../store";
 import { Clip } from "../types";
-import { formatOf } from "../util/formatOf";
+import { formatOfAudioBuffer } from "../util/formatOf";
 
 export const Details = (props: { clip: Clip }) => (
   <div
@@ -36,7 +36,7 @@ export const Details = (props: { clip: Clip }) => (
           (props.clip.buffer.sampleRate)).toFixed(2)}s
       </p>
       <p>
-        {formatOf(props.clip.buffer)}
+        {formatOfAudioBuffer(props.clip.buffer)}
       </p>
     </div>
   </div>

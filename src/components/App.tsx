@@ -1,12 +1,5 @@
 import { AudioInput } from "./AudioInput";
-import {
-  createEffect,
-  createMemo,
-  createSignal,
-  For,
-  JSX,
-  Show,
-} from "solid-js";
+import { createSignal, For, JSX, Show } from "solid-js";
 import { mapLinearToLogarithmic, player } from "../player";
 import { download, share } from "../export";
 import { busy, dispatch, loadSession, Session, setBusy, state } from "../store";
@@ -24,6 +17,7 @@ import { audioContext } from "../audioContext";
 import { Clip } from "../types";
 import { Curtain } from "./Curtain";
 import localforage from "localforage";
+import { formatOfChannels } from "../util/formatOf";
 
 const hashHex = async (inputBuffer: BufferSource) => {
   const hashBuffer = await crypto.subtle.digest("SHA-256", inputBuffer);
@@ -72,12 +66,16 @@ const arrayBufferOfFile = (file: File) =>
 
 const LoadAudio = () => {
   return (
-    <fieldset
+    <div
       style={{
-        "margin-inline": "1rem",
+        "padding-inline": "1rem",
+        display: "flex",
+        "flex-direction": "column",
+        "gap": "1rem",
+        "align-items": "flex-start",
       }}
     >
-      <legend>import audio</legend>
+      <h2>import audio</h2>
       <AudioInput
         onChange={async (file) => {
           setBusy(true);
@@ -96,7 +94,7 @@ const LoadAudio = () => {
         }}
       />
       <UrlInput />
-    </fieldset>
+    </div>
   );
 };
 
@@ -111,29 +109,55 @@ const Sessions = () => {
   const length = () => sessions()?.length || 0;
 
   return (
-    <Show
-      when={sessions()}
-      // fallback={() => <p>loading...</p>}
+    <div
+      style={{
+        "padding-inline": "1rem",
+        "display": "flex",
+        "flex-direction": "column",
+        "gap": "1rem",
+        "align-items": "flex-start",
+      }}
     >
-      <For
-        each={sessions()}
-      >
-        {(session) => (
-          <div
-            onClick={async () => {
-              setBusy(true);
-              await loadSession(session);
-              setBusy(false);
-            }}
-          >
-            <p>{session.alias}</p>
-            <p>{session.hash}</p>
-          </div>
-        )}
-      </For>
+      <h2>sessions</h2>
       <Show
-        when={length()}
+        when={sessions()}
+        // fallback={() => <p>loading...</p>}
       >
+        <For
+          each={sessions()}
+        >
+          {(session) => (
+            <div
+              style={{
+                border: "1px solid",
+                padding: "0.8rem",
+                "border-radius": "0.8rem",
+              }}
+            >
+              <h3
+                style={{ "line-break": "anywhere" }}
+              >
+                {session.alias}
+              </h3>
+              <p>{formatOfChannels(session.numberOfChannels)}</p>
+              <p>{(session.length / session.sampleRate).toFixed(2)}s</p>
+              <p>
+                last modified {new Date(session.lastModified).toLocaleString()}
+              </p>
+              <button
+                onClick={async () => {
+                  setBusy(true);
+                  await loadSession(session);
+                  setBusy(false);
+                }}
+              >
+                open
+              </button>
+            </div>
+          )}
+        </For>
+      </Show>
+      <Show when={length()}>
         <button
           onClick={() => {
             if (confirm("clear sessions permanently?")) {
@@ -147,7 +171,7 @@ const Sessions = () => {
           clear sessions
         </button>
       </Show>
-    </Show>
+    </div>
   );
 };
 
@@ -201,10 +225,17 @@ export const App = () => (
     <Show
       when={state.clip}
       fallback={() => (
-        <>
+        <div
+          style={{
+            display: "flex",
+            "flex-direction": "column",
+            "gap": "1rem",
+            "padding-block": "1rem",
+          }}
+        >
           <LoadAudio />
           <Sessions />
-        </>
+        </div>
       )}
     >
       <div>

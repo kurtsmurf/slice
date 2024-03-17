@@ -669,9 +669,6 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
 
   const [width, setWidth] = createSignal(800);
 
-  // @ts-ignore
-  window.setWidth = setWidth;
-
   const resizeObserver = new ResizeObserver(debounce(
     () => {
       if (root) setWidth(root.clientWidth);
