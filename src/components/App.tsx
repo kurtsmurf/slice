@@ -2,7 +2,15 @@ import { AudioInput } from "./AudioInput";
 import { createSignal, For, JSX, Show } from "solid-js";
 import { mapLinearToLogarithmic, player } from "../player";
 import { download, share } from "../export";
-import { busy, dispatch, loadSession, Session, setBusy, state } from "../store";
+import {
+  busy,
+  clearSessions,
+  dispatch,
+  loadSession,
+  Session,
+  setBusy,
+  state,
+} from "../store";
 import {
   contentElement,
   scrollElement,
@@ -102,6 +110,7 @@ const Sessions = () => {
   const [sessions, setSessions] = createSignal<Session[] | undefined>();
 
   localforage.getItem("sessions").then((sessionsMap) => {
+    if (!sessionsMap) return;
     const blah = [...(sessionsMap as Map<string, Session>).values()];
     setSessions(blah);
   });
@@ -159,11 +168,9 @@ const Sessions = () => {
       </Show>
       <Show when={length()}>
         <button
-          onClick={() => {
+          onClick={async () => {
             if (confirm("clear sessions permanently?")) {
-              localforage.clear().then(() => {
-                localforage.setItem("sessions", new Map());
-              });
+              await clearSessions();
               setSessions();
             }
           }}

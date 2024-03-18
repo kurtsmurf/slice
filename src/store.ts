@@ -49,14 +49,16 @@ let lastModified = Date.now();
 // @ts-ignore
 window.localforage = localforage;
 
+const reset = () => {
+  setUndoStack([]);
+  setRedoStack([]);
+  setStore(defaultState);
+};
+
 export const dispatch = (event: Event) => {
   switch (event.type) {
     case "reset": {
-      syncStorage().then(() => {
-        setUndoStack([]);
-        setRedoStack([]);
-        setStore(defaultState);
-      });
+      syncStorage().then(reset);
       break;
     }
     case "setClip": {
@@ -353,9 +355,28 @@ export const same = (a: Region, b: Region) =>
   a.start === b.start && a.end === b.end;
 
 const tabSyncChannel = new BroadcastChannel("tab-sync");
+
+// listen for {hash} messages
+// on receipt
+// if current clip hash equals message hash
+// load clip state from storage (sync state)
 tabSyncChannel.addEventListener("message", (e: MessageEvent) => {
   if (!state.clip?.hash || e.data !== state.clip.hash) return;
   debounce(syncState, 1000)();
+});
+
+// listen for "CLEAR_SESSIONS" messages
+// on receipt
+// if clip loaded
+// wipe state without saving
+// why:
+// prevent re-saving sessions
+// that were already deleted in another tab
+tabSyncChannel.addEventListener("message", (e: MessageEvent) => {
+  if (e.data === "CLEAR_SESSIONS" && state.clip) {
+    // wipe state without saving
+    reset();
+  }
 });
 
 export const undo = {
@@ -523,10 +544,13 @@ const saveChannels = (clip: Clip) => {
   }
 };
 
-// @ts-ignore
-window.syncStorage = syncStorage;
-
 // initialize sessions if necessary
 if (await localforage.keys().then((keys) => !keys.includes("sessions"))) {
   localforage.setItem("sessions", new Map());
 }
+
+export const clearSessions = async () => {
+  tabSyncChannel.postMessage("CLEAR_SESSIONS");
+  await localforage.clear();
+  await localforage.setItem("sessions", new Map());
+};
