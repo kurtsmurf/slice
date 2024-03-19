@@ -4,7 +4,7 @@ import { mapLinearToLogarithmic, player } from "../player";
 import { download, share } from "../export";
 import {
   busy,
-  clearSessions,
+  deleteSessions,
   dispatch,
   loadSession,
   Session,
@@ -111,8 +111,7 @@ const Sessions = () => {
 
   localforage.getItem("sessions").then((sessionsMap) => {
     if (!sessionsMap) return;
-    const blah = [...(sessionsMap as Map<string, Session>).values()];
-    setSessions(blah);
+    setSessions([...(sessionsMap as Map<string, Session>).values()]);
   });
 
   const length = () => sessions()?.length || 0;
@@ -140,7 +139,7 @@ const Sessions = () => {
               style={{
                 border: "1px solid",
                 padding: "0.8rem",
-                "border-radius": "0.8rem",
+                "border-radius": "2px",
               }}
             >
               <h3
@@ -169,13 +168,13 @@ const Sessions = () => {
       <Show when={length()}>
         <button
           onClick={async () => {
-            if (confirm("clear sessions permanently?")) {
-              await clearSessions();
+            if (confirm("delete sessions permanently?")) {
+              await deleteSessions();
               setSessions();
             }
           }}
         >
-          clear sessions
+          delete sessions
         </button>
       </Show>
     </div>

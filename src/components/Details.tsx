@@ -13,13 +13,13 @@ export const Details = (props: { clip: Clip }) => (
   >
     <button
       onClick={() => {
-        if (confirm("Are you sure?")) {
+        if (confirm("leave session?")) {
           dispatch({ type: "reset" });
           player.stop();
         }
       }}
     >
-      clear
+      home
     </button>
     <div
       style={{

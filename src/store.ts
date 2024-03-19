@@ -365,7 +365,7 @@ tabSyncChannel.addEventListener("message", (e: MessageEvent) => {
   debounce(syncState, 1000)();
 });
 
-// listen for "CLEAR_SESSIONS" messages
+// listen for "DELETE_SESSIONS" messages
 // on receipt
 // if clip loaded
 // wipe state without saving
@@ -373,7 +373,7 @@ tabSyncChannel.addEventListener("message", (e: MessageEvent) => {
 // prevent re-saving sessions
 // that were already deleted in another tab
 tabSyncChannel.addEventListener("message", (e: MessageEvent) => {
-  if (e.data === "CLEAR_SESSIONS" && state.clip) {
+  if (e.data === "DELETE_SESSIONS" && state.clip) {
     // wipe state without saving
     reset();
   }
@@ -549,8 +549,8 @@ if (await localforage.keys().then((keys) => !keys.includes("sessions"))) {
   localforage.setItem("sessions", new Map());
 }
 
-export const clearSessions = async () => {
-  tabSyncChannel.postMessage("CLEAR_SESSIONS");
+export const deleteSessions = async () => {
+  tabSyncChannel.postMessage("DELETE_SESSIONS");
   await localforage.clear();
   await localforage.setItem("sessions", new Map());
 };
