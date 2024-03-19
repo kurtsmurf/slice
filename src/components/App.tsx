@@ -123,6 +123,7 @@ const Sessions = () => {
     });
   };
 
+  // read latest sessions from storage on every tab sync message
   tabSyncChannel.addEventListener("message", debounce(syncState, 1000));
   syncState();
 

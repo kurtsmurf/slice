@@ -44,7 +44,7 @@ const [redoStack, setRedoStack] = createSignal<RegionsMigration[]>([], {
   equals: false,
 });
 
-let lastModified = Date.now();
+let lastModified: number | undefined;
 
 // @ts-ignore
 window.localforage = localforage;
@@ -115,6 +115,7 @@ export const dispatch = (event: Event) => {
 
       // deduplicate rapid moveSlice events on the undo stack
       if (
+        lastModified !== undefined &&
         event.type === "moveSlice" &&
         lastMigration?.forward.type === "moveSlice" &&
         event.index === lastMigration?.forward.index &&
@@ -437,6 +438,7 @@ const syncState = async () => {
     >;
     const session = sessions.get(clip.hash);
     if (!session) return;
+    if (lastModified === undefined) return;
     if (session.lastModified <= lastModified) return;
 
     await loadSession(session);
@@ -519,12 +521,14 @@ const syncStorage = async () => {
       ? new Map<string, Session>()
       : result as Map<string, Session>;
 
+    const prev = sessions.get(clip.hash);
+
     const session: Session = {
       hash: clip.hash,
       alias: clip.name,
       sampleRate: clip.buffer.sampleRate,
       numberOfChannels: clip.buffer.numberOfChannels,
-      lastModified: lastModified,
+      lastModified: lastModified || prev?.lastModified || Date.now(),
       length: clip.buffer.length,
     };
     sessions.set(clip.hash, session);
