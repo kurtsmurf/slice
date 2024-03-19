@@ -1,5 +1,5 @@
 import { AudioInput } from "./AudioInput";
-import { createSignal, For, JSX, Show } from "solid-js";
+import { createSignal, For, JSX, onCleanup, Show } from "solid-js";
 import { mapLinearToLogarithmic, player } from "../player";
 import { download, share } from "../export";
 import {
@@ -26,6 +26,7 @@ import { Clip } from "../types";
 import { Curtain } from "./Curtain";
 import localforage from "localforage";
 import { formatOfChannels } from "../util/formatOf";
+import debounce from "lodash.debounce";
 
 const hashHex = async (inputBuffer: BufferSource) => {
   const hashBuffer = await crypto.subtle.digest("SHA-256", inputBuffer);
@@ -109,10 +110,21 @@ const LoadAudio = () => {
 const Sessions = () => {
   const [sessions, setSessions] = createSignal<Session[] | undefined>();
 
-  localforage.getItem("sessions").then((sessionsMap) => {
-    if (!sessionsMap) return;
-    setSessions([...(sessionsMap as Map<string, Session>).values()]);
+  const tabSyncChannel = new BroadcastChannel("tab-sync");
+
+  onCleanup(() => {
+    tabSyncChannel.close();
   });
+
+  const syncState = () => {
+    localforage.getItem("sessions").then((sessionsMap) => {
+      if (!sessionsMap) return;
+      setSessions([...(sessionsMap as Map<string, Session>).values()]);
+    });
+  };
+
+  tabSyncChannel.addEventListener("message", debounce(syncState, 1000));
+  syncState();
 
   const length = () => sessions()?.length || 0;
 
