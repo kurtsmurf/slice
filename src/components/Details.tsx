@@ -18,6 +18,9 @@ export const Details = (props: { clip: Clip }) => (
           player.stop();
         }
       }}
+      style={{
+        "white-space": "nowrap",
+      }}
     >
       home
     </button>

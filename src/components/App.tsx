@@ -119,7 +119,7 @@ const Sessions = () => {
   const syncState = () => {
     localforage.getItem("sessions").then((sessionsMap) => {
       if (!sessionsMap) return;
-      setSessions([...(sessionsMap as Map<string, Session>).values()]);
+      setSessions([...(sessionsMap as Map<string, Session>).values()].sort((a,b) => b.lastModified - a.lastModified));
     });
   };
 
@@ -146,6 +146,7 @@ const Sessions = () => {
       >
         <For
           each={sessions()}
+
         >
           {(session) => (
             <div
