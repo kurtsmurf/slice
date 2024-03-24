@@ -152,13 +152,7 @@ const Sessions = () => {
           each={sessions()}
         >
           {(session) => (
-            <div
-              style={{
-                border: "1px solid",
-                padding: "0.8rem",
-                "border-radius": "2px",
-              }}
-            >
+            <div>
               <h3
                 style={{ "line-break": "anywhere" }}
               >
@@ -296,7 +290,6 @@ const SettingsDialog = () => {
         height: "100vh",
         border: "none",
         "border-right": "2px solid",
-        "box-shadow": "0px 0px 10px",
       }}
     >
       <SettingsForm />
@@ -793,26 +786,25 @@ const ToggleFxDialog = () => (
 );
 
 const ToggleLoop = () => (
-  <label
-    for="loop-toggle"
+  <fieldset
     style={{
-      // background: "Canvas",
       width: "calc(var(--min-btn-dimension) * 1.25)",
       height: "calc(var(--min-btn-dimension) * 1.25)",
-      // border: "1px solid",
     }}
   >
-    <span>loop</span>
-    <input
-      type="checkbox"
-      id="loop-toggle"
-      name="loop"
-      checked={player.loop()}
-      disabled={player.playing()}
-      onChange={(e) => {
-        // @ts-ignore
-        player.setLoop(e.target.checked);
-      }}
-    />
-  </label>
+    <label for="loop-toggle">
+      <span>loop</span>
+      <input
+        type="checkbox"
+        id="loop-toggle"
+        name="loop"
+        checked={player.loop()}
+        disabled={player.playing()}
+        onChange={(e) => {
+          // @ts-ignore
+          player.setLoop(e.target.checked);
+        }}
+      />
+    </label>
+  </fieldset>
 );
