@@ -119,7 +119,11 @@ const Sessions = () => {
   const syncState = () => {
     localforage.getItem("sessions").then((sessionsMap) => {
       if (!sessionsMap) return;
-      setSessions([...(sessionsMap as Map<string, Session>).values()].sort((a,b) => b.lastModified - a.lastModified));
+      setSessions(
+        [...(sessionsMap as Map<string, Session>).values()].sort((a, b) =>
+          b.lastModified - a.lastModified
+        ),
+      );
     });
   };
 
@@ -146,7 +150,6 @@ const Sessions = () => {
       >
         <For
           each={sessions()}
-
         >
           {(session) => (
             <div
@@ -555,7 +558,7 @@ const RegionDetails = (props: { index: number }) => {
             "align-items": "center",
             position: "sticky",
             top: 0,
-            background: "white",
+            background: "Canvas",
             "z-index": 1,
           }}
         >
@@ -793,10 +796,10 @@ const ToggleLoop = () => (
   <label
     for="loop-toggle"
     style={{
-      background: "white",
+      // background: "Canvas",
       width: "calc(var(--min-btn-dimension) * 1.25)",
       height: "calc(var(--min-btn-dimension) * 1.25)",
-      border: "1px solid",
+      // border: "1px solid",
     }}
   >
     <span>loop</span>

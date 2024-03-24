@@ -146,6 +146,7 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
           left: "-0.5ch",
           opacity: 0.8,
           top: "calc(var(--min-btn-dimension) * -1 - 15px)",
+          fill: "CanvasText",
         }}
       >
         <circle cx="1" cy="1" r="1" />
@@ -272,9 +273,9 @@ const Slice = (
       <Stick
         pos={dragPos()}
         width={2}
-        background="black"
+        background="CanvasText"
         style={{
-          "box-shadow": `1px 0px 0px white, -1px 0px 0px white`,
+          "box-shadow": `1px 0px 0px Canvas, -1px 0px 0px Canvas`,
         }}
       >
       </Stick>
@@ -295,7 +296,10 @@ const Slice = (
         <Stick
           pos={dragPos()}
           width={30}
-          background="hsl(0deg 0% 25% / 50%)"
+          background="CanvasText"
+          style={{
+            opacity: "50%",
+          }}
           onPointerDown={(e) => {
             drag.start(e);
           }}
@@ -730,7 +734,7 @@ const WaveformSummary = (props: { buffer: AudioBuffer }) => {
         {(region) => (
           <Stick
             pos={region.start}
-            background="black"
+            background="CanvasText"
             style={{
               height: "10px",
             }}

@@ -2,7 +2,6 @@
   margin: 0;
 }
 html {
-  background: white;
   font-family: system-ui;
 }
 body {
@@ -14,8 +13,11 @@ body {
   -ms-user-select: none;
   user-select: none;
   --min-btn-dimension: 48px;
-  background: white;
 }
+:root {
+  color-scheme: light dark;
+}
+
 button {
   /* prevents ios zoom on double tap button */
   touch-action: manipulation;
@@ -45,4 +47,6 @@ label:has(input[type="checkbox"]) {
   display: grid;
   place-content: center;
   height: 2rem;
+  box-sizing: border-box;
+  background: canvas;
 }

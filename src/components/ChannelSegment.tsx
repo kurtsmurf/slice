@@ -1,6 +1,24 @@
 import { Bucket } from "../types";
-import { createEffect, JSX, onCleanup } from "solid-js";
+import { createEffect, createSignal, JSX, onCleanup } from "solid-js";
 import workerpool from "workerpool";
+
+const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+const [strokeColor, setStrokeColor] = createSignal<"black" | "white">(
+  mediaQuery.matches ? "white" : "black",
+);
+
+createEffect(() => console.log(strokeColor()));
+
+// Register event listener
+mediaQuery.addEventListener("change", (e) => {
+  console.log(e);
+  if (e.matches) {
+    setStrokeColor("white");
+  } else {
+    setStrokeColor("black");
+  }
+});
 
 export const ChannelSegment = (
   props: {
@@ -19,12 +37,13 @@ export const ChannelSegment = (
   });
 
   createEffect(async () => {
+    const color = strokeColor();
     workerTask?.cancel();
     workerTask = pool
       .exec(computeBuckets, [props.data, props.numBuckets])
       .then((buckets: Bucket[]) => {
         if (canvas) {
-          drawBars(canvas, buckets);
+          drawBars(canvas, buckets, color);
         }
       })
       .catch((e) => {
@@ -80,6 +99,7 @@ function computeBuckets(data: Float32Array, numBuckets: number): Bucket[] {
 const drawBars = (
   canvas: HTMLCanvasElement,
   buckets: Bucket[],
+  color: "black" | "white" = "black",
 ) => {
   const context = canvas.getContext("2d");
   if (!context) {
@@ -88,6 +108,7 @@ const drawBars = (
 
   const LINE_WIDTH = 2;
   context.lineWidth = LINE_WIDTH;
+  context.strokeStyle = color;
   context.clearRect(0, 0, canvas.width, canvas.height);
 
   // shift origin
