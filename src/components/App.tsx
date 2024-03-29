@@ -180,7 +180,9 @@ const Sessions = () => {
         <button
           onClick={async () => {
             if (confirm("delete sessions permanently?")) {
+              setBusy(true);
               await deleteSessions();
+              setBusy(false);
               setSessions();
             }
           }}
@@ -310,75 +312,81 @@ const SettingsForm = () => (
     >
       X
     </button>
-    <fieldset>
-      <legend>speed/pitch</legend>
-      <RangeInput
-        value={player.pitchOffsetSemis()}
-        onInput={(e) => {
-          player.setPitchOffsetSemis(parseFloat(e.currentTarget.value));
-        }}
-        label="coarse"
-        id="speed-semis"
-        min={-12}
-        max={12}
-        sign={true}
-        unit="semis"
-      />
-      <RangeInput
-        value={player.pitchOffsetCents()}
-        onInput={(e) => {
-          player.setPitchOffsetCents(parseFloat(e.currentTarget.value));
-        }}
-        label="fine"
-        id="speed-cents"
-        min={-50}
-        max={50}
-        sign={true}
-        unit="cents"
-      />
-    </fieldset>
-    <fieldset>
-      <legend>filter</legend>
-      <RangeInput
-        value={player.loPass()}
-        transformDisplay={(x) => Math.floor(mapLinearToLogarithmic(x))}
-        onInput={(e) => {
-          player.setLoPass(parseFloat(e.currentTarget.value));
-        }}
-        label="low pass"
-        id="filter-low-pass"
-        min={0}
-        max={100}
-        unit={"hz"}
-      />
-      <RangeInput
-        value={player.hiPass()}
-        transformDisplay={(x) => Math.floor(mapLinearToLogarithmic(x))}
-        onInput={(e) => {
-          player.setHiPass(parseFloat(e.currentTarget.value));
-        }}
-        label="high pass"
-        id="filter-high-pass"
-        min={0}
-        max={100}
-        unit={"hz"}
-      />
-    </fieldset>
-    <fieldset>
-      <legend>compression</legend>
-      <RangeInput
-        value={player.compressionThreshold()}
-        onInput={(e) => {
-          player.setCompressionThreshold(parseFloat(e.currentTarget.value));
-        }}
-        label="threshold"
-        id="compression-threshold"
-        min={-30}
-        max={0}
-        sign={true}
-        unit={"dB"}
-      />
-    </fieldset>
+    <div>
+      <fieldset>
+        <legend>speed/pitch</legend>
+        <RangeInput
+          value={player.pitchOffsetSemis()}
+          onInput={(e) => {
+            player.setPitchOffsetSemis(parseFloat(e.currentTarget.value));
+          }}
+          label="coarse"
+          id="speed-semis"
+          min={-12}
+          max={12}
+          sign={true}
+          unit="semis"
+        />
+        <RangeInput
+          value={player.pitchOffsetCents()}
+          onInput={(e) => {
+            player.setPitchOffsetCents(parseFloat(e.currentTarget.value));
+          }}
+          label="fine"
+          id="speed-cents"
+          min={-50}
+          max={50}
+          sign={true}
+          unit="cents"
+        />
+      </fieldset>
+    </div>
+    <div>
+      <fieldset>
+        <legend>filter</legend>
+        <RangeInput
+          value={player.loPass()}
+          transformDisplay={(x) => Math.floor(mapLinearToLogarithmic(x))}
+          onInput={(e) => {
+            player.setLoPass(parseFloat(e.currentTarget.value));
+          }}
+          label="low pass"
+          id="filter-low-pass"
+          min={0}
+          max={100}
+          unit={"hz"}
+        />
+        <RangeInput
+          value={player.hiPass()}
+          transformDisplay={(x) => Math.floor(mapLinearToLogarithmic(x))}
+          onInput={(e) => {
+            player.setHiPass(parseFloat(e.currentTarget.value));
+          }}
+          label="high pass"
+          id="filter-high-pass"
+          min={0}
+          max={100}
+          unit={"hz"}
+        />
+      </fieldset>
+    </div>
+    <div>
+      <fieldset>
+        <legend>compression</legend>
+        <RangeInput
+          value={player.compressionThreshold()}
+          onInput={(e) => {
+            player.setCompressionThreshold(parseFloat(e.currentTarget.value));
+          }}
+          label="threshold"
+          id="compression-threshold"
+          min={-30}
+          max={0}
+          sign={true}
+          unit={"dB"}
+        />
+      </fieldset>
+    </div>
     <RangeInput
       value={player.gain()}
       onInput={(e) => {
