@@ -7,6 +7,7 @@ export const AudioInput = (props: Props) => {
     <>
       <button
         onClick={() => input?.click()}
+        aria-label="import audio from file"
       >
         from file
       </button>

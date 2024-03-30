@@ -169,6 +169,7 @@ const Sessions = () => {
                   await loadSession(session);
                   setBusy(false);
                 }}
+                aria-label={`open session ${session.alias}`}
               >
                 open
               </button>
@@ -230,7 +231,7 @@ const UrlInput = () => {
         }
       }}
     >
-      <button type="submit">from url</button>
+      <button type="submit" aria-label="import audio from url">from url</button>
       <label for="url-input">
         url:
       </label>
@@ -309,8 +310,9 @@ const SettingsForm = () => (
       style={{
         "align-self": "flex-start",
       }}
+      aria-label="close playback settings"
     >
-      X
+      close
     </button>
     <div>
       <fieldset>
@@ -321,6 +323,7 @@ const SettingsForm = () => (
             player.setPitchOffsetSemis(parseFloat(e.currentTarget.value));
           }}
           label="coarse"
+          aria-label="speed/pitch coarse"
           id="speed-semis"
           min={-12}
           max={12}
@@ -333,6 +336,7 @@ const SettingsForm = () => (
             player.setPitchOffsetCents(parseFloat(e.currentTarget.value));
           }}
           label="fine"
+          aria-label="speed/pitch fine"
           id="speed-cents"
           min={-50}
           max={50}
@@ -351,6 +355,7 @@ const SettingsForm = () => (
             player.setLoPass(parseFloat(e.currentTarget.value));
           }}
           label="low pass"
+          aria-label="low pass filter"
           id="filter-low-pass"
           min={0}
           max={100}
@@ -363,6 +368,7 @@ const SettingsForm = () => (
             player.setHiPass(parseFloat(e.currentTarget.value));
           }}
           label="high pass"
+          aria-label="high pass filter"
           id="filter-high-pass"
           min={0}
           max={100}
@@ -379,6 +385,7 @@ const SettingsForm = () => (
             player.setCompressionThreshold(parseFloat(e.currentTarget.value));
           }}
           label="threshold"
+          aria-label="compression threshold"
           id="compression-threshold"
           min={-30}
           max={0}
@@ -406,10 +413,11 @@ const RangeInput = (
   props: {
     min: number;
     max: number;
-    id: string;
-    label: string;
     value: number;
     onInput: JSX.EventHandlerUnion<HTMLInputElement, InputEvent>;
+    id: string;
+    label: string;
+    "aria-label"?: string;
     transformDisplay?: (x: number) => number;
     sign?: boolean;
     unit?: string;
@@ -449,6 +457,7 @@ const RangeInput = (
         min={props.min}
         max={props.max}
         onInput={props.onInput}
+        aria-label={props["aria-label"] || props.label}
       />
     </div>
   );
@@ -508,7 +517,18 @@ export const Pads = () => {
                 scrollRegionIntoView(region);
               }}
             >
-              ...
+              <svg
+                viewBox="0 0 5 5"
+                style={{
+                  width: "10px",
+                }}
+                fill="currentColor"
+              >
+                  <title>region {index() + 1} details</title>
+                  <rect stroke="none" x="0" y="2" width="1" height="1"/>
+                  <rect stroke="none" x="2" y="2" width="1" height="1"/>
+                  <rect stroke="none" x="4" y="2" width="1" height="1"/>
+              </svg>
             </button>
           </div>
         )}
@@ -579,6 +599,7 @@ const RegionDetails = (props: { index: number }) => {
           </button>
           <h2
             style={{ "margin-inline": "1rem", "margin-inline-start": "auto" }}
+            aria-live="polite"  
           >
             {props.index + 1}
           </h2>
@@ -590,6 +611,7 @@ const RegionDetails = (props: { index: number }) => {
               style={{ "font-size": "1rem" }}
               disabled={props.index === 0}
               onClick={prev}
+              aria-label={"previous region"}
             >
               {"‹"}
             </button>
@@ -597,6 +619,7 @@ const RegionDetails = (props: { index: number }) => {
               style={{ "font-size": "1rem" }}
               disabled={props.index === state.regions.length - 1}
               onClick={next}
+              aria-label={"next region"}
             >
               {"›"}
             </button>
@@ -788,6 +811,7 @@ const ToggleFxDialog = () => (
         dialog.showModal();
       }
     }}
+    aria-label="open playback settings"
   >
     FX
   </button>

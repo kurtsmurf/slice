@@ -15,7 +15,7 @@ import { useAnimationFrame } from "../behaviors/useAnimationFrame";
 import { createDrag } from "../behaviors/createDrag";
 import { range } from "../util/range";
 import { Stick } from "./Stick";
-import { Trigger } from "./Trigger";
+import { PlayIcon, StopIcon, Trigger } from "./Trigger";
 import { createZoom } from "../behaviors/createZoom";
 import { debounce as myDebounce } from "../util/debounce";
 import debounce from "lodash.debounce";
@@ -497,6 +497,7 @@ const Cursor = (
           onKeyDown={onKeyDown}
           onFocus={() => setZoomCenter(dragPos())}
           tabIndex={0}
+          aria-label="cursor"
         >
         </Stick>
       </Show>
@@ -526,7 +527,11 @@ const Cursor = (
         }}
         onKeyDown={onKeyDown}
         ondblclick={(e) => e.stopPropagation()}
-        // onPointerDown={drag.start}
+        aria-label={
+          state.cursorControlsVisible
+            ? "hide cursor controls"
+            : "show cursor controls"
+        }
       >
         <svg
           viewBox="0 0 1 1"
@@ -572,6 +577,7 @@ const Cursor = (
                   dispatch({ type: "selectRegion", index: region() + 1 });
                 }
               }}
+              aria-label="slice at cursor"
             >
               slice
             </button>
@@ -598,8 +604,9 @@ const Cursor = (
               "font-family": "monospace",
               "font-size": "1rem",
             }}
+            aria-label={active() ? "stop" : "play from cursor"}
           >
-            {active() ? <>&#9632;</> : <>&#9654;</>}
+            {active() ? <StopIcon/> : <PlayIcon/>}
           </button>
         </div>
       </Show>

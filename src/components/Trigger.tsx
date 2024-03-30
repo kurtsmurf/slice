@@ -35,7 +35,7 @@ export const Trigger = (props: {
             "font-size": "1rem",
           }}
         >
-          {active() ? <>&#9632;</> : <>&#9654;</>}
+          {active() ? <StopIcon/> : <PlayIcon />}
         </span>
         <Show when={props.text}>&nbsp;</Show>
         {props.text}
@@ -43,3 +43,18 @@ export const Trigger = (props: {
     </button>
   );
 };
+
+export const PlayIcon = () => (
+  <svg
+    height="1ch" viewBox="0 0 1 1">
+    <title>play</title>
+    <polygon points="0,0 1,0.5 0,1" fill="currentColor"/>
+  </svg>
+)
+
+export const StopIcon = () => (
+  <svg height="1ch" viewBox="0 0 1 1">
+    <title>stop</title>
+    <rect x="0" y="0" width="1" height="1" fill="currentColor"/>
+  </svg>
+)
