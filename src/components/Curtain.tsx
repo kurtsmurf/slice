@@ -12,6 +12,13 @@ export const Curtain = () => (
       "z-index": 100,
     }}
   >
-    <progress></progress>
+    <div
+      style={{
+        background: "hsl(0deg 0% 0% / 10%)",
+        padding: "2ch",
+      }}
+    >
+      <progress></progress>
+    </div>
   </div>
 );
