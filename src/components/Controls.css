@@ -17,7 +17,7 @@
 }
 
 .controls fieldset:has(button) {
-  gap: 0;
+  gap: 2px;
 }
 
 .radio-item {

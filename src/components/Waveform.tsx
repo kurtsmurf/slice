@@ -312,6 +312,7 @@ const Slice = (
       </Show>
 
       <div
+        class="flag-button-container"
         style={{
           position: "absolute",
           transform: `translateX(${dragPos() * 100}cqi)`,
@@ -527,11 +528,9 @@ const Cursor = (
         }}
         onKeyDown={onKeyDown}
         ondblclick={(e) => e.stopPropagation()}
-        aria-label={
-          state.cursorControlsVisible
-            ? "hide cursor controls"
-            : "show cursor controls"
-        }
+        aria-label={state.cursorControlsVisible
+          ? "hide cursor controls"
+          : "show cursor controls"}
       >
         <svg
           viewBox="0 0 1 1"
@@ -606,7 +605,7 @@ const Cursor = (
             }}
             aria-label={active() ? "stop" : "play from cursor"}
           >
-            {active() ? <StopIcon/> : <PlayIcon/>}
+            {active() ? <StopIcon /> : <PlayIcon />}
           </button>
         </div>
       </Show>

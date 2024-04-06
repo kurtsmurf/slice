@@ -472,6 +472,7 @@ export const Pads = () => {
         "grid-auto-rows": "100px",
         // compensate for hovering buttons
         "padding-bottom": "calc(var(--min-btn-dimension) * 2)",
+        gap: "2px",
       }}
     >
       <For each={state.regions}>
@@ -524,10 +525,10 @@ export const Pads = () => {
                 }}
                 fill="currentColor"
               >
-                  <title>region {index() + 1} details</title>
-                  <rect stroke="none" x="0" y="2" width="1" height="1"/>
-                  <rect stroke="none" x="2" y="2" width="1" height="1"/>
-                  <rect stroke="none" x="4" y="2" width="1" height="1"/>
+                <title>region {index() + 1} details</title>
+                <rect stroke="none" x="0" y="2" width="1" height="1" />
+                <rect stroke="none" x="2" y="2" width="1" height="1" />
+                <rect stroke="none" x="4" y="2" width="1" height="1" />
               </svg>
             </button>
           </div>
@@ -599,13 +600,13 @@ const RegionDetails = (props: { index: number }) => {
           </button>
           <h2
             style={{ "margin-inline": "1rem", "margin-inline-start": "auto" }}
-            aria-live="polite"  
+            aria-live="polite"
           >
             {props.index + 1}
           </h2>
           <div
             id="region-details-footer"
-            style={{ display: "flex", "justify-content": "center" }}
+            style={{ display: "flex", "justify-content": "center", gap: "2px" }}
           >
             <button
               style={{ "font-size": "1rem" }}
@@ -784,6 +785,16 @@ const scrollRegionIntoView = (region: typeof state.regions[number]) => {
 
 const FloatingControls = () => (
   <div
+    class="floating-controls"
+    // style={{
+    //   position: "fixed",
+    //   bottom: "0",
+    //   left: "0",
+    //   "min-width": "unset",
+    //   "z-index": 2,
+    //   // "border-radius": "2px",
+    //   display: "flex",
+    // }}
     style={{
       position: "fixed",
       bottom: "calc(var(--min-btn-dimension) * .25)",
@@ -800,21 +811,29 @@ const FloatingControls = () => (
 );
 
 const ToggleFxDialog = () => (
-  <button
+  <fieldset
     style={{
       width: "calc(var(--min-btn-dimension) * 1.25)",
-      height: "calc(var(--min-btn-dimension) * 1.25)",
+      background: "canvas",
+      padding: "0",
     }}
-    onClick={() => {
-      const dialog = document.getElementById("settings-dialog");
-      if (dialog instanceof HTMLDialogElement) {
-        dialog.showModal();
-      }
-    }}
-    aria-label="open playback settings"
   >
-    FX
-  </button>
+    <button
+      style={{
+        width: "100%",
+        height: "100%",
+      }}
+      onClick={() => {
+        const dialog = document.getElementById("settings-dialog");
+        if (dialog instanceof HTMLDialogElement) {
+          dialog.showModal();
+        }
+      }}
+      aria-label="open playback settings"
+    >
+      FX
+    </button>
+  </fieldset>
 );
 
 const ToggleLoop = () => (
