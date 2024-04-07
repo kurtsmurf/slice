@@ -13,6 +13,7 @@ body {
   -ms-user-select: none;
   user-select: none;
   --min-btn-dimension: 48px;
+  overscroll-behavior: none;
 }
 :root {
   color-scheme: light dark;
@@ -43,9 +44,10 @@ input {
   font-size: 16px;
 }
 
-
-.flag-button-container button {
-  box-shadow: -1px 0px 0px  canvas;
+@media (prefers-color-scheme: dark) {
+  .flag-button-container > button:first-of-type {
+    box-shadow: -1px 0px 0px  canvas;
+  }
 }
 
 fieldset:has(input[type="checkbox"]) {

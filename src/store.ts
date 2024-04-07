@@ -300,15 +300,13 @@ const updateRegions = (event: UpdateRegionsEvent) => {
       break;
     }
     case "moveSlice": {
-      const region = store.regions[event.index];
-      const leftNeighbor = store.regions[event.index - 1];
-      if (!region || !leftNeighbor) return;
-      if (event.pos <= leftNeighbor.start || event.pos >= region.end) return;
+      const regionBefore = store.regions[event.index];
+      const leftNeighborBefore = store.regions[event.index - 1];
+      if (!regionBefore || !leftNeighborBefore) return;
       if (
-        same(player.region(), region) ||
-        same(player.region(), leftNeighbor)
+        event.pos <= leftNeighborBefore.start || event.pos >= regionBefore.end
       ) {
-        player.stop();
+        return;
       }
 
       setStore(
@@ -321,6 +319,24 @@ const updateRegions = (event: UpdateRegionsEvent) => {
         event.index,
         (prev) => ({ start: event.pos, end: prev.end }),
       );
+
+      // restart playing region when we modify its boundaries
+      if (!player.playing()) break;
+      if (same(player.region(), regionBefore)) {
+        player.stop();
+        const buffer = state.clip?.buffer;
+        const regionAfter = store.regions[event.index];
+        if (!buffer || !regionAfter) break;
+        player.play(buffer, regionAfter);
+      }
+      if (same(player.region(), leftNeighborBefore)) {
+        player.stop();
+        const buffer = state.clip?.buffer;
+        const leftNeighborAfter = store.regions[event.index - 1];
+        if (!buffer || !leftNeighborAfter) break;
+        player.play(buffer, leftNeighborAfter);
+      }
+
       break;
     }
   }
