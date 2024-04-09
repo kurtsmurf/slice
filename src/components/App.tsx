@@ -657,8 +657,32 @@ const RegionDetails = (props: { index: number }) => {
                 if (!state.clip) return;
                 player.play(state.clip.buffer, state.regions[props.index]);
               }}
+              aria-label="replay"
             >
-              spam
+              <span
+                style={{
+                  display: "grid",
+                  "place-content": "center",
+                }}
+              >
+                <svg
+                  viewBox="0 0 1 1"
+                  style={{
+                    "font-size": "1rem",
+                    "font-family": "monospace",
+                    height: "1ch",
+                  }}
+                >
+                  <polygon points="0.3,0.5 1,1 1,0" fill="currentColor" />
+                  <rect
+                    x="0"
+                    y="0"
+                    width="0.25"
+                    height="1"
+                    fill="currentColor"
+                  />
+                </svg>
+              </span>
             </button>
           </fieldset>
           <fieldset>
