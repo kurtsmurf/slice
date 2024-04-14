@@ -572,6 +572,16 @@ const RegionDetails = (props: { index: number }) => {
           "flex-direction": "column",
           gap: "1rem",
         }}
+        onkeydown={(e) => {
+          if (e.key === "ArrowRight") {
+            e.preventDefault();
+            next();
+          }
+          if (e.key === "ArrowLeft") {
+            e.preventDefault();
+            prev();
+          }
+        }}
       >
         <div
           id="region-details-header"
@@ -637,19 +647,7 @@ const RegionDetails = (props: { index: number }) => {
             "padding-bottom": "calc(var(--min-btn-dimension) * 2)",
           }}
         >
-          <fieldset
-            id="region-details-playback"
-            onkeydown={(e) => {
-              if (e.key === "ArrowRight") {
-                e.preventDefault();
-                next();
-              }
-              if (e.key === "ArrowLeft") {
-                e.preventDefault();
-                prev();
-              }
-            }}
-          >
+          <fieldset id="region-details-playback">
             <legend>playback</legend>
             <Trigger region={state.regions[props.index]} />
             <button
