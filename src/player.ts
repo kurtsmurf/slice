@@ -2,6 +2,7 @@ import { createEffect, createSignal } from "solid-js";
 import { audioContext } from "./audioContext";
 import { useAnimationFrame } from "./behaviors/useAnimationFrame";
 import audiobufferToWav from "audiobuffer-to-wav";
+import { createStore, SetStoreFunction, Store } from "solid-js/store";
 
 export const player = createPlayer(audioContext);
 
@@ -64,73 +65,72 @@ type Source = {
   gainEnvelopeScheduler?: NodeJS.Timer;
 };
 
-function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
+function createPlayer(audioContext: AudioContext | OfflineAudioContext): {
+  play: (
+    buffer: AudioBuffer,
+    region: Region,
+  ) => void;
+  playing: () => boolean;
+  region: () => Region;
+  stop: () => void;
+  progress: () => number;
+  settings: Store<PlayerSettings>;
+  updateSettings: SetStoreFunction<PlayerSettings>;
+} {
+  const [settings, updateSettings] = createStore<PlayerSettings>({
+    loop: false,
+    // speed function converts semis/cents to playback rate multiplier
+
+    pitchOffsetSemis: 0,
+    pitchOffsetCents: 0,
+    // 0-100, which is later mapped logarithmically to hz
+    // hiPass < loPass is discouraged (results in silence)
+    // create effect to nudge on pass
+    loPass: 100,
+    hiPass: 0,
+    // dbs <= 0
+    compressionThreshold: 0,
+    // dbs
+    gain: 0,
+  });
+
   const [startedAt, setStartedAt] = createSignal<number | undefined>(undefined);
   const [region, setRegion] = createSignal<Region>({
     start: 0,
     end: 1,
   });
   let activeSource: Source | undefined;
-  const [loop, setLoop] = createSignal(false);
-  /**
-   * pitch offset in semitones where 0 is no offset and 12 is double the pitch -12 is half the pitch
-   */
-  const [pitchOffsetSemis, setPitchOffsetSemis] = createSignal(0);
-  /**
-   * pitch offset in cents where 0 is no offset, +50 is up 1/2 semitone, -50 is down 1/2 semitone
-   */
-  const [pitchOffsetCents, setPitchOffsetCents] = createSignal(0);
-  /**
-   * low pass frequency in % where 100% is 20000hz and 0% is 0hz
-   * default 100% i.e. everything below 20000hz passes through (i.e. everything)
-   */
-  const [loPass, setLoPass] = createSignal(100);
-  /**
-   * high pass frequency in % where 100% is 20000hz and 0% is 0hz
-   * default 0% i.e. everything above 0hz passes through (i.e. everything)
-   */
-  const [hiPass, setHiPass] = createSignal(0);
-  /**
-   * threshold, measured in decibels, above which compression will be applied
-   * max=0, min=??
-   */
-  const [compressionThreshold, setCompressionThreshold] = createSignal(0);
-  /**
-   * gain measured in decibels
-   */
-  const [gain, setGain] = createSignal(0);
-
   /**
    * @returns the speed at which to play audio based on the pitch offset
    */
-  const speed = () => {
-    const totalCents = pitchOffsetCents() + (100 * pitchOffsetSemis());
-    return Math.pow(2, totalCents / 1200);
-  };
-
+  const speed = () =>
+    speedFromChromatic(
+      settings.pitchOffsetSemis,
+      settings.pitchOffsetCents,
+    );
   const fxAssembly = createFxAssembly(audioContext);
   fxAssembly.out.connect(audioContext.destination);
 
   createEffect(() => {
-    rampTo(fxAssembly.gain, Math.pow(10, gain() / 20));
+    rampTo(fxAssembly.gain, Math.pow(10, settings.gain / 20));
   });
 
   createEffect(() => {
     // when hiPass changes
     // update the filter by mapping hiPass to hz
-    rampTo(fxAssembly.hiPassFreq, mapLinearToLogarithmic(hiPass()));
+    rampTo(fxAssembly.hiPassFreq, mapLinearToLogarithmic(settings.hiPass));
   });
 
   createEffect(() => {
     // when loPass changes
     // update the filter by mapping loPass to hz
-    rampTo(fxAssembly.loPassFreq, mapLinearToLogarithmic(loPass()));
+    rampTo(fxAssembly.loPassFreq, mapLinearToLogarithmic(settings.loPass));
   });
 
   createEffect(() => {
     // when compression threshold changes
     // update the dynamics compressor node threshold
-    rampTo(fxAssembly.compressionThreshold, compressionThreshold());
+    rampTo(fxAssembly.compressionThreshold, settings.compressionThreshold);
   });
 
   createEffect(() => {
@@ -154,7 +154,7 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
     stop();
     setRegion(region);
     setStartedAt(audioContext.currentTime);
-    if (loop()) {
+    if (settings.loop) {
       activeSource = schedulePlaybackLoop(
         audioContext,
         buffer,
@@ -215,33 +215,25 @@ function createPlayer(audioContext: AudioContext | OfflineAudioContext) {
     region,
     stop,
     progress,
-    loop,
-    setLoop,
-    pitchOffsetSemis,
-    setPitchOffsetSemis,
-    pitchOffsetCents,
-    setPitchOffsetCents,
-    loPass,
-    setLoPass: (v: number) => {
-      if (v < hiPass()) {
-        setHiPass(v);
-      }
-      setLoPass(v);
-    },
-    hiPass,
-    setHiPass: (v: number) => {
-      if (loPass() < v) {
-        setLoPass(v);
-      }
-      setHiPass(v);
-    },
-    speed,
-    compressionThreshold,
-    setCompressionThreshold,
-    gain,
-    setGain,
+    settings,
+    updateSettings,
   };
 }
+
+export type PlayerSettings = {
+  loop: boolean;
+  pitchOffsetSemis: number;
+  pitchOffsetCents: number;
+  // 0-100, which is later mapped logarithmically to hz
+  // hiPass < loPass is discouraged (results in silence)
+  // create effect to nudge on pass
+  loPass: number;
+  hiPass: number;
+  // dbs <= 0
+  compressionThreshold: number;
+  // dbs
+  gain: number;
+};
 
 // @ts-ignore
 window.createPlayer = createPlayer;
@@ -385,32 +377,29 @@ const scheduleEnvelope = (
 export const print = async (
   buffer: AudioBuffer,
   region: Region,
-  speed: number,
-  hiPass: number,
-  loPass: number,
-  compressionThreshold: number,
-  gain: number,
+  settings: PlayerSettings,
 ) => {
   // render audiobuffer of region
   const offlineAudioContext = new OfflineAudioContext(
     buffer.numberOfChannels,
     buffer.duration * buffer.sampleRate *
-      (region.end - region.start) / speed,
+      (region.end - region.start) /
+      speedFromChromatic(settings.pitchOffsetSemis, settings.pitchOffsetCents),
     buffer.sampleRate,
   );
 
   const fxPipeline = createFxAssembly(offlineAudioContext);
-  fxPipeline.hiPassFreq.value = mapLinearToLogarithmic(hiPass);
-  fxPipeline.loPassFreq.value = mapLinearToLogarithmic(loPass);
-  fxPipeline.compressionThreshold.value = compressionThreshold;
-  fxPipeline.gain.value = Math.pow(10, gain / 20);
+  fxPipeline.hiPassFreq.value = mapLinearToLogarithmic(settings.hiPass);
+  fxPipeline.loPassFreq.value = mapLinearToLogarithmic(settings.loPass);
+  fxPipeline.compressionThreshold.value = settings.compressionThreshold;
+  fxPipeline.gain.value = Math.pow(10, settings.gain / 20);
   fxPipeline.out.connect(offlineAudioContext.destination);
 
   schedulePlaybackSingle(
     offlineAudioContext,
     buffer,
     region,
-    speed,
+    speedFromChromatic(settings.pitchOffsetSemis, settings.pitchOffsetCents),
     fxPipeline.in,
   );
   const offlineResult = await offlineAudioContext
@@ -440,4 +429,9 @@ export function mapLinearToLogarithmic(x: number) {
   const y = Math.pow(10, Math.log10(yMin) + logInterpolation);
 
   return y;
+}
+
+export function speedFromChromatic(semis: number, cents: number) {
+  const totalCents = cents + (100 * semis);
+  return Math.pow(2, totalCents / 1200);
 }

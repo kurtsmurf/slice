@@ -318,9 +318,12 @@ const SettingsForm = () => (
       <fieldset>
         <legend>speed/pitch</legend>
         <RangeInput
-          value={player.pitchOffsetSemis()}
+          value={player.settings.pitchOffsetSemis}
           onInput={(e) => {
-            player.setPitchOffsetSemis(parseFloat(e.currentTarget.value));
+            player.updateSettings(
+              "pitchOffsetSemis",
+              parseFloat(e.currentTarget.value),
+            );
           }}
           label="coarse"
           aria-label="speed/pitch coarse"
@@ -331,9 +334,12 @@ const SettingsForm = () => (
           unit="semis"
         />
         <RangeInput
-          value={player.pitchOffsetCents()}
+          value={player.settings.pitchOffsetCents}
           onInput={(e) => {
-            player.setPitchOffsetCents(parseFloat(e.currentTarget.value));
+            player.updateSettings(
+              "pitchOffsetCents",
+              parseFloat(e.currentTarget.value),
+            );
           }}
           label="fine"
           aria-label="speed/pitch fine"
@@ -349,10 +355,15 @@ const SettingsForm = () => (
       <fieldset>
         <legend>filter</legend>
         <RangeInput
-          value={player.loPass()}
+          value={player.settings.loPass}
           transformDisplay={(x) => Math.floor(mapLinearToLogarithmic(x))}
           onInput={(e) => {
-            player.setLoPass(parseFloat(e.currentTarget.value));
+            const value = parseFloat(e.currentTarget.value);
+            player.updateSettings("loPass", value);
+            // nudge hiPass
+            if (value < player.settings.hiPass) {
+              player.updateSettings("hiPass", value);
+            }
           }}
           label="low pass"
           aria-label="low pass filter"
@@ -362,10 +373,15 @@ const SettingsForm = () => (
           unit={"hz"}
         />
         <RangeInput
-          value={player.hiPass()}
+          value={player.settings.hiPass}
           transformDisplay={(x) => Math.floor(mapLinearToLogarithmic(x))}
           onInput={(e) => {
-            player.setHiPass(parseFloat(e.currentTarget.value));
+            const value = parseFloat(e.currentTarget.value);
+            player.updateSettings("hiPass", value);
+            // nudge loPass
+            if (value > player.settings.loPass) {
+              player.updateSettings("loPass", value);
+            }
           }}
           label="high pass"
           aria-label="high pass filter"
@@ -380,9 +396,12 @@ const SettingsForm = () => (
       <fieldset>
         <legend>compression</legend>
         <RangeInput
-          value={player.compressionThreshold()}
+          value={player.settings.compressionThreshold}
           onInput={(e) => {
-            player.setCompressionThreshold(parseFloat(e.currentTarget.value));
+            player.updateSettings(
+              "compressionThreshold",
+              parseFloat(e.currentTarget.value),
+            );
           }}
           label="threshold"
           aria-label="compression threshold"
@@ -395,9 +414,9 @@ const SettingsForm = () => (
       </fieldset>
     </div>
     <RangeInput
-      value={player.gain()}
+      value={player.settings.gain}
       onInput={(e) => {
-        player.setGain(parseFloat(e.currentTarget.value));
+        player.updateSettings("gain", parseFloat(e.currentTarget.value));
       }}
       label="gain"
       id="gain"
@@ -653,7 +672,8 @@ const RegionDetails = (props: { index: number }) => {
             <button
               onClick={() => {
                 if (!state.clip) return;
-                player.play(state.clip.buffer, state.regions[props.index]);
+                const region = state.regions[props.index];
+                if (region) player.play(state.clip.buffer, region);
               }}
               aria-label="replay"
             >
@@ -694,11 +714,7 @@ const RegionDetails = (props: { index: number }) => {
                   await download(
                     buffer,
                     region,
-                    player.speed(),
-                    player.loPass(),
-                    player.hiPass(),
-                    player.compressionThreshold(),
-                    player.gain(),
+                    player.settings,
                   ).catch();
                   setBusy(false);
                 }
@@ -716,11 +732,7 @@ const RegionDetails = (props: { index: number }) => {
                     await share(
                       buffer,
                       region,
-                      player.speed(),
-                      player.loPass(),
-                      player.hiPass(),
-                      player.compressionThreshold(),
-                      player.gain(),
+                      player.settings,
                     ).catch();
                     setBusy(false);
                   }
@@ -871,11 +883,11 @@ const ToggleLoop = () => (
         type="checkbox"
         id="loop-toggle"
         name="loop"
-        checked={player.loop()}
+        checked={player.settings.loop}
         disabled={player.playing()}
         onChange={(e) => {
           // @ts-ignore
-          player.setLoop(e.target.checked);
+          player.updateSettings("loop", e.target.checked);
         }}
       />
     </label>

@@ -1,22 +1,14 @@
-import { print, Region } from "./player";
+import { PlayerSettings, print, Region } from "./player";
 
 export const download = async (
   buffer: AudioBuffer,
   region: Region,
-  speed: number,
-  loPass: number,
-  hiPass: number,
-  compressionThreshold: number,
-  gain: number,
+  settings: PlayerSettings,
 ) => {
   const { wav, fileName } = await print(
     buffer,
     region,
-    speed,
-    hiPass,
-    loPass,
-    compressionThreshold,
-    gain,
+    settings,
   );
   const url = URL.createObjectURL(
     new Blob([wav], { type: "audio/wav" }),
@@ -31,20 +23,12 @@ export const download = async (
 export const share = async (
   buffer: AudioBuffer,
   region: Region,
-  speed: number,
-  loPass: number,
-  hiPass: number,
-  compressionThreshold: number,
-  gain: number,
+  settings: PlayerSettings,
 ) => {
   const { wav, fileName } = await print(
     buffer,
     region,
-    speed,
-    hiPass,
-    loPass,
-    compressionThreshold,
-    gain,
+    settings,
   );
   const file = new File([wav], fileName, { type: "audio/wav" });
   navigator.share({
