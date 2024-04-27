@@ -44,9 +44,16 @@ input {
   font-size: 16px;
 }
 
+:root {
+  --editable-slice-bg: hsl(0deg 0% 0% / 50%)
+}
+
 @media (prefers-color-scheme: dark) {
   .flag-button-container > button:first-of-type {
     box-shadow: -1px 0px 0px  canvas;
+  }
+  :root {
+    --editable-slice-bg: hsl(0deg 0% 100% / 50%)
   }
 }
 

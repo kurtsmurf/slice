@@ -296,10 +296,7 @@ const Slice = (
         <Stick
           pos={dragPos()}
           width={30}
-          background="CanvasText"
-          style={{
-            opacity: "50%",
-          }}
+          background="var(--editable-slice-bg)"
           onPointerDown={(e) => {
             drag.start(e);
           }}
