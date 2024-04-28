@@ -211,9 +211,7 @@ const UrlInput = () => {
           setBusy(true);
           const url = input.value;
 
-          const buffer = await fetch(url)
-            .then((response) => response.arrayBuffer())
-            .then((arrayBuffer) => audioContext.decodeAudioData(arrayBuffer))
+          const buffer = await audioBufferOfUrl(url)
             .catch((err) => {
               console.error(err);
               alert("failed to load audio");
@@ -222,8 +220,7 @@ const UrlInput = () => {
 
           if (!buffer) return;
 
-          const name = url.slice(url.lastIndexOf("/") + 1);
-
+          const name = nameOfUrl(url);
           const hash = await hashAudioBuffer(buffer);
 
           dispatch({ type: "setClip", clip: { name, buffer, hash } });
@@ -240,38 +237,77 @@ const UrlInput = () => {
   );
 };
 
-export const App = () => (
-  <>
-    <Show
-      when={state.clip}
-      fallback={() => (
-        <div
-          style={{
-            display: "flex",
-            "flex-direction": "column",
-            "gap": "1rem",
-            "padding-block": "1rem",
-          }}
-        >
-          <LoadAudio />
-          <Sessions />
+/**
+ * Check url search params for "url" and load audio from url if found
+ * e.g.
+ * https://{url-of-chop-dot-quest}/?url=https%3A%2F%2Ftile.loc.gov%2Fstreaming-services%2Fiiif%2Fservice%3Ambrsrs%3Ambrsjukebox%3Aucsb_victor_70047_01_c10548_04%3Aucsb_victor_70047_01_c10548_04%2Ffull%2Ffull%2F0%2Ffull%2Fdefault.mp3
+ *
+ * will load mp3 of Bach's "Air On the G String" from library of congress. Non-encoded url:
+ * https://tile.loc.gov/streaming-services/iiif/service:mbrsrs:mbrsjukebox:ucsb_victor_70047_01_c10548_04:ucsb_victor_70047_01_c10548_04/full/full/0/full/default.mp3
+ */
+const loadClipFromQueryParam = async () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const url = urlParams.get("url");
+  if (!url) return;
+  setBusy(true);
+  await audioBufferOfUrl(url)
+    .then(async (buffer) => {
+      const name = nameOfUrl(url);
+      const hash = await hashAudioBuffer(buffer);
+      dispatch({ type: "setClip", clip: { name, buffer, hash } });
+    })
+    .catch((err) => {
+      console.error(err);
+      alert("failed to load audio");
+      setBusy(false);
+    });
+  setBusy(false);
+};
+
+const nameOfUrl = (url: string) => url.slice(url.lastIndexOf("/") + 1);
+
+const audioBufferOfUrl = (url: string) => {
+  return fetch(url)
+    .then((response) => response.arrayBuffer())
+    .then((arrayBuffer) => audioContext.decodeAudioData(arrayBuffer));
+};
+
+export const App = () => {
+  loadClipFromQueryParam();
+
+  return (
+    <>
+      <Show
+        when={state.clip}
+        fallback={() => (
+          <div
+            style={{
+              display: "flex",
+              "flex-direction": "column",
+              "gap": "1rem",
+              "padding-block": "1rem",
+            }}
+          >
+            <LoadAudio />
+            <Sessions />
+          </div>
+        )}
+      >
+        <div>
+          <Details clip={state.clip!} />
+          <Controls />
+          <Waveform buffer={state.clip!.buffer} />
         </div>
-      )}
-    >
-      <div>
-        <Details clip={state.clip!} />
-        <Controls />
-        <Waveform buffer={state.clip!.buffer} />
-      </div>
-      <BottomPanel />
-      <FloatingControls />
-      <SettingsDialog />
-    </Show>
-    <Show when={busy()}>
-      <Curtain />
-    </Show>
-  </>
-);
+        <BottomPanel />
+        <FloatingControls />
+        <SettingsDialog />
+      </Show>
+      <Show when={busy()}>
+        <Curtain />
+      </Show>
+    </>
+  );
+};
 
 const SettingsDialog = () => {
   let dialog: HTMLDialogElement | undefined;
