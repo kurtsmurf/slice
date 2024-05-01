@@ -1,5 +1,5 @@
 import { AudioInput } from "./AudioInput";
-import { createSignal, For, JSX, onCleanup, Show } from "solid-js";
+import { createSignal, For, JSX, onCleanup, onMount, Show } from "solid-js";
 import { mapLinearToLogarithmic, player } from "../player";
 import { download, share } from "../export";
 import {
@@ -197,6 +197,13 @@ const Sessions = () => {
 
 const UrlInput = () => {
   let input: HTMLInputElement | undefined;
+
+  onMount(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const url = urlParams.get("url");
+    if (url && input) input.value = url;
+  });
+
   return (
     <form
       style={{
@@ -237,33 +244,6 @@ const UrlInput = () => {
   );
 };
 
-/**
- * Check url search params for "url" and load audio from url if found
- * e.g.
- * https://{url-of-chop-dot-quest}/?url=https%3A%2F%2Ftile.loc.gov%2Fstreaming-services%2Fiiif%2Fservice%3Ambrsrs%3Ambrsjukebox%3Aucsb_victor_70047_01_c10548_04%3Aucsb_victor_70047_01_c10548_04%2Ffull%2Ffull%2F0%2Ffull%2Fdefault.mp3
- *
- * will load mp3 of Bach's "Air On the G String" from library of congress. Non-encoded url:
- * https://tile.loc.gov/streaming-services/iiif/service:mbrsrs:mbrsjukebox:ucsb_victor_70047_01_c10548_04:ucsb_victor_70047_01_c10548_04/full/full/0/full/default.mp3
- */
-const loadClipFromQueryParam = async () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const url = urlParams.get("url");
-  if (!url) return;
-  setBusy(true);
-  await audioBufferOfUrl(url)
-    .then(async (buffer) => {
-      const name = nameOfUrl(url);
-      const hash = await hashAudioBuffer(buffer);
-      dispatch({ type: "setClip", clip: { name, buffer, hash } });
-    })
-    .catch((err) => {
-      console.error(err);
-      alert("failed to load audio");
-      setBusy(false);
-    });
-  setBusy(false);
-};
-
 const nameOfUrl = (url: string) => url.slice(url.lastIndexOf("/") + 1);
 
 const audioBufferOfUrl = (url: string) => {
@@ -272,42 +252,38 @@ const audioBufferOfUrl = (url: string) => {
     .then((arrayBuffer) => audioContext.decodeAudioData(arrayBuffer));
 };
 
-export const App = () => {
-  loadClipFromQueryParam();
-
-  return (
-    <>
-      <Show
-        when={state.clip}
-        fallback={() => (
-          <div
-            style={{
-              display: "flex",
-              "flex-direction": "column",
-              "gap": "1rem",
-              "padding-block": "1rem",
-            }}
-          >
-            <LoadAudio />
-            <Sessions />
-          </div>
-        )}
-      >
-        <div>
-          <Details clip={state.clip!} />
-          <Controls />
-          <Waveform buffer={state.clip!.buffer} />
+export const App = () => (
+  <>
+    <Show
+      when={state.clip}
+      fallback={() => (
+        <div
+          style={{
+            display: "flex",
+            "flex-direction": "column",
+            "gap": "1rem",
+            "padding-block": "1rem",
+          }}
+        >
+          <LoadAudio />
+          <Sessions />
         </div>
-        <BottomPanel />
-        <FloatingControls />
-        <SettingsDialog />
-      </Show>
-      <Show when={busy()}>
-        <Curtain />
-      </Show>
-    </>
-  );
-};
+      )}
+    >
+      <div>
+        <Details clip={state.clip!} />
+        <Controls />
+        <Waveform buffer={state.clip!.buffer} />
+      </div>
+      <BottomPanel />
+      <FloatingControls />
+      <SettingsDialog />
+    </Show>
+    <Show when={busy()}>
+      <Curtain />
+    </Show>
+  </>
+);
 
 const SettingsDialog = () => {
   let dialog: HTMLDialogElement | undefined;
