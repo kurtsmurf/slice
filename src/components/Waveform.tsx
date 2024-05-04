@@ -132,6 +132,7 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
       }}
       ondblclick={(e) => {
         placeCursor(e);
+        document.getElementById("cursor-handle")?.focus()
         setZoomCenter(state.cursor);
         dispatch({ type: "showCursorControls" });
       }}
@@ -487,6 +488,7 @@ const Cursor = (
 
       <Show when={state.mode === "slice"}>
         <Stick
+          id="cursor-handle"
           ref={ref}
           pos={dragPos()}
           width={30}
