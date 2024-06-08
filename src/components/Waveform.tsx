@@ -132,7 +132,7 @@ const WaveformContent = (props: { buffer: AudioBuffer }) => {
       }}
       ondblclick={(e) => {
         placeCursor(e);
-        document.getElementById("cursor-handle")?.focus()
+        document.getElementById("cursor-handle")?.focus();
         setZoomCenter(state.cursor);
         dispatch({ type: "showCursorControls" });
       }}

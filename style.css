@@ -57,16 +57,7 @@ input {
   }
 }
 
-fieldset:has(input[type="checkbox"]) {
-  position: relative;
-  height: 2rem;
-  box-sizing: border-box;
-  background: canvas;
-  padding: 0;
-}
-
 label:has(input[type="checkbox"]) {
-  color: AccentColor;
   display: grid;
   place-content: center;
   width: 100%;

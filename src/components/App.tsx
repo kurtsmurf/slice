@@ -502,7 +502,7 @@ export const Pads = () => {
         "grid-template-columns": "repeat( auto-fit, minmax(100px, 1fr) )",
         "grid-auto-rows": "100px",
         // compensate for hovering buttons
-        "padding-bottom": "calc(var(--min-btn-dimension) * 2)",
+        "padding-bottom": "calc(var(--min-btn-dimension) * 1.25 + 1rem)",
         gap: "2px",
       }}
     >
@@ -675,7 +675,7 @@ const RegionDetails = (props: { index: number }) => {
             gap: "1rem",
             "margin-inline": "1rem",
             // compensate for hovering buttons
-            "padding-bottom": "calc(var(--min-btn-dimension) * 2)",
+            "padding-bottom": "calc(var(--min-btn-dimension) * 1.25 + 1rem)",
           }}
         >
           <fieldset id="region-details-playback">
@@ -831,24 +831,18 @@ const scrollRegionIntoView = (region: typeof state.regions[number]) => {
 
 const FloatingControls = () => (
   <div
-    class="floating-controls"
-    // style={{
-    //   position: "fixed",
-    //   bottom: "0",
-    //   left: "0",
-    //   "min-width": "unset",
-    //   "z-index": 2,
-    //   // "border-radius": "2px",
-    //   display: "flex",
-    // }}
     style={{
       position: "fixed",
-      bottom: "calc(var(--min-btn-dimension) * .25)",
-      left: "calc(var(--min-btn-dimension) * .25)",
-      "min-width": "unset",
+      bottom: "0",
+      left: "0",
+      // "min-width": "unset",
       "z-index": 2,
       display: "flex",
-      gap: "calc(var(--min-btn-dimension) * .25)",
+      gap: "0",
+      padding: "0.25rem",
+      background: "canvas",
+      "border-top-right-radius": "0.125rem",
+      // "box-shadow": "0 0 5px 1px canvas",
     }}
   >
     <ToggleFxDialog />
@@ -857,51 +851,43 @@ const FloatingControls = () => (
 );
 
 const ToggleFxDialog = () => (
-  <fieldset
+  <button
     style={{
       width: "calc(var(--min-btn-dimension) * 1.25)",
-      background: "canvas",
+      height: "calc(var(--min-btn-dimension) * 1.25)",
       padding: "0",
     }}
+    onClick={() => {
+      const dialog = document.getElementById("settings-dialog");
+      if (dialog instanceof HTMLDialogElement) {
+        dialog.showModal();
+      }
+    }}
+    aria-label="open playback settings"
   >
-    <button
-      style={{
-        width: "100%",
-        height: "100%",
-      }}
-      onClick={() => {
-        const dialog = document.getElementById("settings-dialog");
-        if (dialog instanceof HTMLDialogElement) {
-          dialog.showModal();
-        }
-      }}
-      aria-label="open playback settings"
-    >
-      FX
-    </button>
-  </fieldset>
+    FX
+  </button>
 );
 
 const ToggleLoop = () => (
-  <fieldset
+  <label
+    for="loop-toggle"
     style={{
       width: "calc(var(--min-btn-dimension) * 1.25)",
       height: "calc(var(--min-btn-dimension) * 1.25)",
     }}
   >
-    <label for="loop-toggle">
-      <span>loop</span>
-      <input
-        type="checkbox"
-        id="loop-toggle"
-        name="loop"
-        checked={player.settings.loop}
-        disabled={player.playing()}
-        onChange={(e) => {
-          // @ts-ignore
-          player.updateSettings("loop", e.target.checked);
-        }}
-      />
-    </label>
-  </fieldset>
+    <span>loop</span>
+    <input
+      type="checkbox"
+      id="loop-toggle"
+      name="loop"
+      checked={player.settings.loop}
+      disabled={player.playing()}
+      onChange={(e) => {
+        // @ts-ignore
+        player.updateSettings("loop", e.target.checked);
+      }}
+    />
+  </label>
 );
