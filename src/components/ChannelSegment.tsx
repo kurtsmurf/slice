@@ -8,11 +8,8 @@ const [strokeColor, setStrokeColor] = createSignal<"black" | "white">(
   mediaQuery.matches ? "white" : "black",
 );
 
-createEffect(() => console.log(strokeColor()));
-
 // Register event listener
 mediaQuery.addEventListener("change", (e) => {
-  console.log(e);
   if (e.matches) {
     setStrokeColor("white");
   } else {

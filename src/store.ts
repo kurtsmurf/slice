@@ -426,8 +426,6 @@ export const redo = {
   execute: () => {
     const eventToRedo = redoStack().pop();
 
-    console.log(eventToRedo);
-
     setRedoStack((prev) => prev);
 
     if (eventToRedo) {
