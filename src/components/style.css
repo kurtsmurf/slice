@@ -2,6 +2,8 @@
 @media (min-height: 600px) {
     #bottom-panel {
         overflow: auto;
+        -webkit-transform: translateZ(0);
+
     }
 }
 html, body, #root, #bottom-panel, #region-details {
