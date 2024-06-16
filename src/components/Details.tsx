@@ -19,7 +19,7 @@ export const Details = (props: { clip: Clip }) => (
         }
       }}
       style={{
-        "white-space": "nowrap",
+        "flex-shrink": 0,
       }}
     >
       home
