@@ -27,6 +27,10 @@ export const Trigger = (props: {
       ondblclick={(e) => e.stopPropagation()}
       style={props.style}
       disabled={!props.region}
+      classList={{
+        "trigger": true,
+        "active": active(),
+      }}
     >
       <span>
         <span
