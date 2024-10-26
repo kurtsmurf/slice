@@ -1,9 +1,11 @@
 * {
   margin: 0;
 }
+
 html {
   font-family: system-ui;
 }
+
 body {
   /* prevents selection of waveform elements */
   -webkit-touch-callout: none;
@@ -25,7 +27,6 @@ button {
   height: var(--min-btn-dimension);
   min-width: var(--min-btn-dimension);
 }
-
 
 #region-details-playback button {
   position: relative;
@@ -64,7 +65,16 @@ label:has(input[type="checkbox"]) {
   height: 100%;
 }
 
-
 label:has(input[type="checkbox"]:disabled) {
   color: graytext;
+}
+
+button.trigger.active {
+  filter: brightness(0.75);
+}
+
+@media (prefers-color-scheme: dark) {
+  button.trigger.active {
+    filter: brightness(1.5);
+  }  
 }
