@@ -20,7 +20,6 @@ import {
 import { Controls } from "./Controls";
 import { Details } from "./Details";
 import { Trigger } from "./Trigger";
-import "./style.css";
 import { audioContext } from "../audioContext";
 import { Clip } from "../types";
 import { Curtain } from "./Curtain";

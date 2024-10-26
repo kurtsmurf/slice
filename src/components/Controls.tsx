@@ -1,6 +1,5 @@
 import { dispatch, redo, state, undo } from "../store";
 import { zoom } from "./Waveform";
-import "./Controls.css";
 
 export const Controls = () => (
   <div class="controls-outer">
